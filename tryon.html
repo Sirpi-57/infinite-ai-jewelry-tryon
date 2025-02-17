@@ -348,6 +348,31 @@
         .capture-btn i {
             font-size: 1.2rem;
         }
+
+        .design-control {
+            margin-bottom: 1rem;
+        }
+
+        .design-selector {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            background: var(--color-surface);
+            color: var(--color-dark);
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+        }
+
+        .design-selector:hover {
+            border-color: var(--color-primary);
+        }
+
+        .design-selector:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(123, 44, 191, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -402,8 +427,41 @@
         const DROP_HEIGHT = 45;
         
         const JEWELRY = {
-            jhumka: {
-                name: "Jhumka Earrings",
+            jhumka1: {
+                name: "Earring Design 1",
+                type: 'earrings',
+                left: 'earing1left.png',
+                right: 'earing1right.png',
+                landmarks: [177, 401],
+                landmarkOptions: [
+                    { label: "Ear Lobe", left: 177, right: 401 },
+                    { label: "Ear Alternate", left: 132, right: 361 },
+                    { label: "Ear Base", left: 234, right: 454 }
+                ],
+                offset: { x: 0, y: 0 },
+                defaultScale: 0.75,
+                gap: 0,
+                group: 'earrings',
+                designs: ['jhumka1', 'jhumka2', 'jhumka3', 'jhumka4']
+            },
+            jhumka2: {
+                name: "Earring Design 2",
+                type: 'earrings',
+                left: 'earing2left.png',
+                right: 'earing2right.png',
+                landmarks: [177, 401],
+                landmarkOptions: [
+                    { label: "Ear Lobe", left: 177, right: 401 },
+                    { label: "Ear Alternate", left: 132, right: 361 },
+                    { label: "Ear Base", left: 234, right: 454 }
+                ],
+                offset: { x: 0, y: 0 },
+                defaultScale: 1.5,
+                gap: 0,
+                group: 'earrings'
+            },
+            jhumka3: {
+                name: "Earring Design 3",
                 type: 'earrings',
                 left: 'earing3left.png',
                 right: 'earing3right.png',
@@ -414,47 +472,180 @@
                     { label: "Ear Base", left: 234, right: 454 }
                 ],
                 offset: { x: 0, y: 0 },
-                defaultScale: 2.0,
-                gap: 0
+                defaultScale: 1.5,
+                gap: 0,
+                group: 'earrings'
             },
-            necklace: {
-                name: "Traditional Necklace",
-                type: 'necklace',
-                image: 'necklace.png',
+            jhumka4: {
+                name: "Earring Design 4",
+                type: 'earrings',
+                left: 'earing4left.png',
+                right: 'earing4right.png',
+                landmarks: [177, 401],
+                landmarkOptions: [
+                    { label: "Ear Lobe", left: 177, right: 401 },
+                    { label: "Ear Alternate", left: 132, right: 361 },
+                    { label: "Ear Base", left: 234, right: 454 }
+                ],
                 offset: { x: 0, y: 0 },
-                defaultScale: PERFECT_SCALE
+                defaultScale: 1.5,
+                gap: 0,
+                group: 'earrings'
             },
-            tikka: {
-                name: "Tikka",
+            necklace1: {
+                name: "Necklace Design 1",
+                type: 'necklace',
+                image: 'necklace1.png',
+                offset: { x: 0, y: 0 },
+                defaultScale: PERFECT_SCALE,
+                group: 'necklace',
+                designs: ['necklace1', 'necklace2', 'necklace3', 'necklace4', 'necklace5', 'necklace6', 'necklace7']
+            },
+            necklace2: {
+                name: "Necklace Design 2",
+                type: 'necklace',
+                image: 'necklace2.png',
+                offset: { x: 0, y: 0 },
+                defaultScale: PERFECT_SCALE,
+                group: 'necklace'
+            },
+            necklace3: {
+                name: "Necklace Design 3",
+                type: 'necklace',
+                image: 'necklace3.png',
+                offset: { x: 0, y: 0 },
+                defaultScale: PERFECT_SCALE,
+                group: 'necklace'
+            },
+            necklace4: {
+                name: "Necklace Design 4",
+                type: 'necklace',
+                image: 'necklace4.png',
+                offset: { x: 0, y: 0 },
+                defaultScale: 0.4,
+                group: 'necklace'
+            },
+            necklace5: {
+                name: "Necklace Design 5",
+                type: 'necklace',
+                image: 'necklace5.png',
+                offset: { x: 0, y: 0 },
+                defaultScale: 0.4,
+                group: 'necklace'
+            },
+            necklace6: {
+                name: "Necklace Design 6",
+                type: 'necklace',
+                image: 'necklace6.png',
+                offset: { x: 0, y: 0 },
+                defaultScale: 0.4,
+                group: 'necklace'
+            },
+            necklace7: {
+                name: "Necklace Design 7",
+                type: 'necklace',
+                image: 'necklace7.png',
+                offset: { x: 0, y: 0 },
+                defaultScale:0.4,
+                group: 'necklace'
+            },
+            tikka1: {
+                name: "Tikka Design 1",
                 type: 'single',
-                image: 'tikka.png',
+                image: 'tikka1.png',
                 landmark: 151,
                 landmarkOptions: [
                     { label: "Forehead Center", value: 151 },
                     { label: "Upper Forehead", value: 10 }
                 ],
                 offset: { x: 0, y: 0 },
-                defaultScale: 0.3
+                defaultScale: 1,
+                group: 'tikka',
+                designs: ['tikka1', 'tikka2', 'tikka3', 'tikka4']
             },
-            ring: {
-                name: "Ring",
+            tikka2: {
+                name: "Tikka Design 2",
+                type: 'single',
+                image: 'tikka2.png',
+                landmark: 151,
+                landmarkOptions: [
+                    { label: "Forehead Center", value: 151 },
+                    { label: "Upper Forehead", value: 10 }
+                ],
+                offset: { x: 0, y: 0 },
+                defaultScale: 1,
+                group: 'tikka'
+            },
+            tikka3: {
+                name: "Tikka Design 3",
+                type: 'single',
+                image: 'tikka3.png',
+                landmark: 151,
+                landmarkOptions: [
+                    { label: "Forehead Center", value: 151 },
+                    { label: "Upper Forehead", value: 10 }
+                ],
+                offset: { x: 0, y: 0 },
+                defaultScale: 1,
+                group: 'tikka'
+            },
+            tikka4: {
+                name: "Tikka Design 4",
+                type: 'single',
+                image: 'tikka4.png',
+                landmark: 151,
+                landmarkOptions: [
+                    { label: "Forehead Center", value: 151 },
+                    { label: "Upper Forehead", value: 10 }
+                ],
+                offset: { x: 0, y: 0 },
+                defaultScale: 0.8,
+                group: 'tikka'
+            },
+            ring1: {
+                name: "Ring Design",
                 type: 'hand',
-                image: 'ring.png',
+                image: 'ring1.png',
                 landmark: 'custom',
                 fingerIndex: 8,
                 handIndex: 0,
                 offset: { x: 0, y: 0 },
-                defaultScale: 0.2
+                defaultScale: 0.2,
+                group: 'ring'
             },
-            bangle: {
-                name: "Bangle",
+            bangle1: {
+                name: "Bangle Design 1",
                 type: 'hand',
                 image: 'bangle1.png',
                 landmark: 'custom',
                 wristIndex: 0,
                 handIndex: 0,
                 offset: { x: 0, y: 0 },
-                defaultScale: 0.35
+                defaultScale: 0.35,
+                group: 'bangle',
+                designs: ['bangle1', 'bangle2', 'bangle3']
+            },
+            bangle2: {
+                name: "Bangle Design 2",
+                type: 'hand',
+                image: 'bangle2.png',
+                landmark: 'custom',
+                wristIndex: 0,
+                handIndex: 0,
+                offset: { x: 0, y: 0 },
+                defaultScale: 0.35,
+                group: 'bangle'
+            },
+            bangle3: {
+                name: "Bangle Design 3",
+                type: 'hand',
+                image: 'bangle3.png',
+                landmark: 'custom',
+                wristIndex: 0,
+                handIndex: 0,
+                offset: { x: 0, y: 0 },
+                defaultScale: 0.35,
+                group: 'bangle'
             }
         };
 
@@ -476,6 +667,29 @@
             const div = document.createElement('div');
             div.className = 'jewelry-item';
             div.id = `item-${id}`;
+
+            // Get all designs for this group if they exist
+            const designs = jewelry.designs || [id];
+            const designOptions = designs.map(designId => {
+                const design = JEWELRY[designId];
+                return `<option value="${designId}">${design.name}</option>`;
+            }).join('');
+
+            // Create design selector dropdown with a "None" option
+            const designSelector = `
+                <div class="design-control">
+                    <select class="design-selector" onchange="this.value ? this.closest('.jewelry-item').classList.add('active') : this.closest('.jewelry-item').classList.remove('active'); toggleJewelry('${id}', this.value)">
+                        <option value="">
+                            ${jewelry.type === 'earrings' ? 'Select Earrings' : 
+                            jewelry.type === 'necklace' ? 'Select Necklace' :
+                            jewelry.type === 'single' ? 'Select Tikka' :
+                            jewelry.type === 'hand' && id.startsWith('ring') ? 'Select Ring' :
+                            'Select Bangle'}
+                        </option>
+                        ${designOptions}
+                    </select>
+                </div>
+            `;
 
             let landmarkOptions = '';
             if (jewelry.landmarkOptions) {
@@ -522,7 +736,7 @@
                     </div>
                 `;
                 
-                if (id === 'ring') {
+                if (id.startsWith('ring')) {
                     handControls += `
                         <div class="finger-control">
                             <div class="control-label">Finger Selection</div>
@@ -539,13 +753,10 @@
             }
 
             div.innerHTML = `
-                <div class="checkbox-wrapper">
-                    <input type="checkbox" id="${id}" onchange="toggleJewelry('${id}')">
-                    <label for="${id}">${jewelry.name}</label>
-                </div>
+                ${designSelector}
                 <div class="jewelry-controls">
                     ${landmarkOptions}
-                    ${handControls}
+                    ${handControls || ''}
                     <div class="size-control">
                         <div class="control-label">Size</div>
                         <input type="range" 
@@ -556,7 +767,7 @@
                             value="${jewelry.defaultScale}"
                             onInput="updateJewelrySize('${id}', this.value)">
                     </div>
-                    ${gapControl}
+                    ${gapControl || ''}
                     <div class="control-label">Fine Position Adjustment</div>
                     <div class="direction-controls">
                         <button class="direction-btn" onclick="moveSelected('${id}', 'up-left')">↖</button>
@@ -574,28 +785,67 @@
             return div;
         }
 
+        function updateDesign(currentId, newDesignId) {
+            if (activeJewelry.has(currentId)) {
+                const currentJewelry = activeJewelry.get(currentId);
+                const currentOffset = currentJewelry.offset;
+                
+                // Create new jewelry item based on the selected design
+                const newJewelry = JSON.parse(JSON.stringify(JEWELRY[newDesignId]));
+                
+                // Transfer only the offset, use the new design's default scale
+                newJewelry.offset = currentOffset;
+                newJewelry.scale = JEWELRY[newDesignId].defaultScale;  // Use new default scale
+                
+                // Transfer images based on jewelry type
+                if (newJewelry.type === 'earrings') {
+                    newJewelry.leftImage = JEWELRY[newDesignId].leftImage;
+                    newJewelry.rightImage = JEWELRY[newDesignId].rightImage;
+                } else {
+                    newJewelry.loadedImage = JEWELRY[newDesignId].loadedImage;
+                }
+                
+                // Update the active jewelry
+                activeJewelry.set(currentId, newJewelry);
+                
+                // Update the size slider to reflect the new default scale
+                const sizeSlider = document.getElementById(`size-${currentId}`);
+                if (sizeSlider) {
+                    sizeSlider.value = JEWELRY[newDesignId].defaultScale;
+                }
+            }
+        }
+
         function createJewelryList() {
             const jewelryList = document.getElementById('jewelryList');
             jewelryList.innerHTML = `
                 <div class="try-on-header">
-                    <h2 class="text-xl font-bold text-gray-800 mb-2">Virtual Try-On Studio</h2>
-                    <p class="text-sm font-bold text-gray-800 mb-2">Select and customize your jewelry</p>
+                    <h2 class="text-xl font-bold text-white mb-2">Virtual Try-On Studio</h2>
+                    <p class="text-sm text-white mb-2">Select and customize your jewelry</p>
                 </div>
             `;
 
             const groups = {
-                'Face Jewelry': ['tikka'],
-                'Ear Jewelry': ['jhumka'],
-                'Neck Jewelry': ['necklace'],
-                'Hand Jewelry': ['ring', 'bangle']
+                'Face Jewelry': {
+                    items: ['tikka1'],
+                },
+                'Ear Jewelry': {
+                    items: ['jhumka1'],
+                },
+                'Neck Jewelry': {
+                    items: ['necklace1'],
+                },
+                'Hand Jewelry': {
+                    items: ['ring1', 'bangle1'],
+                }
             };
 
-            for (const [groupName, items] of Object.entries(groups)) {
+            for (const [groupName, groupData] of Object.entries(groups)) {
                 const groupDiv = document.createElement('div');
                 groupDiv.className = 'jewelry-group';
                 groupDiv.innerHTML = `<h3>${groupName}</h3>`;
 
-                items.forEach(id => {
+                groupData.items.forEach(id => {
                     if (JEWELRY[id]) {
                         groupDiv.appendChild(createJewelryItem(id, JEWELRY[id]));
                     }
@@ -856,9 +1106,9 @@
                         try {
                             const handIndex = jewelry.handIndex || 0;
                             if (handLandmarks[handIndex]) {
-                                if (id === 'ring' && jewelry.loadedImage) {
+                                if (id.startsWith('ring')) {
                                     drawRing(jewelry, handLandmarks[handIndex]);
-                                } else if (id === 'bangle' && jewelry.loadedImage) {
+                                } else if (id.startsWith('bangle')) {
                                     drawBangle(jewelry, handLandmarks[handIndex]);
                                 }
                             }
@@ -933,8 +1183,12 @@
             const fingerTip = handLandmarks[jewelry.fingerIndex];
             const fingerBase = handLandmarks[jewelry.fingerIndex - 3];
             
+            if (!fingerTip || !fingerBase) {
+                console.log("Missing finger landmarks");
+                return;
+            }
+            
             // Calculate position 2/3 of the way from base to tip
-            // (instead of halfway, which was the previous calculation)
             const positionRatio = 0.3;  // This will place it 60% of the way from base to tip
             const x = (fingerBase.x + (fingerTip.x - fingerBase.x) * positionRatio) * canvas.width + jewelry.offset.x;
             const y = (fingerBase.y + (fingerTip.y - fingerBase.y) * positionRatio) * canvas.height + jewelry.offset.y;
@@ -943,6 +1197,11 @@
                 fingerTip.y - fingerBase.y,
                 fingerTip.x - fingerBase.x
             );
+
+            if (!jewelry.loadedImage) {
+                console.log("Ring image not loaded");
+                return;
+            }
 
             ctx.save();
             ctx.translate(x, y);
@@ -964,9 +1223,13 @@
             const wrist = handLandmarks[0];
             const palmBase = handLandmarks[9];
             
-            // Add vertical and horizontal offsets
-            const verticalOffset = 30;   // Down offset from previous adjustment
-            const horizontalOffset = -20; // Left offset (-25 pixels to match 5 left clicks)
+            if (!wrist || !palmBase) {
+                console.log("Missing wrist landmarks");
+                return;
+            }
+            
+            const verticalOffset = 30;   
+            const horizontalOffset = -20; 
             
             const x = wrist.x * canvas.width + horizontalOffset + jewelry.offset.x;
             const y = wrist.y * canvas.height + verticalOffset + jewelry.offset.y;
@@ -975,6 +1238,11 @@
                 palmBase.y - wrist.y,
                 palmBase.x - wrist.x
             );
+
+            if (!jewelry.loadedImage) {
+                console.log("Bangle image not loaded");
+                return;
+            }
 
             const wristLeft = handLandmarks[17];
             const wristRight = handLandmarks[5];
@@ -1039,30 +1307,76 @@
                     }
                 } catch (error) {
                     console.error(`Error loading images for ${id}:`, error);
+                    // Add fallback or error handling if needed
+                    if (jewelry.type === 'earrings') {
+                        console.log(`Retrying to load ${id} earrings...`);
+                        try {
+                            // Retry loading with a small delay
+                            await new Promise(resolve => setTimeout(resolve, 1000));
+                            const leftImg = new Image();
+                            const rightImg = new Image();
+                            
+                            leftImg.src = jewelry.left;
+                            rightImg.src = jewelry.right;
+                            
+                            await Promise.all([
+                                new Promise((resolve) => { leftImg.onload = resolve; }),
+                                new Promise((resolve) => { rightImg.onload = resolve; })
+                            ]);
+                            
+                            jewelry.leftImage = leftImg;
+                            jewelry.rightImage = rightImg;
+                            console.log(`Successfully loaded ${id} earrings images on retry`);
+                        } catch (retryError) {
+                            console.error(`Failed to load ${id} even after retry:`, retryError);
+                        }
+                    } else {
+                        console.log(`Retrying to load ${id}...`);
+                        try {
+                            await new Promise(resolve => setTimeout(resolve, 1000));
+                            const img = new Image();
+                            img.src = jewelry.image;
+                            await new Promise((resolve) => { img.onload = resolve; });
+                            jewelry.loadedImage = img;
+                            console.log(`Successfully loaded ${id} image on retry`);
+                        } catch (retryError) {
+                            console.error(`Failed to load ${id} even after retry:`, retryError);
+                        }
+                    }
                 }
             }
         }
 
-        function toggleJewelry(id) {
-            const checkbox = document.getElementById(id);
+        // Update the toggleJewelry function to handle deselection
+        function toggleJewelry(id, selectedValue) {
             const itemDiv = document.getElementById(`item-${id}`);
             
-            if (checkbox.checked) {
-                const jewelryItem = JSON.parse(JSON.stringify(JEWELRY[id]));
+            if (selectedValue) {  // If a design is selected
+                const jewelryItem = JSON.parse(JSON.stringify(JEWELRY[selectedValue]));
                 
-                if (JEWELRY[id].type === 'earrings') {
-                    jewelryItem.leftImage = JEWELRY[id].leftImage;
-                    jewelryItem.rightImage = JEWELRY[id].rightImage;
+                // Ensure we copy the loaded image reference
+                if (JEWELRY[selectedValue].type === 'earrings') {
+                    jewelryItem.leftImage = JEWELRY[selectedValue].leftImage;
+                    jewelryItem.rightImage = JEWELRY[selectedValue].rightImage;
                 } else {
-                    jewelryItem.loadedImage = JEWELRY[id].loadedImage;
+                    jewelryItem.loadedImage = JEWELRY[selectedValue].loadedImage;
                 }
                 
-                jewelryItem.scale = JEWELRY[id].defaultScale;
+                jewelryItem.scale = JEWELRY[selectedValue].defaultScale;
                 jewelryItem.offset = { x: 0, y: 0 };
+                
+                // Ensure hand jewelry specific properties are copied
+                if (JEWELRY[selectedValue].type === 'hand') {
+                    jewelryItem.handIndex = 0; // Default to right hand
+                    if (selectedValue.startsWith('ring')) {
+                        jewelryItem.fingerIndex = 8; // Default to index finger
+                    }
+                }
                 
                 activeJewelry.set(id, jewelryItem);
                 itemDiv.classList.add('active');
             } else {
+                // Remove the jewelry if no design is selected
                 activeJewelry.delete(id);
                 itemDiv.classList.remove('active');
             }
@@ -1174,7 +1488,8 @@
             const gapAdjustment = (gap / 100) * faceWidth;
             
             const earHeight = Math.abs(landmarks[234].y - leftLobe.y) * canvas.height;
-            const scale = (earHeight * 0.8) / jewelry.leftImage.height;
+            const baseScale = (earHeight * 0.8) / jewelry.leftImage.height;
+            const scale = baseScale * jewelry.scale; // Combine base scale with user adjustable scale
             
             if (faceRotation > -0.1) {
                 const leftX = leftLobe.x * canvas.width - gapAdjustment + jewelry.offset.x;
@@ -1230,7 +1545,7 @@
                 return;
             }
 
-            let x, y, scale;
+            let x, y, baseScale, scale;
 
             if (jewelry.landmark === 151) { // Tikka
                 const centerPoint = landmarks[LANDMARKS.tikka.center];
@@ -1241,7 +1556,8 @@
                 y = ((centerPoint.y + topPoint.y) / 2) * canvas.height - 20 + jewelry.offset.y;
                 
                 const foreheadWidth = Math.abs(landmarks[71].x - landmarks[301].x) * canvas.width;
-                scale = (foreheadWidth * 0.6) / jewelry.loadedImage.width;
+                baseScale = (foreheadWidth * 0.4) / jewelry.loadedImage.width;
+                scale = baseScale * jewelry.scale; // Combine base scale with user adjustable scale
             }
 
             ctx.save();
