@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Infinite AI - Advanced AI & AR Solutions for business transformation, including virtual try-ons, chatbots, and data science services">
+    <title>Infinite AI - Advanced AI & AR Solutions</title>
+    
+    <!-- Stylesheets -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --color-primary: #7B2CBF;
+            --color-secondary: #9D4EDD;
+            --color-accent: #C77DFF;
+            --color-dark: #240046;
+            --color-light: #E0AAFF;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--color-dark) 0%, var(--color-primary) 100%);
+        }
+
+        .gradient-light {
+            background: linear-gradient(135deg, rgba(123, 44, 191, 0.1) 0%, rgba(157, 78, 221, 0.1) 100%);
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .service-card {
+            background: white;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .service-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(123, 44, 191, 0.2);
+        }
+
+        .pricing-card {
+            background: white;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .pricing-card:hover {
+            border-color: var(--color-primary);
+            transform: scale(1.02);
+        }
+
+        .pricing-card.featured {
+            background: linear-gradient(135deg, rgba(123, 44, 191, 0.1) 0%, rgba(157, 78, 221, 0.1) 100%);
+            border: 2px solid var(--color-primary);
+        }
+
+        .button-primary {
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+            transition: all 0.3s ease;
+        }
+
+        .button-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(123, 44, 191, 0.4);
+        }
+
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 1s ease-in;
+        }
+
+        .slide-up {
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Mobile menu */
+        .mobile-menu {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .mobile-menu.active {
+            transform: translateX(0);
+        }
+
+        /* Skip link for accessibility */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: var(--color-primary);
+            color: white;
+            padding: 8px;
+            z-index: 100;
+        }
+
+        .skip-link:focus {
+            top: 0;
+        }
+
+        /* Improved focus states */
+        button:focus, 
+        a:focus {
+            outline: 2px solid var(--color-accent);
+            outline-offset: 2px;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--color-primary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--color-secondary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Skip to main content link for accessibility -->
+    <a href="#main" class="skip-link">Skip to main content</a>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 gradient-bg" role="navigation" aria-label="Main navigation">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <a href="#" class="text-2xl font-bold text-white" aria-label="Infinite AI Home">Infinite AI</a>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#services" class="text-white hover:text-light transition-colors">Services</a>
+                    <a href="#solutions" class="text-white hover:text-light transition-colors">Solutions</a>
+                    <a href="#pricing" class="text-white hover:text-light transition-colors">Pricing</a>
+                    <a href="#education" class="text-white hover:text-light transition-colors">AI Education</a>
+                    <a href="#contact" class="text-white hover:text-light transition-colors">Contact</a>
+                    <button class="button-primary px-6 py-2 rounded-full text-white" 
+                            aria-label="Get Started">
+                        Get Started
+                    </button>
+                </div>
+                <button class="md:hidden text-white" 
+                        aria-expanded="false"
+                        aria-controls="mobile-menu"
+                        aria-label="Toggle menu">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" 
+         class="mobile-menu fixed top-0 left-0 h-full w-64 bg-dark z-50 md:hidden"
+         aria-label="Mobile navigation"
+         aria-hidden="true">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-8">
+                <span class="text-white text-xl font-bold">Menu</span>
+                <button class="text-white"
+                        aria-label="Close menu">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div class="flex flex-col space-y-4">
+                <a href="#services" class="text-white hover:text-light transition-colors">Services</a>
+                <a href="#solutions" class="text-white hover:text-light transition-colors">Solutions</a>
+                <a href="#pricing" class="text-white hover:text-light transition-colors">Pricing</a>
+                <a href="#education" class="text-white hover:text-light transition-colors">AI Education</a>
+                <a href="#contact" class="text-white hover:text-light transition-colors">Contact</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main id="main">
+        <!-- Hero Section -->
+        <section class="gradient-bg min-h-screen flex items-center pt-20" aria-label="Hero section">
+            <div class="container mx-auto px-6">
+                <div class="flex flex-col md:flex-row items-center">
+                    <div class="md:w-1/2">
+                        <h1 class="text-4xl md:text-6xl font-bold text-white mb-6 fade-in">
+                            Transform Your Business with AI & AR
+                        </h1>
+                        <p class="text-lg text-gray-300 mb-8 slide-up">
+                            Unleash the power of artificial intelligence and augmented reality to revolutionize your business. 
+                            From virtual try-ons to intelligent chatbots, we're your partner in digital transformation.
+                        </p>
+                        <div class="flex space-x-4 slide-up">
+                            <a href="tryon.html" 
+                               target="_blank" 
+                               class="button-primary px-8 py-3 rounded-full text-white inline-block text-center" 
+                               aria-label="Try Virtual Demo">
+                                Try Demo
+                            </a>
+                            <button class="px-8 py-3 rounded-full text-white border border-white hover:bg-white hover:text-purple-900 transition-all"
+                                    aria-label="Learn More">
+                                Learn More
+                            </button>
+                        </div>
+                    </div>
+                    <div class="md:w-1/2 mt-10 md:mt-0">
+                        <div class="relative">
+                            <img src="ardemo.jpg" 
+                                 alt="AR Demo Visualization" 
+                                 class="rounded-lg shadow-2xl"
+                                 loading="lazy">
+                            <div class="absolute -bottom-4 -right-4 bg-white p-4 rounded-lg shadow-lg">
+                                <div class="text-sm font-semibold text-gray-800">Trusted by</div>
+                                <div class="text-2xl font-bold text-purple-600">500+ Businesses</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+<!-- Services Section -->
+<section id="services" class="py-20 bg-gray-50">
+    <div class="container mx-auto px-6">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">Our Services</h2>
+            <p class="text-gray-600 max-w-2xl mx-auto">
+                Comprehensive AI and AR solutions tailored to transform your business and enhance customer experiences.
+            </p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Virtual Try-On Card -->
+            <article class="service-card p-6">
+                <div class="feature-icon mb-6" aria-hidden="true">
+                    <i class="fas fa-vr-cardboard"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-4">Virtual Try-On</h3>
+                <p class="text-gray-600 mb-4">
+                    Revolutionary AR technology for jewelry, eyewear, and fashion. Let customers try before they buy.
+                </p>
+                <ul class="text-gray-600 mb-6 space-y-2" role="list">
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
+                        Real-time visualization
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
+                        Multi-item try-on
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
+                        Easy integration
+                    </li>
+                </ul>
+                <button class="button-primary w-full py-2 rounded-lg text-white" 
+                        aria-label="Learn more about Virtual Try-On">
+                    Learn More
+                </button>
+            </article>
+
+            <!-- AI Chatbot Card -->
+            <article class="service-card p-6">
+                <div class="feature-icon mb-6" aria-hidden="true">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-4">RASA Chatbots</h3>
+                <p class="text-gray-600 mb-4">
+                    Intelligent conversational AI powered by RASA for enhanced customer service.
+                </p>
+                <ul class="text-gray-600 mb-6 space-y-2" role="list">
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
+                        24/7 customer support
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
+                        Natural language processing
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
+                        Custom workflow integration
+                    </li>
+                </ul>
+                <button class="button-primary w-full py-2 rounded-lg text-white"
+                        aria-label="Learn more about RASA Chatbots">
+                    Learn More
+                </button>
+            </article>
+
+            <!-- Data Science Card -->
+            <article class="service-card p-6">
+                <div class="feature-icon mb-6" aria-hidden="true">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-4">Data Science Services</h3>
+                <p class="text-gray-600 mb-4">
+                    Transform your data into actionable insights with our advanced analytics.
+                </p>
+                <ul class="text-gray-600 mb-6 space-y-2" role="list">
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
+                        Predictive analytics
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
+                        Business intelligence
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
+                        Custom reporting
+                    </li>
+                </ul>
+                <button class="button-primary w-full py-2 rounded-lg text-white"
+                        aria-label="Learn more about Data Science Services">
+                    Learn More
+                </button>
+            </article>
+        </div>
+
+        <!-- Additional Services -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
+            <!-- AI Education Card -->
+            <article class="service-card p-6">
+                <div class="flex items-start">
+                    <div class="feature-icon mr-6" aria-hidden="true">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">AI Education</h3>
+                        <p class="text-gray-600 mb-4">
+                            Empowering the next generation with AI knowledge through comprehensive education programs.
+                        </p>
+                        <ul class="text-gray-600 mb-6 space-y-2" role="list">
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
+                                Free programs for government schools
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
+                                Hands-on project experience
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
+                                Industry expert mentoring
+                            </li>
+                        </ul>
+                        <button class="button-primary px-6 py-2 rounded-lg text-white"
+                                aria-label="Join AI Education Program">
+                            Join Program
+                        </button>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Custom Solutions Card -->
+            <article class="service-card p-6">
+                <div class="flex items-start">
+                    <div class="feature-icon mr-6" aria-hidden="true">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">Custom AI Solutions</h3>
+                        <p class="text-gray-600 mb-4">
+                            Tailored AI solutions designed specifically for your business needs and challenges.
+                        </p>
+                        <ul class="text-gray-600 mb-6 space-y-2" role="list">
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
+                                Custom AI model development
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
+                                Integration support
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                Ongoing maintenance
+                            </li>
+                        </ul>
+                        <button class="button-primary px-6 py-2 rounded-lg text-white"
+                                aria-label="Consult about Custom AI Solutions">
+                            Consult Now
+                        </button>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </div>
+</section>
+<!-- Solutions Showcase Section -->
+<section id="solutions" class="py-20 gradient-bg text-white">
+    <div class="container mx-auto px-6">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold mb-4">Solutions That Drive Results</h2>
+            <p class="max-w-2xl mx-auto text-gray-300">
+                See how our AI and AR solutions are transforming businesses across industries
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Case Study 1 -->
+            <article class="card p-6 rounded-xl">
+                <img src="virtualtry.jpg" 
+                     alt="Virtual jewelry try-on interface demonstration" 
+                     class="w-full rounded-lg mb-6"
+                     loading="lazy">
+                <h3 class="text-xl font-bold mb-3">Jewelry Try-On</h3>
+                <p class="text-gray-300 mb-4">
+                    Increased online sales by 45% through virtual jewelry try-on experience
+                </p>
+                <button class="text-white hover:text-accent transition-colors flex items-center group"
+                        aria-label="View Jewelry Try-On case study">
+                    View Case Study
+                    <i class="fas fa-arrow-right ml-2 transform group-hover:translate-x-1 transition-transform" 
+                       aria-hidden="true"></i>
+                </button>
+            </article>
+
+            <!-- Case Study 2 -->
+            <article class="card p-6 rounded-xl">
+                <img src="chatbot.jpg" 
+                     alt="AI chatbot interface with customer interaction" 
+                     class="w-full rounded-lg mb-6"
+                     loading="lazy">
+                <h3 class="text-xl font-bold mb-3">AI Customer Service</h3>
+                <p class="text-gray-300 mb-4">
+                    Reduced customer response time by 80% with RASA-powered chatbots
+                </p>
+                <button class="text-white hover:text-accent transition-colors flex items-center group"
+                        aria-label="View AI Customer Service case study">
+                    View Case Study
+                    <i class="fas fa-arrow-right ml-2 transform group-hover:translate-x-1 transition-transform" 
+                       aria-hidden="true"></i>
+                </button>
+            </article>
+
+            <!-- Case Study 3 -->
+            <article class="card p-6 rounded-xl">
+                <img src="dataanalytics.avif" 
+                     alt="Data analytics dashboard showing predictive insights" 
+                     class="w-full rounded-lg mb-6"
+                     loading="lazy">
+                <h3 class="text-xl font-bold mb-3">Predictive Analytics</h3>
+                <p class="text-gray-300 mb-4">
+                    Improved inventory management efficiency by 60% using AI predictions
+                </p>
+                <button class="text-white hover:text-accent transition-colors flex items-center group"
+                        aria-label="View Predictive Analytics case study">
+                    View Case Study
+                    <i class="fas fa-arrow-right ml-2 transform group-hover:translate-x-1 transition-transform" 
+                       aria-hidden="true"></i>
+                </button>
+            </article>
+        </div>
+
+        <!-- Stats Section -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mt-20">
+            <!-- Clients Stat -->
+            <div class="text-center" role="status" aria-label="Company statistics">
+                <div class="text-4xl font-bold mb-2" aria-label="Number of clients served">500+</div>
+                <div class="text-gray-300">Clients Served</div>
+            </div>
+
+            <!-- Satisfaction Stat -->
+            <div class="text-center" role="status">
+                <div class="text-4xl font-bold mb-2" aria-label="Client satisfaction rate">95%</div>
+                <div class="text-gray-300">Client Satisfaction</div>
+            </div>
+
+            <!-- Try-Ons Stat -->
+            <div class="text-center" role="status">
+                <div class="text-4xl font-bold mb-2" aria-label="Number of virtual try-ons completed">1M+</div>
+                <div class="text-gray-300">Try-Ons Completed</div>
+            </div>
+
+            <!-- Sales Increase Stat -->
+            <div class="text-center" role="status">
+                <div class="text-4xl font-bold mb-2" aria-label="Average sales increase">40%</div>
+                <div class="text-gray-300">Avg. Sales Increase</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Trust Indicators Section -->
+<section class="py-12 bg-gray-50">
+    <div class="container mx-auto px-6">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">Trusted by Industry Leaders</h2>
+            <p class="text-gray-600">
+                Join hundreds of businesses already transforming their operations with our AI solutions
+            </p>
+        </div>
+        
+        <!-- Logos Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 items-center justify-items-center">
+            <!-- Replace src with actual company logos -->
+            <img src="company1.png" alt="Company 1" class="max-h-12 opacity-50 hover:opacity-100 transition-opacity">
+            <img src="company2.webp" alt="Company 2" class="max-h-12 opacity-50 hover:opacity-100 transition-opacity">
+            <img src="company3.png" alt="Company 3" class="max-h-12 opacity-50 hover:opacity-100 transition-opacity">
+            <img src="company4.avif" alt="Company 4" class="max-h-12 opacity-50 hover:opacity-100 transition-opacity">
+        </div>
+    </div>
+</section>
+<!-- Pricing Section -->
+<section id="pricing" class="py-20 gradient-light" aria-labelledby="pricing-title">
+    <div class="container mx-auto px-6">
+        <div class="text-center mb-16">
+            <h2 id="pricing-title" class="text-4xl font-bold text-gray-800 mb-4">Simple, Transparent Pricing</h2>
+            <p class="text-gray-600 max-w-2xl mx-auto">
+                Choose the perfect plan for your business needs
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Starter Plan -->
+            <div class="pricing-card p-8" role="article" aria-labelledby="starter-plan">
+                <div class="text-center mb-8">
+                    <h3 id="starter-plan" class="text-2xl font-bold text-gray-800">Starter</h3>
+                    <div class="mt-4" aria-label="Starter plan pricing">
+                        <span class="text-4xl font-bold text-gray-800">₹15,000</span>
+                        <span class="text-gray-600">/month</span>
+                    </div>
+                </div>
+                <ul class="space-y-4 mb-8" role="list" aria-label="Starter plan features">
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
+                        <span>Up to 500 try-ons per month</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
+                        <span>Basic analytics dashboard</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
+                        <span>Email support</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
+                        <span>100 jewelry items</span>
+                    </li>
+                </ul>
+                <button class="button-primary w-full py-3 rounded-lg text-white"
+                        aria-label="Get started with Starter plan">
+                    Get Started
+                </button>
+            </div>
+
+            <!-- Professional Plan -->
+            <div class="pricing-card featured p-8" role="article" aria-labelledby="pro-plan">
+                <div class="text-center mb-8">
+                    <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm" 
+                          aria-label="Most popular plan">
+                        MOST POPULAR
+                    </span>
+                    <h3 id="pro-plan" class="text-2xl font-bold text-gray-800 mt-4">Professional</h3>
+                    <div class="mt-4" aria-label="Professional plan pricing">
+                        <span class="text-4xl font-bold text-gray-800">₹25,000</span>
+                        <span class="text-gray-600">/month</span>
+                    </div>
+                </div>
+                <ul class="space-y-4 mb-8" role="list" aria-label="Professional plan features">
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
+                        <span>Up to 2000 try-ons per month</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
+                        <span>Advanced analytics</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
+                        <span>Priority support</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
+                        <span>500 jewelry items</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
+                        <span>Custom branding</span>
+                    </li>
+                </ul>
+                <button class="button-primary w-full py-3 rounded-lg text-white"
+                        aria-label="Get started with Professional plan">
+                    Get Started
+                </button>
+            </div>
+
+            <!-- Enterprise Plan -->
+            <div class="pricing-card p-8" role="article" aria-labelledby="enterprise-plan">
+                <div class="text-center mb-8">
+                    <h3 id="enterprise-plan" class="text-2xl font-bold text-gray-800">Enterprise</h3>
+                    <div class="mt-4" aria-label="Enterprise plan pricing">
+                        <span class="text-2xl font-bold text-gray-800">Custom</span>
+                    </div>
+                </div>
+                <ul class="space-y-4 mb-8" role="list" aria-label="Enterprise plan features">
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
+                        <span>Unlimited try-ons</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
+                        <span>Custom analytics</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
+                        <span>24/7 dedicated support</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
+                        <span>Unlimited jewelry items</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
+                        <span>API access</span>
+                    </li>
+                </ul>
+                <button class="button-primary w-full py-3 rounded-lg text-white"
+                        aria-label="Contact sales for Enterprise plan">
+                    Contact Sales
+                </button>
+            </div>
+        </div>
+
+        <!-- Pricing FAQ -->
+        <div class="mt-20 max-w-3xl mx-auto">
+            <h3 class="text-2xl font-bold text-gray-800 mb-8 text-center">Frequently Asked Questions</h3>
+            <div class="space-y-6">
+                <details class="group">
+                    <summary class="flex justify-between items-center cursor-pointer p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                        <span class="font-semibold text-gray-800">What's included in the free trial?</span>
+                        <span class="transform group-open:rotate-180 transition-transform">
+                            <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                        </span>
+                    </summary>
+                    <div class="p-4 bg-white">
+                        <p class="text-gray-600">
+                            Our 14-day free trial includes all Professional plan features with a limit of 100 try-ons. 
+                            No credit card required.
+                        </p>
+                    </div>
+                </details>
+
+                <details class="group">
+                    <summary class="flex justify-between items-center cursor-pointer p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                        <span class="font-semibold text-gray-800">Can I change plans later?</span>
+                        <span class="transform group-open:rotate-180 transition-transform">
+                            <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                        </span>
+                    </summary>
+                    <div class="p-4 bg-white">
+                        <p class="text-gray-600">
+                            Yes, you can upgrade or downgrade your plan at any time. Changes take effect at the start of the next billing cycle.
+                        </p>
+                    </div>
+                </details>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- AI Education Section -->
+<section id="education" class="py-20 bg-white" aria-labelledby="education-title">
+    <div class="container mx-auto px-6">
+        <div class="text-center mb-16">
+            <h2 id="education-title" class="text-4xl font-bold text-gray-800 mb-4">AI Education Initiative</h2>
+            <p class="text-gray-600 max-w-2xl mx-auto">
+                Empowering the next generation with AI knowledge
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <!-- Image Section -->
+            <div class="relative">
+                <img src="aieducation.jpg" 
+                     alt="Students engaging in AI education program" 
+                     class="rounded-lg shadow-xl"
+                     loading="lazy">
+                <!-- Overlay Stats -->
+                <div class="absolute -bottom-6 -right-6 bg-white p-6 rounded-lg shadow-xl">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="text-center">
+                            <span class="block text-2xl font-bold text-purple-600">1000+</span>
+                            <span class="text-sm text-gray-600">Students Trained</span>
+                        </div>
+                        <div class="text-center">
+                            <span class="block text-2xl font-bold text-purple-600">50+</span>
+                            <span class="text-sm text-gray-600">Schools</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Section -->
+            <div class="space-y-8">
+                <!-- Program Features -->
+                <div class="space-y-6">
+                    <div class="flex items-start">
+                        <div class="feature-icon mr-4 mt-1" aria-hidden="true">
+                            <i class="fas fa-school"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-2">Free Programs for Government Schools</h3>
+                            <p class="text-gray-600">
+                                Making AI education accessible to all through our free programs for government school students.
+                                Our initiative aims to bridge the digital divide.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start">
+                        <div class="feature-icon mr-4 mt-1" aria-hidden="true">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-2">Comprehensive Curriculum</h3>
+                            <p class="text-gray-600">
+                                Structured learning path covering AI basics to advanced concepts, designed by industry experts
+                                and educational professionals.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start">
+                        <div class="feature-icon mr-4 mt-1" aria-hidden="true">
+                            <i class="fas fa-laptop-code"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-2">Practical Training</h3>
+                            <p class="text-gray-600">
+                                Hands-on experience with real-world AI projects and applications, ensuring students gain
+                                practical skills alongside theoretical knowledge.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Program Benefits -->
+                <div class="bg-purple-50 p-6 rounded-lg">
+                    <h3 class="text-lg font-bold text-purple-800 mb-4">Program Benefits</h3>
+                    <ul class="space-y-3" role="list">
+                        <li class="flex items-center text-gray-700">
+                            <i class="fas fa-check-circle text-purple-600 mr-2" aria-hidden="true"></i>
+                            <span>Industry-recognized certification upon completion</span>
+                        </li>
+                        <li class="flex items-center text-gray-700">
+                            <i class="fas fa-check-circle text-purple-600 mr-2" aria-hidden="true"></i>
+                            <span>Mentorship from AI professionals</span>
+                        </li>
+                        <li class="flex items-center text-gray-700">
+                            <i class="fas fa-check-circle text-purple-600 mr-2" aria-hidden="true"></i>
+                            <span>Internship opportunities with partner companies</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- CTA Section -->
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button class="button-primary px-8 py-3 rounded-lg text-white flex-1"
+                            aria-label="Learn more about AI education programs">
+                        Learn More
+                    </button>
+                    <button class="px-8 py-3 rounded-lg border-2 border-purple-600 text-purple-600 
+                                 hover:bg-purple-600 hover:text-white transition-colors flex-1"
+                            aria-label="Register for AI education program">
+                        Register Now
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Testimonials -->
+        <div class="mt-20">
+            <h3 class="text-2xl font-bold text-gray-800 text-center mb-8">Student Success Stories</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Testimonial 1 -->
+                <blockquote class="bg-white p-6 rounded-lg shadow-lg">
+                    <div class="flex items-center mb-4">
+                        <img src="student1.jpeg" 
+                             alt="" 
+                             class="w-12 h-12 rounded-full"
+                             aria-hidden="true">
+                        <div class="ml-4">
+                            <cite class="font-semibold text-gray-800 block">Priya Singh</cite>
+                            <span class="text-gray-600 text-sm">Government School, Delhi</span>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 italic">
+                        "The AI education program opened new possibilities for me. I'm now pursuing a career in data science."
+                    </p>
+                </blockquote>
+
+                <!-- Testimonial 2 -->
+                <blockquote class="bg-white p-6 rounded-lg shadow-lg">
+                    <div class="flex items-center mb-4">
+                        <img src="student2.jpg" 
+                             alt="" 
+                             class="w-12 h-12 rounded-full"
+                             aria-hidden="true">
+                        <div class="ml-4">
+                            <cite class="font-semibold text-gray-800 block">Rahul Verma</cite>
+                            <span class="text-gray-600 text-sm">Government School, Mumbai</span>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 italic">
+                        "The practical approach to learning AI concepts helped me understand complex topics easily."
+                    </p>
+                </blockquote>
+
+                <!-- Testimonial 3 -->
+                <blockquote class="bg-white p-6 rounded-lg shadow-lg">
+                    <div class="flex items-center mb-4">
+                        <img src="student3.jpg" 
+                             alt="" 
+                             class="w-12 h-12 rounded-full"
+                             aria-hidden="true">
+                        <div class="ml-4">
+                            <cite class="font-semibold text-gray-800 block">Aisha Patel</cite>
+                            <span class="text-gray-600 text-sm">Government School, Bangalore</span>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 italic">
+                        "Thanks to this program, I've developed my first AI model. The mentorship was invaluable."
+                    </p>
+                </blockquote>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Contact Section -->
+<section id="contact" class="py-20 gradient-bg" aria-labelledby="contact-title">
+    <div class="container mx-auto px-6">
+        <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2">
+                <!-- Contact Form -->
+                <div class="p-10">
+                    <h2 id="contact-title" class="text-3xl font-bold text-gray-800 mb-6">Get in Touch</h2>
+                    <form class="space-y-6" id="contactForm" novalidate>
+                        <!-- Name Field -->
+                        <div>
+                            <label for="name" class="block text-gray-700 text-sm font-semibold mb-2">
+                                Name <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" 
+                                   id="name" 
+                                   name="name"
+                                   class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-purple-500" 
+                                   required 
+                                   aria-required="true"
+                                   aria-describedby="name-error">
+                            <div id="name-error" class="text-red-500 text-sm mt-1 hidden">
+                                Please enter your name
+                            </div>
+                        </div>
+
+                        <!-- Email Field -->
+                        <div>
+                            <label for="email" class="block text-gray-700 text-sm font-semibold mb-2">
+                                Email <span class="text-red-500">*</span>
+                            </label>
+                            <input type="email" 
+                                   id="email" 
+                                   name="email"
+                                   class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-purple-500" 
+                                   required 
+                                   aria-required="true"
+                                   aria-describedby="email-error">
+                            <div id="email-error" class="text-red-500 text-sm mt-1 hidden">
+                                Please enter a valid email address
+                            </div>
+                        </div>
+
+                        <!-- Phone Field -->
+                        <div>
+                            <label for="phone" class="block text-gray-700 text-sm font-semibold mb-2">
+                                Phone
+                            </label>
+                            <input type="tel" 
+                                   id="phone" 
+                                   name="phone"
+                                   class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-purple-500" 
+                                   pattern="[0-9]{10}"
+                                   aria-describedby="phone-error">
+                            <div id="phone-error" class="text-red-500 text-sm mt-1 hidden">
+                                Please enter a valid phone number
+                            </div>
+                        </div>
+
+                        <!-- Service Selection -->
+                        <div>
+                            <label for="service" class="block text-gray-700 text-sm font-semibold mb-2">
+                                Service Interested In <span class="text-red-500">*</span>
+                            </label>
+                            <select id="service" 
+                                    name="service"
+                                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-purple-500" 
+                                    required 
+                                    aria-required="true"
+                                    aria-describedby="service-error">
+                                <option value="">Select a service</option>
+                                <option value="virtual-tryon">Virtual Try-On</option>
+                                <option value="chatbot">AI Chatbots</option>
+                                <option value="data-science">Data Science Services</option>
+                                <option value="education">AI Education</option>
+                                <option value="custom">Custom Solution</option>
+                            </select>
+                            <div id="service-error" class="text-red-500 text-sm mt-1 hidden">
+                                Please select a service
+                            </div>
+                        </div>
+
+                        <!-- Message Field -->
+                        <div>
+                            <label for="message" class="block text-gray-700 text-sm font-semibold mb-2">
+                                Message <span class="text-red-500">*</span>
+                            </label>
+                            <textarea id="message" 
+                                      name="message"
+                                      class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-purple-500 h-32" 
+                                      required 
+                                      aria-required="true"
+                                      aria-describedby="message-error"></textarea>
+                            <div id="message-error" class="text-red-500 text-sm mt-1 hidden">
+                                Please enter your message
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" 
+                                class="button-primary w-full py-3 rounded-lg text-white relative"
+                                aria-label="Send message">
+                            <span class="inline-flex items-center">
+                                <span>Send Message</span>
+                                <span class="loading-spinner ml-2 hidden">
+                                    <i class="fas fa-circle-notch fa-spin"></i>
+                                </span>
+                            </span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="gradient-bg p-10 text-white">
+                    <h3 class="text-2xl font-bold mb-6">Contact Information</h3>
+                    <div class="space-y-8">
+                        <!-- Address -->
+                        <div class="flex items-start">
+                            <i class="fas fa-map-marker-alt text-2xl mr-4 mt-1" aria-hidden="true"></i>
+                            <div>
+                                <h4 class="font-semibold mb-1">Address</h4>
+                                <address class="not-italic">
+                                    Your Business Address<br>
+                                    City, State, PIN Code
+                                </address>
+                            </div>
+                        </div>
+
+                        <!-- Phone -->
+                        <div class="flex items-start">
+                            <i class="fas fa-phone text-2xl mr-4 mt-1" aria-hidden="true"></i>
+                            <div>
+                                <h4 class="font-semibold mb-1">Phone</h4>
+                                <p>
+                                    <a href="tel:+91XXXXXXXXXX" class="hover:text-light transition-colors">
+                                        +91 8778418859
+                                    </a>
+                                </p>
+                                <p class="text-sm">Mon-Fri 9am to 6pm</p>
+                            </div>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="flex items-start">
+                            <i class="fas fa-envelope text-2xl mr-4 mt-1" aria-hidden="true"></i>
+                            <div>
+                                <h4 class="font-semibold mb-1">Email</h4>
+                                <p>
+                                    <a href="mailto:contact@infiniteai.in" class="hover:text-light transition-colors">
+                                        contact@infiniteai.in
+                                    </a>
+                                </p>
+                                <p>
+                                    <a href="mailto:support@infiniteai.in" class="hover:text-light transition-colors">
+                                        support@infiniteai.in
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Social Media -->
+                        <div class="pt-6">
+                            <h4 class="font-semibold mb-4">Follow Us</h4>
+                            <div class="flex space-x-4">
+                                <a href="#" class="hover:text-light transition-colors" aria-label="LinkedIn">
+                                    <i class="fab fa-linkedin text-2xl"></i>
+                                </a>
+                                <a href="#" class="hover:text-light transition-colors" aria-label="Twitter">
+                                    <i class="fab fa-twitter text-2xl"></i>
+                                </a>
+                                <a href="#" class="hover:text-light transition-colors" aria-label="Instagram">
+                                    <i class="fab fa-instagram text-2xl"></i>
+                                </a>
+                                <a href="#" class="hover:text-light transition-colors" aria-label="GitHub">
+                                    <i class="fab fa-github text-2xl"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Footer -->
+<footer class="bg-dark py-12" role="contentinfo">
+    <div class="container mx-auto px-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <!-- Company Info -->
+            <div>
+                <h4 class="text-white text-lg font-semibold mb-4">Infinite AI</h4>
+                <p class="text-gray-400 mb-4">Transforming businesses through AI and AR innovation.</p>
+                <div class="space-y-2">
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors block">
+                        <i class="fas fa-shield-alt mr-2" aria-hidden="true"></i>
+                        Privacy Policy
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors block">
+                        <i class="fas fa-file-contract mr-2" aria-hidden="true"></i>
+                        Terms of Service
+                    </a>
+                </div>
+            </div>
+
+            <!-- Services Links -->
+            <div>
+                <h4 class="text-white text-lg font-semibold mb-4">Services</h4>
+                <ul class="text-gray-400 space-y-2">
+                    <li><a href="#" class="hover:text-white transition-colors">Virtual Try-On</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">AI Chatbots</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Data Science</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">AI Education</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Custom Solutions</a></li>
+                </ul>
+            </div>
+
+            <!-- Company Links -->
+            <div>
+                <h4 class="text-white text-lg font-semibold mb-4">Company</h4>
+                <ul class="text-gray-400 space-y-2">
+                    <li><a href="#" class="hover:text-white transition-colors">About Us</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Our Team</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Careers</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Blog</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Contact</a></li>
+                </ul>
+            </div>
+
+            <!-- Newsletter -->
+            <div>
+                <h4 class="text-white text-lg font-semibold mb-4">Newsletter</h4>
+                <p class="text-gray-400 mb-4">Stay updated with our latest news and updates.</p>
+                <form id="newsletterForm" class="space-y-4">
+                    <div class="flex">
+                        <input type="email" 
+                               id="newsletter-email"
+                               class="px-4 py-2 rounded-l-lg w-full" 
+                               placeholder="Your email"
+                               required
+                               aria-label="Email for newsletter">
+                        <button type="submit" 
+                                class="button-primary px-4 py-2 rounded-r-lg"
+                                aria-label="Subscribe to newsletter">
+                            <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <label class="flex items-start space-x-2">
+                        <input type="checkbox" 
+                               class="mt-1"
+                               required
+                               aria-label="Consent to receive marketing emails">
+                        <span class="text-gray-400 text-sm">
+                            I agree to receive marketing emails from Infinite AI
+                        </span>
+                    </label>
+                </form>
+            </div>
+        </div>
+
+        <!-- Footer Bottom -->
+        <div class="border-t border-gray-800 mt-12 pt-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-400 text-sm">
+                    &copy; 2024 Infinite AI. All rights reserved.
+                </p>
+                <div class="flex space-x-6 mt-4 md:mt-0">
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors" aria-label="Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors" aria-label="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors" aria-label="GitHub">
+                        <i class="fab fa-github"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- Back to Top Button -->
+<button id="backToTop" 
+        class="fixed bottom-8 right-8 bg-purple-600 text-white p-3 rounded-full shadow-lg 
+               hover:bg-purple-700 transition-all opacity-0 invisible"
+        aria-label="Back to top">
+    <i class="fas fa-arrow-up" aria-hidden="true"></i>
+</button>
+
+<!-- Cookie Consent -->
+<div id="cookieConsent" 
+     class="fixed bottom-0 left-0 right-0 bg-gray-900 text-white py-4 px-6 hidden"
+     role="alert"
+     aria-live="polite">
+    <div class="container mx-auto flex flex-col md:flex-row items-center justify-between">
+        <p class="mb-4 md:mb-0">
+            We use cookies to enhance your experience. By continuing to visit this site you agree to our use of cookies.
+        </p>
+        <div class="flex space-x-4">
+            <button class="px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors"
+                    id="acceptCookies">
+                Accept
+            </button>
+            <button class="px-4 py-2 border border-white rounded-lg hover:bg-white hover:text-gray-900 transition-colors"
+                    id="declineCookies">
+                Decline
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mobile menu functionality
+        const mobileMenuButton = document.querySelector('.md\\:hidden');
+        const mobileMenu = document.querySelector('.mobile-menu');
+        const mobileMenuCloseButton = document.querySelector('.mobile-menu button');
+        
+        function toggleMobileMenu(show) {
+            mobileMenu.classList.toggle('active', show);
+            mobileMenu.setAttribute('aria-hidden', !show);
+            if (show) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
+            }
+        }
+
+        mobileMenuButton?.addEventListener('click', () => toggleMobileMenu(true));
+        mobileMenuCloseButton?.addEventListener('click', () => toggleMobileMenu(false));
+
+        // Form validation
+        function validateForm(form) {
+            const requiredFields = form.querySelectorAll('[required]');
+            let isValid = true;
+
+            requiredFields.forEach(field => {
+                const errorElement = document.getElementById(`${field.id}-error`);
+                if (!errorElement) return;
+
+                if (!field.value.trim()) {
+                    errorElement.classList.remove('hidden');
+                    field.setAttribute('aria-invalid', 'true');
+                    isValid = false;
+                } else if (field.type === 'email' && !isValidEmail(field.value)) {
+                    errorElement.classList.remove('hidden');
+                    field.setAttribute('aria-invalid', 'true');
+                    isValid = false;
+                } else {
+                    errorElement.classList.add('hidden');
+                    field.removeAttribute('aria-invalid');
+                }
+            });
+
+            return isValid;
+        }
+
+        function isValidEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
+        // Contact form submission
+        const contactForm = document.getElementById('contactForm');
+        contactForm?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            if (!validateForm(this)) return;
+
+            const submitButton = this.querySelector('button[type="submit"]');
+            const spinner = submitButton.querySelector('.loading-spinner');
+            
+            try {
+                submitButton.disabled = true;
+                spinner.classList.remove('hidden');
+
+                // Simulate API call
+                await new Promise(resolve => setTimeout(resolve, 1500));
+
+                // Success handling
+                this.reset();
+                alert('Thank you for your message. We will get back to you soon!');
+            } catch (error) {
+                console.error('Form submission error:', error);
+                alert('There was an error submitting the form. Please try again.');
+            } finally {
+                submitButton.disabled = false;
+                spinner.classList.add('hidden');
+            }
+        });
+
+        // Newsletter form submission
+        const newsletterForm = document.getElementById('newsletterForm');
+        newsletterForm?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            if (!validateForm(this)) return;
+
+            try {
+                // Simulate API call
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                this.reset();
+                alert('Thank you for subscribing to our newsletter!');
+            } catch (error) {
+                console.error('Newsletter subscription error:', error);
+                alert('There was an error subscribing. Please try again.');
+            }
+        });
+
+        // Back to top button
+        const backToTopButton = document.getElementById('backToTop');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 500) {
+                backToTopButton.classList.remove('opacity-0', 'invisible');
+            } else {
+                backToTopButton.classList.add('opacity-0', 'invisible');
+            }
+        });
+
+        backToTopButton?.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        // Cookie consent
+        const cookieConsent = document.getElementById('cookieConsent');
+        const acceptCookies = document.getElementById('acceptCookies');
+        const declineCookies = document.getElementById('declineCookies');
+
+        if (!localStorage.getItem('cookieConsent')) {
+            cookieConsent?.classList.remove('hidden');
+        }
+
+        acceptCookies?.addEventListener('click', () => {
+            localStorage.setItem('cookieConsent', 'accepted');
+            cookieConsent.classList.add('hidden');
+        });
+
+        declineCookies?.addEventListener('click', () => {
+            localStorage.setItem('cookieConsent', 'declined');
+            cookieConsent.classList.add('hidden');
+        });
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                    // Close mobile menu if open
+                    toggleMobileMenu(false);
+                }
+            });
+        });
+
+        // Intersection Observer for animations
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('fade-in');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('section').forEach(section => {
+            observer.observe(section);
+        });
+    });
+</script>
+</body>
+</html>

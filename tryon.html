@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infinite AI - Virtual Try-On Experience</title>
+    
+    <!-- Load MediaPipe dependencies first -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4.1633559619/face_mesh.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3.1620248257/drawing_utils.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1620248257/camera_utils.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js" defer></script>
+
+    <!-- Stylesheets -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        :root {
+            /* Using your existing color palette */
+            --color-primary: #7B2CBF;
+            --color-secondary: #9D4EDD;
+            --color-accent: #C77DFF;
+            --color-dark: #240046;
+            --color-light: #E0AAFF;
+            
+            /* Adding some neutral colors for better contrast */
+            --color-background: #f8f9fa;
+            --color-surface: #ffffff;
+            --color-border: rgba(36, 0, 70, 0.1);
+            --color-text: #2D3748;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-background);
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            color: var(--color-text);
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--color-surface);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--color-light);
+            border-top-color: var(--color-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-error {
+            color: #dc2626;
+            margin-top: 1rem;
+            text-align: center;
+            max-width: 80%;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Main Layout */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+            width: 100vw;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 320px;
+            background: var(--color-surface);
+            box-shadow: 2px 0 20px var(--color-border);
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .try-on-header {
+            padding: 1.25rem;
+            background: var(--color-primary);
+            border-bottom: 1px solid var(--color-dark);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            color: var(--color-surface);
+        }
+
+        /* Camera Container */
+        .camera-container {
+            position: relative;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--color-dark);
+        }
+
+        #cameraFeed {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #jewelryCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Camera Permission Error */
+        .camera-error {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--color-surface);
+            padding: 2rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            max-width: 80%;
+            box-shadow: 0 4px 6px var(--color-border);
+        }
+
+        /* Jewelry Item Styling */
+        .jewelry-group {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .jewelry-group h3 {
+            color: var(--color-dark);
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .jewelry-item {
+            background: var(--color-surface);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--color-border);
+            transition: all 0.3s ease;
+        }
+
+        .jewelry-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(123, 44, 191, 0.15);
+            border-color: var(--color-secondary);
+        }
+
+        .jewelry-item.active {
+            border-color: var(--color-primary);
+            background: linear-gradient(to right, var(--color-light), var(--color-surface));
+        }
+
+        /* Controls Styling */
+        .jewelry-controls {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px dashed var(--color-secondary);
+            display: none;
+        }
+
+        .jewelry-item.active .jewelry-controls {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .control-label {
+            color: var(--color-dark);
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Input Styling */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            background: var(--color-light);
+            border-radius: 3px;
+            outline: none;
+            margin: 0.5rem 0;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--color-primary);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(123, 44, 191, 0.3);
+        }
+
+        select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            background: var(--color-surface);
+            color: var(--color-dark);
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+            margin-bottom: 1rem;
+        }
+
+        select:hover {
+            border-color: var(--color-primary);
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(123, 44, 191, 0.1);
+        }
+
+        /* Checkbox Styling */
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 1.2rem;
+            height: 1.2rem;
+            border-radius: 4px;
+            border: 2px solid var(--color-border);
+            transition: all 0.2s ease;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .checkbox-wrapper input[type="checkbox"]:checked {
+            background-color: var(--color-primary);
+            border-color: var(--color-primary);
+        }
+
+        .checkbox-wrapper label {
+            color: var(--color-dark);
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        /* Direction Controls */
+        .direction-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 36px);
+            gap: 4px;
+            justify-content: center;
+            margin-top: 0.5rem;
+        }
+
+        .direction-btn {
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--color-border);
+            background: var(--color-surface);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            color: var(--color-dark);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .direction-btn:hover {
+            background: var(--color-light);
+            color: var(--color-primary);
+            border-color: var(--color-primary);
+        }
+
+        /* Capture Button */
+        .capture-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem 2rem;
+            background: var(--color-primary);
+            color: var(--color-surface);
+            border: none;
+            border-radius: 50px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(123, 44, 191, 0.2);
+            z-index: 20;
+        }
+
+        .capture-btn:hover {
+            background: var(--color-secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(123, 44, 191, 0.3);
+        }
+
+        .capture-btn i {
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-spinner mb-4"></div>
+        <p class="text-gray-600">Initializing Virtual Try-On Experience...</p>
+        <p class="loading-error hidden"></p>
+    </div>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar" id="jewelryList">
+            <div class="try-on-header">
+                <h2 class="text-xl font-bold text-gray-800 mb-2">Virtual Try-On Studio</h2>
+                <p class="text-sm text-gray-500">Select and customize your jewelry</p>
+            </div>
+            <!-- Jewelry groups will be added here dynamically -->
+        </div>
+
+        <!-- Camera View -->
+        <div class="camera-container">
+            <video id="cameraFeed" autoplay playsinline></video>
+            <canvas id="jewelryCanvas"></canvas>
+            
+            <!-- Camera Error Message (hidden by default) -->
+            <div class="camera-error hidden" id="cameraError">
+                <i class="fas fa-video-slash text-3xl text-red-500 mb-4"></i>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Camera Access Required</h3>
+                <p class="text-gray-600 mb-4">Please allow camera access to use the virtual try-on experience.</p>
+                <button onclick="requestCameraAccess()" class="button-primary px-6 py-2 rounded-lg text-white">
+                    Enable Camera
+                </button>
+            </div>
+            
+            <!-- Capture Button -->
+            <button class="capture-btn" onclick="captureImage()" id="captureBtn">
+                <i class="fas fa-camera"></i>
+                <span>Take Photo</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let video, canvas, ctx, faceMesh, hands, pose;
+        let activeJewelry = new Map();
+        let handLandmarks = null;
+        
+        // Add necklace constants
+        const PERFECT_SCALE = 0.55;
+        const VERTICAL_OFFSET = -115;
+        const DROP_HEIGHT = 45;
+        
+        const JEWELRY = {
+            jhumka: {
+                name: "Jhumka Earrings",
+                type: 'earrings',
+                left: 'earing3left.png',
+                right: 'earing3right.png',
+                landmarks: [177, 401],
+                landmarkOptions: [
+                    { label: "Ear Lobe", left: 177, right: 401 },
+                    { label: "Ear Alternate", left: 132, right: 361 },
+                    { label: "Ear Base", left: 234, right: 454 }
+                ],
+                offset: { x: 0, y: 0 },
+                defaultScale: 2.0,
+                gap: 0
+            },
+            necklace: {
+                name: "Traditional Necklace",
+                type: 'necklace',
+                image: 'necklace.png',
+                offset: { x: 0, y: 0 },
+                defaultScale: PERFECT_SCALE
+            },
+            tikka: {
+                name: "Tikka",
+                type: 'single',
+                image: 'tikka.png',
+                landmark: 151,
+                landmarkOptions: [
+                    { label: "Forehead Center", value: 151 },
+                    { label: "Upper Forehead", value: 10 }
+                ],
+                offset: { x: 0, y: 0 },
+                defaultScale: 0.3
+            },
+            ring: {
+                name: "Ring",
+                type: 'hand',
+                image: 'ring.png',
+                landmark: 'custom',
+                fingerIndex: 8,
+                handIndex: 0,
+                offset: { x: 0, y: 0 },
+                defaultScale: 0.2
+            },
+            bangle: {
+                name: "Bangle",
+                type: 'hand',
+                image: 'bangle1.png',
+                landmark: 'custom',
+                wristIndex: 0,
+                handIndex: 0,
+                offset: { x: 0, y: 0 },
+                defaultScale: 0.35
+            }
+        };
+
+        const LANDMARKS = {
+            tikka: {
+                center: 151,
+                top: 10,
+                reference: 9
+            },
+            earrings: {
+                leftLobe: 58,
+                rightLobe: 288,
+                leftRef: 234,
+                rightRef: 454
+            }
+        };
+
+        function createJewelryItem(id, jewelry) {
+            const div = document.createElement('div');
+            div.className = 'jewelry-item';
+            div.id = `item-${id}`;
+
+            let landmarkOptions = '';
+            if (jewelry.landmarkOptions) {
+                landmarkOptions = `
+                    <div class="landmark-control">
+                        <div class="control-label">Position</div>
+                        <select onchange="updateLandmark('${id}', this.value)">
+                            ${jewelry.landmarkOptions.map((option, index) => 
+                                `<option value="${index}">${option.label}</option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                `;
+            }
+
+            let gapControl = '';
+            if (jewelry.type === 'earrings') {
+                gapControl = `
+                    <div class="gap-control">
+                        <div class="control-label">Width Adjustment</div>
+                        <div class="gap-control-wrapper">
+                            <input type="range" 
+                                id="gap-${id}" 
+                                min="-50" 
+                                max="50" 
+                                step="1" 
+                                value="0"
+                                onInput="updateGap('${id}', this.value)">
+                            <span id="gap-value-${id}" class="gap-value">0 px</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            let handControls = '';
+            if (jewelry.type === 'hand') {
+                handControls = `
+                    <div class="hand-control">
+                        <div class="control-label">Hand Selection</div>
+                        <select onchange="updateHandSelection('${id}', this.value)">
+                            <option value="0">Right Hand</option>
+                            <option value="1">Left Hand</option>
+                        </select>
+                    </div>
+                `;
+                
+                if (id === 'ring') {
+                    handControls += `
+                        <div class="finger-control">
+                            <div class="control-label">Finger Selection</div>
+                            <select onchange="updateFingerSelection('${id}', this.value)">
+                                <option value="8">Index Finger</option>
+                                <option value="12">Middle Finger</option>
+                                <option value="16">Ring Finger</option>
+                                <option value="20">Pinky Finger</option>
+                                <option value="4">Thumb</option>
+                            </select>
+                        </div>
+                    `;
+                }
+            }
+
+            div.innerHTML = `
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="${id}" onchange="toggleJewelry('${id}')">
+                    <label for="${id}">${jewelry.name}</label>
+                </div>
+                <div class="jewelry-controls">
+                    ${landmarkOptions}
+                    ${handControls}
+                    <div class="size-control">
+                        <div class="control-label">Size</div>
+                        <input type="range" 
+                            id="size-${id}" 
+                            min="0.1" 
+                            max="1.0" 
+                            step="0.05" 
+                            value="${jewelry.defaultScale}"
+                            onInput="updateJewelrySize('${id}', this.value)">
+                    </div>
+                    ${gapControl}
+                    <div class="control-label">Fine Position Adjustment</div>
+                    <div class="direction-controls">
+                        <button class="direction-btn" onclick="moveSelected('${id}', 'up-left')">↖</button>
+                        <button class="direction-btn" onclick="moveSelected('${id}', 'up')">↑</button>
+                        <button class="direction-btn" onclick="moveSelected('${id}', 'up-right')">↗</button>
+                        <button class="direction-btn" onclick="moveSelected('${id}', 'left')">←</button>
+                        <button class="direction-btn" onclick="moveSelected('${id}', 'center')">•</button>
+                        <button class="direction-btn" onclick="moveSelected('${id}', 'right')">→</button>
+                        <button class="direction-btn" onclick="moveSelected('${id}', 'down-left')">↙</button>
+                        <button class="direction-btn" onclick="moveSelected('${id}', 'down')">↓</button>
+                        <button class="direction-btn" onclick="moveSelected('${id}', 'down-right')">↘</button>
+                    </div>
+                </div>
+            `;
+            return div;
+        }
+
+        function createJewelryList() {
+            const jewelryList = document.getElementById('jewelryList');
+            jewelryList.innerHTML = `
+                <div class="try-on-header">
+                    <h2 class="text-xl font-bold text-gray-800 mb-2">Virtual Try-On Studio</h2>
+                    <p class="text-sm font-bold text-gray-800 mb-2">Select and customize your jewelry</p>
+                </div>
+            `;
+
+            const groups = {
+                'Face Jewelry': ['tikka'],
+                'Ear Jewelry': ['jhumka'],
+                'Neck Jewelry': ['necklace'],
+                'Hand Jewelry': ['ring', 'bangle']
+            };
+
+            for (const [groupName, items] of Object.entries(groups)) {
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'jewelry-group';
+                groupDiv.innerHTML = `<h3>${groupName}</h3>`;
+
+                items.forEach(id => {
+                    if (JEWELRY[id]) {
+                        groupDiv.appendChild(createJewelryItem(id, JEWELRY[id]));
+                    }
+                });
+
+                jewelryList.appendChild(groupDiv);
+            }
+        }
+        
+        // Initialization and Core Functions
+        async function init() {
+            try {
+                console.log("Starting initialization...");
+                
+                // Get DOM elements
+                video = document.getElementById('cameraFeed');
+                canvas = document.getElementById('jewelryCanvas');
+                ctx = canvas.getContext('2d');
+                const loadingScreen = document.getElementById('loadingScreen');
+                const loadingError = loadingScreen.querySelector('.loading-error');
+
+                if (!video || !canvas || !ctx) {
+                    throw new Error("Required elements not found");
+                }
+
+                // Create jewelry list first
+                createJewelryList();
+                
+                // Initialize camera first
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            width: 1280,
+                            height: 720,
+                            facingMode: 'user'
+                        }
+                    });
+                    
+                    video.srcObject = stream;
+                    
+                    await new Promise((resolve) => {
+                        video.onloadedmetadata = () => {
+                            canvas.width = video.videoWidth;
+                            canvas.height = video.videoHeight;
+                            console.log("Video dimensions:", video.videoWidth, video.videoHeight);
+                            resolve();
+                        };
+                    });
+
+                    await video.play();
+                    console.log("Camera initialized successfully");
+                    
+                    // Hide camera error if shown
+                    document.getElementById('cameraError').classList.add('hidden');
+
+                } catch (error) {
+                    console.error("Camera access error:", error);
+                    document.getElementById('cameraError').classList.remove('hidden');
+                    throw new Error("Camera access denied. Please enable camera permissions.");
+                }
+
+                // Initialize MediaPipe models
+                updateLoadingStatus("Initializing AI models...");
+                
+                try {
+                    // Initialize FaceMesh
+                    faceMesh = new FaceMesh({
+                        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4.1633559619/${file}`,
+                        wasmBinary: true
+                    });
+
+                    // Initialize Hands
+                    hands = new Hands({
+                        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/${file}`,
+                        wasmBinary: true
+                    });
+
+                    // Initialize Pose
+                    pose = new Pose({
+                        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${file}`,
+                        wasmBinary: true
+                    });
+
+                    // Configure models
+                    faceMesh.setOptions({
+                        maxNumFaces: 1,
+                        refineLandmarks: true,
+                        minDetectionConfidence: 0.5,
+                        minTrackingConfidence: 0.5
+                    });
+
+                    hands.setOptions({
+                        maxNumHands: 2,
+                        modelComplexity: 1,
+                        minDetectionConfidence: 0.5,
+                        minTrackingConfidence: 0.5
+                    });
+
+                    pose.setOptions({
+                        modelComplexity: 1,
+                        smoothLandmarks: true,
+                        minDetectionConfidence: 0.5,
+                        minTrackingConfidence: 0.5
+                    });
+
+                    // Initialize models sequentially
+                    updateLoadingStatus("Loading face detection...");
+                    await faceMesh.initialize();
+                    
+                    updateLoadingStatus("Loading hand detection...");
+                    await hands.initialize();
+                    
+                    updateLoadingStatus("Loading pose detection...");
+                    await pose.initialize();
+
+                    console.log("AI models initialized successfully");
+
+                } catch (error) {
+                    console.error("Model initialization error:", error);
+                    throw new Error("Failed to initialize AI models. Please try refreshing the page.");
+                }
+
+                // Set up callbacks
+                faceMesh.onResults(onResults);
+                hands.onResults(onHandResults);
+                pose.onResults(onPoseResults);
+
+                // Preload images
+                updateLoadingStatus("Loading jewelry assets...");
+                try {
+                    await preloadImages();
+                    console.log("Images preloaded successfully");
+                } catch (error) {
+                    console.error("Image preload error:", error);
+                    throw new Error("Failed to load jewelry images. Please check your connection.");
+                }
+
+                // Start detection loop
+                isInitialized = true;
+                detectAll();
+
+                // Hide loading screen with transition
+                loadingScreen.classList.add('hidden');
+                console.log("Initialization complete!");
+
+            } catch (error) {
+                console.error("Initialization error:", error);
+                if (loadingScreen && loadingError) {
+                    loadingError.textContent = error.message || "Error initializing app. Please refresh the page.";
+                    loadingError.classList.remove('hidden');
+                }
+            }
+        }
+
+        // Helper function to update loading status
+        function updateLoadingStatus(message) {
+            const loadingScreen = document.getElementById('loadingScreen');
+            const statusText = loadingScreen.querySelector('p:not(.loading-error)');
+            if (statusText) {
+                statusText.textContent = message;
+            }
+        }
+
+        // Camera access request function
+        async function requestCameraAccess() {
+            try {
+                document.getElementById('cameraError').classList.add('hidden');
+                await init();
+            } catch (error) {
+                console.error("Camera request error:", error);
+                document.getElementById('cameraError').classList.remove('hidden');
+            }
+        }
+
+        async function detectAll() {
+            if (!video.videoWidth || !video.videoHeight) {
+                console.log("Video dimensions not ready yet");
+                requestAnimationFrame(detectAll);
+                return;
+            }
+
+            try {
+                await Promise.all([
+                    hands.send({image: video}),
+                    faceMesh.send({image: video}),
+                    pose.send({image: video})
+                ]);
+            } catch (error) {
+                console.error("Detection error:", error);
+            }
+            
+            requestAnimationFrame(detectAll);
+        }
+
+        function onHandResults(results) {
+            handLandmarks = results.multiHandLandmarks;
+        }
+
+        let poseLandmarks = null;
+        function onPoseResults(results) {
+            poseLandmarks = results.poseLandmarks;
+        }
+
+        function onResults(results) {
+            if (!canvas || !ctx) {
+                console.error("Canvas or context not initialized");
+                return;
+            }
+
+            if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                console.log("Updated canvas dimensions:", canvas.width, canvas.height);
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+                const landmarks = results.multiFaceLandmarks[0];
+                
+                // Process active jewelry
+                for (const [id, jewelry] of activeJewelry) {
+                    console.log(`Processing ${id} jewelry:`, jewelry);
+                    
+                    if (jewelry.type === 'necklace') {
+                        if (poseLandmarks) {
+                            drawNecklace(jewelry, poseLandmarks);
+                        }
+                    } else if (jewelry.type !== 'hand') {
+                        try {
+                            switch(jewelry.type) {
+                                case 'earrings':
+                                    if (!jewelry.leftImage || !jewelry.rightImage) {
+                                        console.error(`Missing images for ${id}`);
+                                        continue;
+                                    }
+                                    drawEarrings(jewelry, landmarks);
+                                    break;
+                                case 'single':
+                                    if (!jewelry.loadedImage) {
+                                        console.error(`Missing image for ${id}`);
+                                        continue;
+                                    }
+                                    drawSinglePiece(jewelry, landmarks);
+                                    break;
+                            }
+                        } catch (error) {
+                            console.error(`Error drawing ${id}:`, error);
+                        }
+                    }
+                }
+            }
+
+            if (handLandmarks && handLandmarks.length > 0) {
+                // Process hand jewelry
+                for (const [id, jewelry] of activeJewelry) {
+                    if (jewelry.type === 'hand') {
+                        try {
+                            const handIndex = jewelry.handIndex || 0;
+                            if (handLandmarks[handIndex]) {
+                                if (id === 'ring' && jewelry.loadedImage) {
+                                    drawRing(jewelry, handLandmarks[handIndex]);
+                                } else if (id === 'bangle' && jewelry.loadedImage) {
+                                    drawBangle(jewelry, handLandmarks[handIndex]);
+                                }
+                            }
+                        } catch (error) {
+                            console.error(`Error drawing ${id}:`, error);
+                        }
+                    }
+                }
+            }
+        }
+
+        function drawNecklace(jewelry, poseLandmarks) {
+            const leftShoulder = poseLandmarks[11];
+            const rightShoulder = poseLandmarks[12];
+
+            // Calculate base positions from shoulders
+            const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x) * canvas.width;
+            const collarOffset = 0.15;
+            const leftX = leftShoulder.x * canvas.width + shoulderWidth * collarOffset;
+            const rightX = rightShoulder.x * canvas.width - shoulderWidth * collarOffset;
+            const baseY = leftShoulder.y * canvas.height;
+
+            // Apply perfect measurements
+            const adjustedY = baseY + VERTICAL_OFFSET + jewelry.offset.y;
+            const centerX = (leftX + rightX) / 2 + jewelry.offset.x;
+            
+            // Calculate necklace dimensions
+            const necklaceWidth = shoulderWidth * jewelry.scale;
+            const necklaceHeight = jewelry.loadedImage.height * (necklaceWidth / jewelry.loadedImage.width);
+
+            // Calculate the actual drawing position in canvas coordinates
+            const drawX = centerX - necklaceWidth/2;
+            const drawY = adjustedY - DROP_HEIGHT/2;
+
+            // Calculate which portion of the image should be shown
+            const srcX = Math.max(0, -drawX);
+            const srcY = Math.max(0, -drawY);
+            const srcWidth = Math.min(jewelry.loadedImage.width, jewelry.loadedImage.width - srcX);
+            const srcHeight = Math.min(jewelry.loadedImage.height, jewelry.loadedImage.height - srcY);
+
+            // Calculate where on the canvas to draw
+            const dstX = Math.max(0, drawX);
+            const dstY = Math.max(0, drawY);
+            const dstWidth = Math.min(necklaceWidth - srcX, canvas.width - dstX);
+            const dstHeight = Math.min(necklaceHeight - srcY, canvas.height - dstY);
+
+            // Only draw if there's something to show
+            if (dstWidth > 0 && dstHeight > 0) {
+                ctx.save();
+                ctx.shadowColor = 'rgba(0,0,0,0.3)';
+                ctx.shadowBlur = 8;
+                ctx.shadowOffsetX = 2;
+                ctx.shadowOffsetY = 2;
+
+                ctx.drawImage(
+                    jewelry.loadedImage,
+                    srcX * (jewelry.loadedImage.width / necklaceWidth),
+                    srcY * (jewelry.loadedImage.height / necklaceHeight),
+                    dstWidth * (jewelry.loadedImage.width / necklaceWidth),
+                    dstHeight * (jewelry.loadedImage.height / necklaceHeight),
+                    dstX,
+                    dstY,
+                    dstWidth,
+                    dstHeight
+                );
+                
+                ctx.restore();
+            }
+        }
+
+        function drawRing(jewelry, handLandmarks) {
+            const fingerTip = handLandmarks[jewelry.fingerIndex];
+            const fingerBase = handLandmarks[jewelry.fingerIndex - 3];
+            
+            // Calculate position 2/3 of the way from base to tip
+            // (instead of halfway, which was the previous calculation)
+            const positionRatio = 0.3;  // This will place it 60% of the way from base to tip
+            const x = (fingerBase.x + (fingerTip.x - fingerBase.x) * positionRatio) * canvas.width + jewelry.offset.x;
+            const y = (fingerBase.y + (fingerTip.y - fingerBase.y) * positionRatio) * canvas.height + jewelry.offset.y;
+            
+            const angle = Math.atan2(
+                fingerTip.y - fingerBase.y,
+                fingerTip.x - fingerBase.x
+            );
+
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle - Math.PI/2);
+
+            const width = jewelry.loadedImage.width * jewelry.scale;
+            const height = jewelry.loadedImage.height * jewelry.scale;
+            
+            ctx.drawImage(jewelry.loadedImage,
+                -width/2,
+                -height/2,
+                width,
+                height
+            );
+            ctx.restore();
+        }
+
+        function drawBangle(jewelry, handLandmarks) {
+            const wrist = handLandmarks[0];
+            const palmBase = handLandmarks[9];
+            
+            // Add vertical and horizontal offsets
+            const verticalOffset = 30;   // Down offset from previous adjustment
+            const horizontalOffset = -20; // Left offset (-25 pixels to match 5 left clicks)
+            
+            const x = wrist.x * canvas.width + horizontalOffset + jewelry.offset.x;
+            const y = wrist.y * canvas.height + verticalOffset + jewelry.offset.y;
+            
+            const angle = Math.atan2(
+                palmBase.y - wrist.y,
+                palmBase.x - wrist.x
+            );
+
+            const wristLeft = handLandmarks[17];
+            const wristRight = handLandmarks[5];
+            const wristWidth = Math.abs(wristRight.x - wristLeft.x) * canvas.width;
+            
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle - Math.PI/2);
+
+            const baseScale = 3.2;
+            const width = wristWidth * baseScale * jewelry.scale;
+            const height = jewelry.loadedImage.height * (width / jewelry.loadedImage.width);
+            
+            ctx.drawImage(jewelry.loadedImage,
+                -width/2,
+                -height/2,
+                width,
+                height
+            );
+            ctx.restore();
+        }
+
+        async function preloadImages() {
+            for (const [id, jewelry] of Object.entries(JEWELRY)) {
+                try {
+                    if (jewelry.type === 'earrings') {
+                        const leftImg = new Image();
+                        const rightImg = new Image();
+                        
+                        leftImg.onerror = () => console.error(`Failed to load ${jewelry.left}`);
+                        rightImg.onerror = () => console.error(`Failed to load ${jewelry.right}`);
+                        
+                        // Add cache-busting parameter to earring images
+                        leftImg.src = `${jewelry.left}?v=${Date.now()}`;
+                        rightImg.src = `${jewelry.right}?v=${Date.now()}`;
+                        
+                        await Promise.all([
+                            new Promise((resolve, reject) => {
+                                leftImg.onload = resolve;
+                                leftImg.onerror = reject;
+                            }),
+                            new Promise((resolve, reject) => {
+                                rightImg.onload = resolve;
+                                rightImg.onerror = reject;
+                            })
+                        ]);
+                        jewelry.leftImage = leftImg;
+                        jewelry.rightImage = rightImg;
+                        console.log(`Successfully loaded ${id} earrings images`);
+                    } else {
+                        const img = new Image();
+                        img.onerror = () => console.error(`Failed to load ${jewelry.image}`);
+                        // Add cache-busting parameter to other jewelry images
+                        img.src = `${jewelry.image}?v=${Date.now()}`;
+                        
+                        await new Promise((resolve, reject) => {
+                            img.onload = resolve;
+                            img.onerror = reject;
+                        });
+                        jewelry.loadedImage = img;
+                        console.log(`Successfully loaded ${id} image`);
+                    }
+                } catch (error) {
+                    console.error(`Error loading images for ${id}:`, error);
+                }
+            }
+        }
+
+        function toggleJewelry(id) {
+            const checkbox = document.getElementById(id);
+            const itemDiv = document.getElementById(`item-${id}`);
+            
+            if (checkbox.checked) {
+                const jewelryItem = JSON.parse(JSON.stringify(JEWELRY[id]));
+                
+                if (JEWELRY[id].type === 'earrings') {
+                    jewelryItem.leftImage = JEWELRY[id].leftImage;
+                    jewelryItem.rightImage = JEWELRY[id].rightImage;
+                } else {
+                    jewelryItem.loadedImage = JEWELRY[id].loadedImage;
+                }
+                
+                jewelryItem.scale = JEWELRY[id].defaultScale;
+                jewelryItem.offset = { x: 0, y: 0 };
+                
+                activeJewelry.set(id, jewelryItem);
+                itemDiv.classList.add('active');
+            } else {
+                activeJewelry.delete(id);
+                itemDiv.classList.remove('active');
+            }
+        }
+
+        function updateJewelrySize(id, value) {
+            if (activeJewelry.has(id)) {
+                const jewelry = activeJewelry.get(id);
+                jewelry.scale = parseFloat(value);
+            }
+        }
+
+        function moveSelected(id, direction) {
+            if (!activeJewelry.has(id)) return;
+            
+            const jewelry = activeJewelry.get(id);
+            const step = 5;
+            
+            switch (direction) {
+                case 'up':
+                    jewelry.offset.y -= step;
+                    break;
+                case 'down':
+                    jewelry.offset.y += step;
+                    break;
+                case 'left':
+                    jewelry.offset.x -= step;
+                    break;
+                case 'right':
+                    jewelry.offset.x += step;
+                    break;
+                case 'up-left':
+                    jewelry.offset.x -= step;
+                    jewelry.offset.y -= step;
+                    break;
+                case 'up-right':
+                    jewelry.offset.x += step;
+                    jewelry.offset.y -= step;
+                    break;
+                case 'down-left':
+                    jewelry.offset.x -= step;
+                    jewelry.offset.y += step;
+                    break;
+                case 'down-right':
+                    jewelry.offset.x += step;
+                    jewelry.offset.y += step;
+                    break;
+                case 'center':
+                    jewelry.offset = { x: 0, y: 0 };
+                    break;
+            }
+        }
+
+        function updateHandSelection(id, value) {
+            if (activeJewelry.has(id)) {
+                const jewelry = activeJewelry.get(id);
+                jewelry.handIndex = parseInt(value);
+            }
+        }
+
+        function updateFingerSelection(id, value) {
+            if (activeJewelry.has(id)) {
+                const jewelry = activeJewelry.get(id);
+                jewelry.fingerIndex = parseInt(value);
+            }
+        }
+
+        function updateLandmark(id, optionIndex) {
+            if (activeJewelry.has(id)) {
+                const jewelry = activeJewelry.get(id);
+                const option = JEWELRY[id].landmarkOptions[optionIndex];
+                if (jewelry.type === 'earrings') {
+                    jewelry.landmarks = [option.left, option.right];
+                } else {
+                    jewelry.landmark = option.value;
+                }
+            }
+        }
+
+        function updateGap(id, value) {
+            if (activeJewelry.has(id)) {
+                const jewelry = activeJewelry.get(id);
+                jewelry.gap = parseInt(value);
+                const gapValueDisplay = document.getElementById(`gap-value-${id}`);
+                if (gapValueDisplay) {
+                    gapValueDisplay.textContent = `${value} px`;
+                }
+            }
+        }
+
+        function drawEarrings(jewelry, landmarks) {
+            const nose = landmarks[1];
+            const leftEar = landmarks[234];
+            const rightEar = landmarks[454];
+            
+            const faceRotation = (rightEar.z - leftEar.z);
+            let gap = jewelry.gap || 0;
+            
+            if (Math.abs(faceRotation) <= 0.1) {
+                gap += 3;
+            } else {
+                gap += 24;
+            }
+            
+            const leftLobe = landmarks[177];
+            const rightLobe = landmarks[401];
+            
+            const faceWidth = Math.abs(rightEar.x - leftEar.x) * canvas.width;
+            const gapAdjustment = (gap / 100) * faceWidth;
+            
+            const earHeight = Math.abs(landmarks[234].y - leftLobe.y) * canvas.height;
+            const scale = (earHeight * 0.8) / jewelry.leftImage.height;
+            
+            if (faceRotation > -0.1) {
+                const leftX = leftLobe.x * canvas.width - gapAdjustment + jewelry.offset.x;
+                const leftY = leftLobe.y * canvas.height + jewelry.offset.y;
+                
+                ctx.save();
+                ctx.shadowColor = 'rgba(0,0,0,0.3)';
+                ctx.shadowBlur = 5;
+                ctx.shadowOffsetX = 2;
+                ctx.shadowOffsetY = 2;
+                
+                const leftWidth = jewelry.leftImage.width * scale;
+                const leftHeight = jewelry.leftImage.height * scale;
+                ctx.drawImage(jewelry.leftImage,
+                    leftX - leftWidth/2,
+                    leftY - leftHeight/2,
+                    leftWidth,
+                    leftHeight
+                );
+                ctx.restore();
+            }
+            
+            if (faceRotation < 0.1) {
+                const rightX = rightLobe.x * canvas.width + gapAdjustment + jewelry.offset.x + 15;
+                const rightY = rightLobe.y * canvas.height + jewelry.offset.y;
+                
+                ctx.save();
+                ctx.shadowColor = 'rgba(0,0,0,0.3)';
+                ctx.shadowBlur = 5;
+                ctx.shadowOffsetX = 2;
+                ctx.shadowOffsetY = 2;
+                
+                const rightWidth = jewelry.rightImage.width * scale;
+                const rightHeight = jewelry.rightImage.height * scale;
+                ctx.drawImage(jewelry.rightImage,
+                    rightX - rightWidth/2,
+                    rightY - rightHeight/2,
+                    rightWidth,
+                    rightHeight
+                );
+                ctx.restore();
+            }
+
+            const gapValueDisplay = document.getElementById(`gap-value-${jewelry.id}`);
+            if (gapValueDisplay) {
+                gapValueDisplay.textContent = `${gap} px`;
+            }
+        }
+
+        function drawSinglePiece(jewelry, landmarks) {
+            if (!jewelry.loadedImage) {
+                console.error('Image not loaded:', jewelry);
+                return;
+            }
+
+            let x, y, scale;
+
+            if (jewelry.landmark === 151) { // Tikka
+                const centerPoint = landmarks[LANDMARKS.tikka.center];
+                const topPoint = landmarks[LANDMARKS.tikka.top];
+                const refPoint = landmarks[LANDMARKS.tikka.reference];
+                
+                x = ((centerPoint.x + refPoint.x) / 2) * canvas.width + jewelry.offset.x;
+                y = ((centerPoint.y + topPoint.y) / 2) * canvas.height - 20 + jewelry.offset.y;
+                
+                const foreheadWidth = Math.abs(landmarks[71].x - landmarks[301].x) * canvas.width;
+                scale = (foreheadWidth * 0.6) / jewelry.loadedImage.width;
+            }
+
+            ctx.save();
+            ctx.shadowColor = 'rgba(0,0,0,0.3)';
+            ctx.shadowBlur = 8;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+            
+            const width = jewelry.loadedImage.width * scale;
+            const height = jewelry.loadedImage.height * scale;
+            
+            ctx.drawImage(jewelry.loadedImage,
+                x - width/2,
+                y - height/2,
+                width,
+                height
+            );
+            ctx.restore();
+        }
+
+        function captureImage() {
+            const link = document.createElement('a');
+            link.download = 'jewelry-tryon.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
