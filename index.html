@@ -158,9 +158,83 @@
         ::-webkit-scrollbar-thumb:hover {
             background: var(--color-secondary);
         }
+
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* Background gradient */
+        .gradient-bg {
+            background: linear-gradient(135deg, #1a0034 0%, #7B2CBF 100%);
+        }
+
+        /* AI text animation */
+        .animate-text-ai {
+            background: linear-gradient(90deg, #ff72e1 0%, #ff72e1 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            animation: pulse 2s ease infinite;
+        }
+
+        /* AR text animation */
+        .animate-text-ar {
+            background: linear-gradient(90deg, #72d6ff 0%, #72d6ff 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            animation: pulse 2s ease infinite;
+        }
+
+        /* Pulse animation */
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        /* Button hover animation */
+        .button-primary {
+            background: linear-gradient(135deg, #7B2CBF 0%, #9D4EDD 100%);
+            transition: all 0.3s ease;
+        }
+
+        .button-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(123, 44, 191, 0.4);
+        }
+
+        /* For the floating stats card */
+        .backdrop-blur-sm {
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .button-primary {
+            background: linear-gradient(135deg, #7B2CBF 0%, #9D4EDD 100%);
+            transition: all 0.3s ease;
+        }
+
+        .button-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(123, 44, 191, 0.4);
+        }
+
     </style>
 </head>
 <body>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <!-- Skip to main content link for accessibility -->
     <a href="#main" class="skip-link">Skip to main content</a>
 
@@ -215,42 +289,67 @@
         </div>
     </div>
 
-    <!-- Main Content -->
-    <main id="main">
-        <!-- Hero Section -->
+    <!-- Hero Section -->
         <section class="gradient-bg min-h-screen flex items-center pt-20" aria-label="Hero section">
             <div class="container mx-auto px-6">
-                <div class="flex flex-col md:flex-row items-center">
-                    <div class="md:w-1/2">
-                        <h1 class="text-4xl md:text-6xl font-bold text-white mb-6 fade-in">
-                            Transform Your Business with AI & AR
-                        </h1>
-                        <p class="text-lg text-gray-300 mb-8 slide-up">
-                            Unleash the power of artificial intelligence and augmented reality to revolutionize your business. 
-                            From virtual try-ons to intelligent chatbots, we're your partner in digital transformation.
-                        </p>
-                        <div class="flex space-x-4 slide-up">
-                            <a href="tryon.html" 
-                               target="_blank" 
-                               class="button-primary px-8 py-3 rounded-full text-white inline-block text-center" 
-                               aria-label="Try Virtual Demo">
-                                Try Demo
+                <!-- Main Content Container -->
+                <div class="flex flex-col lg:flex-row items-center gap-16">
+                    <!-- Left Content -->
+                    <div class="lg:w-1/2 space-y-12">
+                        <div class="space-y-10">
+                            <h1 class="text-5xl lg:text-6xl font-bold text-white leading-tight tracking-tight">
+                                Redefining Business with 
+                                <span class="relative inline-block">
+                                    <span class="animate-text-ai font-extrabold">AI</span>
+                                    <span class="absolute -top-1 -right-1 w-3 h-3 bg-purple-300 rounded-full animate-ping opacity-75"></span>
+                                    <span class="absolute -top-1 -right-1 w-3 h-3 bg-purple-400 rounded-full"></span>
+                                </span>
+                                & 
+                                <span class="relative inline-block">
+                                    <span class="animate-text-ar font-extrabold">AR</span>
+                                    <span class="absolute -top-1 -right-1 w-3 h-3 bg-blue-300 rounded-full animate-ping opacity-75"></span>
+                                    <span class="absolute -top-1 -right-1 w-3 h-3 bg-blue-400 rounded-full"></span>
+                                </span>
+                            </h1>
+                            <h2 class="text-xl lg:text-2xl text-gray-200 font-light" style="line-height: 2.2; letter-spacing: 0.01em;">
+                                Unlock the Power of Data-Driven Decision-Making, 
+                                Immersive AR, and Next-Gen AI Solutions 
+                                to Drive Customer Engagement, Foster Innovation, and Scale Your Business.
+                            </h2>
+                        </div>
+
+                        <div class="pt-6">
+                            <a href="mailto:infiniteaitechsol@gmail.com" 
+                            class="button-primary px-8 py-4 rounded-xl text-white text-lg font-semibold 
+                                    shadow-lg hover:shadow-xl transition-all duration-300 inline-flex items-center" 
+                            aria-label="Schedule Free Consultation">
+                                Schedule a Free Consultation
+                                <i class="fas fa-arrow-right ml-2"></i>
                             </a>
-                            <button class="px-8 py-3 rounded-full text-white border border-white hover:bg-white hover:text-purple-900 transition-all"
-                                    aria-label="Learn More">
-                                Learn More
-                            </button>
                         </div>
                     </div>
-                    <div class="md:w-1/2 mt-10 md:mt-0">
+
+                    <!-- Right Content - Image -->
+                    <div class="lg:w-1/2">
                         <div class="relative">
                             <img src="ardemo.jpg" 
-                                 alt="AR Demo Visualization" 
-                                 class="rounded-lg shadow-2xl"
-                                 loading="lazy">
-                            <div class="absolute -bottom-4 -right-4 bg-white p-4 rounded-lg shadow-lg">
-                                <div class="text-sm font-semibold text-gray-800">Trusted by</div>
-                                <div class="text-2xl font-bold text-purple-600">500+ Businesses</div>
+                                alt="Advanced Analytics and AR Visualization" 
+                                class="rounded-2xl shadow-2xl w-full"
+                                loading="lazy">
+
+                            <!-- Floating Stats Card -->
+                            <div class="absolute -bottom-6 -right-6 bg-white p-8 rounded-xl shadow-xl 
+                                        backdrop-blur-sm bg-opacity-95">
+                                <div class="flex items-center space-x-6">
+                                    <div class="text-center px-6 border-r border-gray-200">
+                                        <div class="text-purple-600 font-bold text-2xl mb-1">AI & AR</div>
+                                        <div class="text-gray-600 font-medium">Innovation</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-purple-600 font-bold text-2xl mb-1">Future</div>
+                                        <div class="text-gray-600 font-medium">Ready Solutions</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -275,12 +374,12 @@
                 </div>
                 <h3 class="text-xl font-bold text-gray-800 mb-4">Virtual Try-On</h3>
                 <p class="text-gray-600 mb-4">
-                    Revolutionary AR technology for jewelry, eyewear, and fashion. Let customers try before they buy.
+                    Immersive AR technology that revolutionize online shopping, enabling real-time virtual try-ons. Lets take try before buy to next level!
                 </p>
                 <ul class="text-gray-600 mb-6 space-y-2" role="list">
                     <li class="flex items-center">
                         <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
-                        Real-time visualization
+                        Real-time facial tracking & mapping
                     </li>
                     <li class="flex items-center">
                         <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
@@ -288,13 +387,18 @@
                     </li>
                     <li class="flex items-center">
                         <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
-                        Easy integration
+                        Advanced product visualization
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
+                        Cross-platform compatibility
                     </li>
                 </ul>
-                <button class="button-primary w-full py-2 rounded-lg text-white" 
-                        aria-label="Learn more about Virtual Try-On">
-                    Learn More
-                </button>
+                <a href="tryon.html" 
+                class="button-primary w-full py-2 rounded-lg text-white text-center inline-block" 
+                aria-label="Try Virtual Try-On Demo">
+                    Try Demo
+                </a>
             </article>
 
             <!-- AI Chatbot Card -->
@@ -302,9 +406,9 @@
                 <div class="feature-icon mb-6" aria-hidden="true">
                     <i class="fas fa-robot"></i>
                 </div>
-                <h3 class="text-xl font-bold text-gray-800 mb-4">RASA Chatbots</h3>
+                <h3 class="text-xl font-bold text-gray-800 mb-4">AI Chatbots</h3>
                 <p class="text-gray-600 mb-4">
-                    Intelligent conversational AI powered by RASA for enhanced customer service.
+                    AI-powered virtual assistants that transform customer interactions and deliver personalized user experiences to streamline support operations.
                 </p>
                 <ul class="text-gray-600 mb-6 space-y-2" role="list">
                     <li class="flex items-center">
@@ -313,17 +417,22 @@
                     </li>
                     <li class="flex items-center">
                         <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
-                        Natural language processing
+                        Context-aware conversations
                     </li>
                     <li class="flex items-center">
                         <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
-                        Custom workflow integration
+                        Dynamic conversation flow adaptation
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
+                        Advanced intent recognition
                     </li>
                 </ul>
-                <button class="button-primary w-full py-2 rounded-lg text-white"
-                        aria-label="Learn more about RASA Chatbots">
+                <a href="chatbot.html" 
+                class="button-primary w-full py-2 rounded-lg text-white text-center inline-block"
+                aria-label="Learn more about RASA Chatbots">
                     Learn More
-                </button>
+                </a>
             </article>
 
             <!-- Data Science Card -->
@@ -333,26 +442,31 @@
                 </div>
                 <h3 class="text-xl font-bold text-gray-800 mb-4">Data Science Services</h3>
                 <p class="text-gray-600 mb-4">
-                    Transform your data into actionable insights with our advanced analytics.
+                    Unlock the Power of Data with Advanced Analytics and AI-Driven Insights that Transform Business Decision-Making and Drive Growth.
                 </p>
                 <ul class="text-gray-600 mb-6 space-y-2" role="list">
                     <li class="flex items-center">
                         <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
-                        Predictive analytics
+                        Interactive Dashboards & Automated Reporting
                     </li>
                     <li class="flex items-center">
                         <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
-                        Business intelligence
+                        Predictive Analytics & Forecasting Models
                     </li>
                     <li class="flex items-center">
                         <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
-                        Custom reporting
+                        Customer Behavior Analysis & Segmentation
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
+                        AI-Powered Business Intelligence
                     </li>
                 </ul>
-                <button class="button-primary w-full py-2 rounded-lg text-white"
-                        aria-label="Learn more about Data Science Services">
+                <a href="datascience.html" 
+                class="button-primary w-full py-2 rounded-lg text-white text-center inline-block"
+                aria-label="Learn more about Data Science Services">
                     Learn More
-                </button>
+                </a>
             </article>
         </div>
 
@@ -385,7 +499,7 @@
                         </ul>
                         <button class="button-primary px-6 py-2 rounded-lg text-white"
                                 aria-label="Join AI Education Program">
-                            Join Program
+                            Coming soon
                         </button>
                     </div>
                 </div>
@@ -400,26 +514,28 @@
                     <div>
                         <h3 class="text-xl font-bold text-gray-800 mb-4">Custom AI Solutions</h3>
                         <p class="text-gray-600 mb-4">
-                            Tailored AI solutions designed specifically for your business needs and challenges.
+                            Empower Your Business with Custom AI Solutions - From Computer Vision to NLP, We Build Intelligent Systems Tailored to Your Unique Challenges.
                         </p>
                         <ul class="text-gray-600 mb-6 space-y-2" role="list">
                             <li class="flex items-center">
                                 <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
-                                Custom AI model development
+                                Computer Vision & Image Recognition
                             </li>
                             <li class="flex items-center">
                                 <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
-                                Integration support
+                                Natural Language Processing & Custom AI Models
                             </li>
                             <li class="flex items-center">
                                 <i class="fas fa-check text-green-500 mr-2"></i>
-                                Ongoing maintenance
+                                Seamless Integration & Deployment
                             </li>
                         </ul>
-                        <button class="button-primary px-6 py-2 rounded-lg text-white"
-                                aria-label="Consult about Custom AI Solutions">
+                        <a href="mailto:infiniteaitechsol@gmail.com" 
+                           class="button-primary px-6 py-2 rounded-lg text-white inline-flex items-center transition-all duration-300 hover:shadow-lg"
+                           aria-label="Schedule Free Consultation">
                             Consult Now
-                        </button>
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </a>
                     </div>
                 </div>
             </article>
@@ -444,15 +560,12 @@
                      class="w-full rounded-lg mb-6"
                      loading="lazy">
                 <h3 class="text-xl font-bold mb-3">Jewelry Try-On</h3>
-                <p class="text-gray-300 mb-4">
-                    Increased online sales by 45% through virtual jewelry try-on experience
-                </p>
-                <button class="text-white hover:text-accent transition-colors flex items-center group"
-                        aria-label="View Jewelry Try-On case study">
-                    View Case Study
-                    <i class="fas fa-arrow-right ml-2 transform group-hover:translate-x-1 transition-transform" 
-                       aria-hidden="true"></i>
-                </button>
+                <a href="jewelry-tryon.html" 
+                class="text-white hover:text-accent transition-colors flex items-center group"
+                aria-label="View Jewelry Try-On insights">
+                    View Insights
+                    <i class="fas fa-arrow-right ml-2 transform group-hover:translate-x-1 transition-transform"></i>
+                </a>
             </article>
 
             <!-- Case Study 2 -->
@@ -462,15 +575,12 @@
                      class="w-full rounded-lg mb-6"
                      loading="lazy">
                 <h3 class="text-xl font-bold mb-3">AI Customer Service</h3>
-                <p class="text-gray-300 mb-4">
-                    Reduced customer response time by 80% with RASA-powered chatbots
-                </p>
-                <button class="text-white hover:text-accent transition-colors flex items-center group"
-                        aria-label="View AI Customer Service case study">
-                    View Case Study
-                    <i class="fas fa-arrow-right ml-2 transform group-hover:translate-x-1 transition-transform" 
-                       aria-hidden="true"></i>
-                </button>
+                <a href="ai-customer-service.html" 
+                class="text-white hover:text-accent transition-colors flex items-center group"
+                aria-label="View AI Customer Service insights">
+                    View Insights
+                    <i class="fas fa-arrow-right ml-2 transform group-hover:translate-x-1 transition-transform"></i>
+                </a>
             </article>
 
             <!-- Case Study 3 -->
@@ -480,48 +590,18 @@
                      class="w-full rounded-lg mb-6"
                      loading="lazy">
                 <h3 class="text-xl font-bold mb-3">Predictive Analytics</h3>
-                <p class="text-gray-300 mb-4">
-                    Improved inventory management efficiency by 60% using AI predictions
-                </p>
-                <button class="text-white hover:text-accent transition-colors flex items-center group"
-                        aria-label="View Predictive Analytics case study">
-                    View Case Study
-                    <i class="fas fa-arrow-right ml-2 transform group-hover:translate-x-1 transition-transform" 
-                       aria-hidden="true"></i>
-                </button>
+                <a href="predictive-analytics.html" 
+                class="text-white hover:text-accent transition-colors flex items-center group"
+                aria-label="View Predictive Analytics insights">
+                    View Insights
+                    <i class="fas fa-arrow-right ml-2 transform group-hover:translate-x-1 transition-transform"></i>
+                </a>
             </article>
-        </div>
-
-        <!-- Stats Section -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mt-20">
-            <!-- Clients Stat -->
-            <div class="text-center" role="status" aria-label="Company statistics">
-                <div class="text-4xl font-bold mb-2" aria-label="Number of clients served">500+</div>
-                <div class="text-gray-300">Clients Served</div>
-            </div>
-
-            <!-- Satisfaction Stat -->
-            <div class="text-center" role="status">
-                <div class="text-4xl font-bold mb-2" aria-label="Client satisfaction rate">95%</div>
-                <div class="text-gray-300">Client Satisfaction</div>
-            </div>
-
-            <!-- Try-Ons Stat -->
-            <div class="text-center" role="status">
-                <div class="text-4xl font-bold mb-2" aria-label="Number of virtual try-ons completed">1M+</div>
-                <div class="text-gray-300">Try-Ons Completed</div>
-            </div>
-
-            <!-- Sales Increase Stat -->
-            <div class="text-center" role="status">
-                <div class="text-4xl font-bold mb-2" aria-label="Average sales increase">40%</div>
-                <div class="text-gray-300">Avg. Sales Increase</div>
-            </div>
         </div>
     </div>
 </section>
-
-<!-- Trust Indicators Section -->
+<!--
+Trust Indicators Section 
 <section class="py-12 bg-gray-50">
     <div class="container mx-auto px-6">
         <div class="text-center mb-8">
@@ -531,9 +611,9 @@
             </p>
         </div>
         
-        <!-- Logos Grid -->
+         Logos Grid 
         <div class="grid grid-cols-2 md:grid-cols-4 gap-8 items-center justify-items-center">
-            <!-- Replace src with actual company logos -->
+             Replace src with actual company logos 
             <img src="company1.png" alt="Company 1" class="max-h-12 opacity-50 hover:opacity-100 transition-opacity">
             <img src="company2.webp" alt="Company 2" class="max-h-12 opacity-50 hover:opacity-100 transition-opacity">
             <img src="company3.png" alt="Company 3" class="max-h-12 opacity-50 hover:opacity-100 transition-opacity">
@@ -541,163 +621,502 @@
         </div>
     </div>
 </section>
+-->
+<!-- Pricing Section -->
 <!-- Pricing Section -->
 <section id="pricing" class="py-20 gradient-light" aria-labelledby="pricing-title">
     <div class="container mx-auto px-6">
+        <!-- Section Header -->
         <div class="text-center mb-16">
-            <h2 id="pricing-title" class="text-4xl font-bold text-gray-800 mb-4">Simple, Transparent Pricing</h2>
-            <p class="text-gray-600 max-w-2xl mx-auto">
-                Choose the perfect plan for your business needs
-            </p>
+            <h2 id="pricing-title" class="text-5xl font-bold text-gray-800 mb-4">Our Pricing Plans</h2>
+            <p class="text-xl text-gray-600 mt-4">Choose the perfect solution for your business needs</p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <!-- Starter Plan -->
-            <div class="pricing-card p-8" role="article" aria-labelledby="starter-plan">
-                <div class="text-center mb-8">
-                    <h3 id="starter-plan" class="text-2xl font-bold text-gray-800">Starter</h3>
-                    <div class="mt-4" aria-label="Starter plan pricing">
-                        <span class="text-4xl font-bold text-gray-800">₹15,000</span>
-                        <span class="text-gray-600">/month</span>
-                    </div>
-                </div>
-                <ul class="space-y-4 mb-8" role="list" aria-label="Starter plan features">
-                    <li class="flex items-center">
-                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
-                        <span>Up to 500 try-ons per month</span>
-                    </li>
-                    <li class="flex items-center">
-                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
-                        <span>Basic analytics dashboard</span>
-                    </li>
-                    <li class="flex items-center">
-                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
-                        <span>Email support</span>
-                    </li>
-                    <li class="flex items-center">
-                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
-                        <span>100 jewelry items</span>
-                    </li>
-                </ul>
-                <button class="button-primary w-full py-3 rounded-lg text-white"
-                        aria-label="Get started with Starter plan">
-                    Get Started
+        <!-- Category Tabs -->
+        <div class="flex justify-center mb-12">
+            <div class="inline-flex rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
+                <button onclick="showCategory('virtual-tryon')" 
+                        class="px-6 py-2 text-sm font-medium rounded-md bg-purple-600 text-white"
+                        id="virtual-tryon-tab">
+                    Virtual Try-On
                 </button>
-            </div>
-
-            <!-- Professional Plan -->
-            <div class="pricing-card featured p-8" role="article" aria-labelledby="pro-plan">
-                <div class="text-center mb-8">
-                    <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm" 
-                          aria-label="Most popular plan">
-                        MOST POPULAR
-                    </span>
-                    <h3 id="pro-plan" class="text-2xl font-bold text-gray-800 mt-4">Professional</h3>
-                    <div class="mt-4" aria-label="Professional plan pricing">
-                        <span class="text-4xl font-bold text-gray-800">₹25,000</span>
-                        <span class="text-gray-600">/month</span>
-                    </div>
-                </div>
-                <ul class="space-y-4 mb-8" role="list" aria-label="Professional plan features">
-                    <li class="flex items-center">
-                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
-                        <span>Up to 2000 try-ons per month</span>
-                    </li>
-                    <li class="flex items-center">
-                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
-                        <span>Advanced analytics</span>
-                    </li>
-                    <li class="flex items-center">
-                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
-                        <span>Priority support</span>
-                    </li>
-                    <li class="flex items-center">
-                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
-                        <span>500 jewelry items</span>
-                    </li>
-                    <li class="flex items-center">
-                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
-                        <span>Custom branding</span>
-                    </li>
-                </ul>
-                <button class="button-primary w-full py-3 rounded-lg text-white"
-                        aria-label="Get started with Professional plan">
-                    Get Started
+                <button onclick="showCategory('chatbot')" 
+                        class="px-6 py-2 text-sm font-medium rounded-md text-gray-500 hover:text-gray-700"
+                        id="chatbot-tab">
+                    AI Chatbots
                 </button>
-            </div>
-
-            <!-- Enterprise Plan -->
-            <div class="pricing-card p-8" role="article" aria-labelledby="enterprise-plan">
-                <div class="text-center mb-8">
-                    <h3 id="enterprise-plan" class="text-2xl font-bold text-gray-800">Enterprise</h3>
-                    <div class="mt-4" aria-label="Enterprise plan pricing">
-                        <span class="text-2xl font-bold text-gray-800">Custom</span>
-                    </div>
-                </div>
-                <ul class="space-y-4 mb-8" role="list" aria-label="Enterprise plan features">
-                    <li class="flex items-center">
-                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
-                        <span>Unlimited try-ons</span>
-                    </li>
-                    <li class="flex items-center">
-                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
-                        <span>Custom analytics</span>
-                    </li>
-                    <li class="flex items-center">
-                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
-                        <span>24/7 dedicated support</span>
-                    </li>
-                    <li class="flex items-center">
-                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
-                        <span>Unlimited jewelry items</span>
-                    </li>
-                    <li class="flex items-center">
-                        <i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>
-                        <span>API access</span>
-                    </li>
-                </ul>
-                <button class="button-primary w-full py-3 rounded-lg text-white"
-                        aria-label="Contact sales for Enterprise plan">
-                    Contact Sales
+                <button onclick="showCategory('analytics')" 
+                        class="px-6 py-2 text-sm font-medium rounded-md text-gray-500 hover:text-gray-700"
+                        id="analytics-tab">
+                    Data Analytics
                 </button>
             </div>
         </div>
 
-        <!-- Pricing FAQ -->
+        <!-- Pricing Categories Container -->
+        <div class="pricing-categories-container">
+            <!-- Virtual Try-On Plans -->
+            <div id="virtual-tryon-plans" class="pricing-category">
+                <div class="text-center mb-8">
+                    <h3 class="text-3xl font-bold text-gray-800">Virtual Try-On Solutions</h3>
+                    <p class="text-gray-600 mt-2">Transform your e-commerce with AR-powered virtual try-ons</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <!-- Starter Plan -->
+                    <div class="pricing-card p-8">
+                        <div class="text-center mb-8">
+                            <h4 class="text-2xl font-bold text-gray-800">Starter</h4>
+                            <div class="mt-4">
+                                <span class="text-4xl font-bold text-gray-800">₹25,000</span>
+                                <span class="text-gray-600">/month</span>
+                            </div>
+                        </div>
+                        <ul class="space-y-4 mb-8">
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Up to 500 SKUs</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Basic analytics dashboard</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Email support</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>500 jewelry items</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Custom Branding</span>
+                            </li>
+                        </ul>
+                        <button class="button-primary w-full py-3 rounded-lg text-white">
+                            Contact Sales
+                        </button>
+                    </div>
+
+                    <!-- Professional Plan -->
+                    <div class="pricing-card featured p-8">
+                        <div class="popular-badge">
+                            Popular
+                        </div>
+                        <div class="text-center mb-8">
+                            <h4 class="text-2xl font-bold text-gray-800">Professional</h4>
+                            <div class="mt-4">
+                                <span class="text-4xl font-bold text-gray-800">₹35,000</span>
+                                <span class="text-gray-600">/month</span>
+                            </div>
+                        </div>
+                        <ul class="space-y-4 mb-8">
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Up to 2000 SKUs</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Advanced Analytics</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Priority support</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>1000 jewelry items</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Custom Branding</span>
+                            </li>
+                        </ul>
+                        <button class="button-primary w-full py-3 rounded-lg text-white">
+                            Contact Sales
+                        </button>
+                    </div>
+
+                    <!-- Enterprise Plan -->
+                    <div class="pricing-card p-8">
+                        <div class="text-center mb-8">
+                            <h4 class="text-2xl font-bold text-gray-800">Enterprise</h4>
+                            <div class="mt-4">
+                                <span class="text-2xl font-bold text-gray-800">Get a Quote</span>
+                            </div>
+                        </div>
+                        <ul class="space-y-4 mb-8">
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Unlimited try-ons</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Advanced Custom analytics</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>AI Powered Chatbot Integration</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>24/7 dedicated support</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Unlimited jewelry items</span>
+                            </li>
+                        </ul>
+                        <button class="button-primary w-full py-3 rounded-lg text-white">
+                            Contact Sales
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Chatbot Plans -->
+            <div id="chatbot-plans" class="pricing-category hidden">
+                <div class="text-center mb-8">
+                    <h3 class="text-3xl font-bold text-gray-800">AI-Powered Chatbots</h3>
+                    <p class="text-gray-600 mt-2">Intelligent conversational AI solutions for enhanced customer support</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <!-- Starter Plan -->
+                    <div class="pricing-card p-8">
+                        <div class="text-center mb-8">
+                            <h4 class="text-2xl font-bold text-gray-800">Starter</h4>
+                            <div class="mt-4">
+                                <span class="text-2xl font-bold text-gray-800">Get a Quote</span>
+                            </div>
+                        </div>
+                        <ul class="space-y-4 mb-8">
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Up to 1000 monthly interactions</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Basic intent recognition</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Pre-built conversation templates</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Email support</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Multi-platform integration</span>
+                            </li>
+                        </ul>
+                        <button class="button-primary w-full py-3 rounded-lg text-white">
+                            Contact Sales
+                        </button>
+                    </div>
+
+                    <!-- Professional Plan -->
+                    <div class="pricing-card featured p-8">
+                        <div class="popular-badge">
+                            Popular
+                        </div>
+                        <div class="text-center mb-8">
+                            <h4 class="text-2xl font-bold text-gray-800">Professional</h4>
+                            <div class="mt-4">
+                                <span class="text-2xl font-bold text-gray-800">Get a Quote</span>
+                            </div>
+                        </div>
+                        <ul class="space-y-4 mb-8">
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Up to 5000 monthly interactions</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Advanced intent recognition</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Dynamic conversation flow adaptation</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>24/7 priority support</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>AI-powered recommendation engine</span>
+                            </li>
+                        </ul>
+                        <button class="button-primary w-full py-3 rounded-lg text-white">
+                            Contact Sales
+                        </button>
+                    </div>
+
+                    <!-- Enterprise Plan -->
+                    <div class="pricing-card p-8">
+                        <div class="text-center mb-8">
+                            <h4 class="text-2xl font-bold text-gray-800">Enterprise</h4>
+                            <div class="mt-4">
+                                <span class="text-2xl font-bold text-gray-800">Get a Quote</span>
+                            </div>
+                        </div>
+                        <ul class="space-y-4 mb-8">
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Unlimited chatbot interactions</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>24/7 priority support</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>AI-powered customer behavior analysis</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>API integration for seamless automation</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Dedicated support & chatbot optimization</span>
+                            </li>
+                        </ul>
+                        <button class="button-primary w-full py-3 rounded-lg text-white">
+                            Contact Sales
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="analytics-plans" class="pricing-category hidden">
+                <div class="text-center mb-8">
+                    <h3 class="text-3xl font-bold text-gray-800">Data Analytics & Science</h3>
+                    <p class="text-gray-600 mt-2">Transform your business with advanced analytics and AI-driven insights</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <!-- Starter Plan -->
+                    <div class="pricing-card p-8">
+                        <div class="text-center mb-8">
+                            <h4 class="text-2xl font-bold text-gray-800">Starter</h4>
+                            <div class="mt-4">
+                                <span class="text-2xl font-bold text-gray-800">Get a Quote</span>
+                            </div>
+                        </div>
+                        <ul class="space-y-4 mb-8">
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Basic data analytics dashboard</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Monthly performance reports</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Standard data visualizations</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Predictive analytics for key trends</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Customer segmentation insights</span>
+                            </li>
+                        </ul>
+                        <button class="button-primary w-full py-3 rounded-lg text-white">
+                            Contact Sales
+                        </button>
+                    </div>
+
+                    <!-- Professional Plan -->
+                    <div class="pricing-card featured p-8">
+                        <div class="popular-badge">
+                            Popular
+                        </div>
+                        <div class="text-center mb-8">
+                            <h4 class="text-2xl font-bold text-gray-800">Professional</h4>
+                            <div class="mt-4">
+                                <span class="text-2xl font-bold text-gray-800">Get a Quote</span>
+                            </div>
+                        </div>
+                        <ul class="space-y-4 mb-8">
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Interactive dashboards with real-time insights</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Advanced predictive modeling</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Automated reporting & trend forecasting</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>API access for seamless data integration</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Priority support</span>
+                            </li>
+                        </ul>
+                        <button class="button-primary w-full py-3 rounded-lg text-white">
+                            Contact Sales
+                        </button>
+                    </div>
+
+                    <!-- Enterprise Plan -->
+                    <div class="pricing-card p-8">
+                        <div class="text-center mb-8">
+                            <h4 class="text-2xl font-bold text-gray-800">Enterprise</h4>
+                            <div class="mt-4">
+                                <span class="text-2xl font-bold text-gray-800">Get a Quote</span>
+                            </div>
+                        </div>
+                        <ul class="space-y-4 mb-8">
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Fully customized AI-driven analytics solutions</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Real-time data pipelines & streaming insights</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Advanced AI models for forecasting & decision-making</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Behavioral analytics & market trend predictions</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                <span>Dedicated data analytics consultant</span>
+                            </li>
+                        </ul>
+                        <button class="button-primary w-full py-3 rounded-lg text-white">
+                            Contact Sales
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAQ Section -->
         <div class="mt-20 max-w-3xl mx-auto">
             <h3 class="text-2xl font-bold text-gray-800 mb-8 text-center">Frequently Asked Questions</h3>
             <div class="space-y-6">
                 <details class="group">
                     <summary class="flex justify-between items-center cursor-pointer p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                        <span class="font-semibold text-gray-800">What's included in the free trial?</span>
+                        <span class="font-semibold text-gray-800">What's included in the free consultation?</span>
                         <span class="transform group-open:rotate-180 transition-transform">
                             <i class="fas fa-chevron-down" aria-hidden="true"></i>
                         </span>
                     </summary>
                     <div class="p-4 bg-white">
                         <p class="text-gray-600">
-                            Our 14-day free trial includes all Professional plan features with a limit of 100 try-ons. 
-                            No credit card required.
+                            Our free consultation includes a thorough assessment of your business needs, demo of relevant features, and a customized solution proposal. No commitment required.
                         </p>
                     </div>
                 </details>
 
                 <details class="group">
                     <summary class="flex justify-between items-center cursor-pointer p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                        <span class="font-semibold text-gray-800">Can I change plans later?</span>
+                        <span class="font-semibold text-gray-800">Can I combine different services?</span>
                         <span class="transform group-open:rotate-180 transition-transform">
                             <i class="fas fa-chevron-down" aria-hidden="true"></i>
                         </span>
                     </summary>
                     <div class="p-4 bg-white">
                         <p class="text-gray-600">
-                            Yes, you can upgrade or downgrade your plan at any time. Changes take effect at the start of the next billing cycle.
+                            Yes, we offer custom packages that combine multiple services. Contact our sales team for special bundled pricing and integrated solutions.
                         </p>
                     </div>
                 </details>
             </div>
         </div>
     </div>
+
+    <style>
+        /* Add these styles for smooth transitions */
+        .pricing-category {
+            transition: all 0.3s ease-in-out;
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .pricing-category.hidden {
+            display: block;
+            opacity: 0;
+            transform: translateX(20px);
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .pricing-categories-container {
+            position: relative;
+            min-height: 800px;
+        }
+
+        .pricing-card {
+            position: relative; /* Add this to make absolute positioning work */
+            background: white;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .pricing-card.featured {
+            position: relative;
+            background: linear-gradient(135deg, rgba(123, 44, 191, 0.1) 0%, rgba(157, 78, 221, 0.1) 100%);
+            border: 2px solid var(--color-primary);
+        }
+
+        /* Update the Popular badge positioning */
+        .pricing-card .popular-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            transform: translate(0, -50%);
+            background: var(--color-primary);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            z-index: 10;
+        }
+    </style>
+
+    <script>
+        function showCategory(categoryId) {
+            // Get all pricing categories
+            const categories = document.querySelectorAll('.pricing-category');
+            
+            // Update tab styles
+            document.querySelectorAll('[id$="-tab"]').forEach(tab => {
+                const isSelected = tab.id === `${categoryId}-tab`;
+                tab.classList.toggle('bg-purple-600', isSelected);
+                tab.classList.toggle('text-white', isSelected);
+                tab.classList.toggle('text-gray-500', !isSelected);
+                tab.classList.toggle('hover:text-gray-700', !isSelected);
+            });
+            
+            // Animate categories
+            categories.forEach(category => {
+                const isSelected = category.id === `${categoryId}-plans`;
+                category.classList.toggle('hidden', !isSelected);
+            });
+        }
+    </script>
 </section>
 <!-- AI Education Section -->
 <section id="education" class="py-20 bg-white" aria-labelledby="education-title">
@@ -716,19 +1135,7 @@
                      alt="Students engaging in AI education program" 
                      class="rounded-lg shadow-xl"
                      loading="lazy">
-                <!-- Overlay Stats -->
-                <div class="absolute -bottom-6 -right-6 bg-white p-6 rounded-lg shadow-xl">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="text-center">
-                            <span class="block text-2xl font-bold text-purple-600">1000+</span>
-                            <span class="text-sm text-gray-600">Students Trained</span>
-                        </div>
-                        <div class="text-center">
-                            <span class="block text-2xl font-bold text-purple-600">50+</span>
-                            <span class="text-sm text-gray-600">Schools</span>
-                        </div>
-                    </div>
-                </div>
+                
             </div>
 
             <!-- Content Section -->
@@ -796,73 +1203,17 @@
 
                 <!-- CTA Section -->
                 <div class="flex flex-col sm:flex-row gap-4">
-                    <button class="button-primary px-8 py-3 rounded-lg text-white flex-1"
-                            aria-label="Learn more about AI education programs">
+                    <a href="ai-education.html" 
+                    class="button-primary px-6 py-2 rounded-lg text-white text-center inline-block"
+                    aria-label="Learn more about AI Education initiative">
                         Learn More
-                    </button>
+                    </a>
                     <button class="px-8 py-3 rounded-lg border-2 border-purple-600 text-purple-600 
                                  hover:bg-purple-600 hover:text-white transition-colors flex-1"
                             aria-label="Register for AI education program">
-                        Register Now
+                        Coming soon
                     </button>
                 </div>
-            </div>
-        </div>
-
-        <!-- Testimonials -->
-        <div class="mt-20">
-            <h3 class="text-2xl font-bold text-gray-800 text-center mb-8">Student Success Stories</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Testimonial 1 -->
-                <blockquote class="bg-white p-6 rounded-lg shadow-lg">
-                    <div class="flex items-center mb-4">
-                        <img src="student1.jpeg" 
-                             alt="" 
-                             class="w-12 h-12 rounded-full"
-                             aria-hidden="true">
-                        <div class="ml-4">
-                            <cite class="font-semibold text-gray-800 block">Priya Singh</cite>
-                            <span class="text-gray-600 text-sm">Government School, Delhi</span>
-                        </div>
-                    </div>
-                    <p class="text-gray-600 italic">
-                        "The AI education program opened new possibilities for me. I'm now pursuing a career in data science."
-                    </p>
-                </blockquote>
-
-                <!-- Testimonial 2 -->
-                <blockquote class="bg-white p-6 rounded-lg shadow-lg">
-                    <div class="flex items-center mb-4">
-                        <img src="student2.jpg" 
-                             alt="" 
-                             class="w-12 h-12 rounded-full"
-                             aria-hidden="true">
-                        <div class="ml-4">
-                            <cite class="font-semibold text-gray-800 block">Rahul Verma</cite>
-                            <span class="text-gray-600 text-sm">Government School, Mumbai</span>
-                        </div>
-                    </div>
-                    <p class="text-gray-600 italic">
-                        "The practical approach to learning AI concepts helped me understand complex topics easily."
-                    </p>
-                </blockquote>
-
-                <!-- Testimonial 3 -->
-                <blockquote class="bg-white p-6 rounded-lg shadow-lg">
-                    <div class="flex items-center mb-4">
-                        <img src="student3.jpg" 
-                             alt="" 
-                             class="w-12 h-12 rounded-full"
-                             aria-hidden="true">
-                        <div class="ml-4">
-                            <cite class="font-semibold text-gray-800 block">Aisha Patel</cite>
-                            <span class="text-gray-600 text-sm">Government School, Bangalore</span>
-                        </div>
-                    </div>
-                    <p class="text-gray-600 italic">
-                        "Thanks to this program, I've developed my first AI model. The mentorship was invaluable."
-                    </p>
-                </blockquote>
             </div>
         </div>
     </div>
@@ -989,8 +1340,9 @@
                             <div>
                                 <h4 class="font-semibold mb-1">Address</h4>
                                 <address class="not-italic">
-                                    Your Business Address<br>
-                                    City, State, PIN Code
+                                    97A Perambur Redhills Road,<br>
+                                    Kalpalayam, Kolathur<br>
+                                    Chennai, Tamil Nadu, 600099
                                 </address>
                             </div>
                         </div>
@@ -1002,7 +1354,7 @@
                                 <h4 class="font-semibold mb-1">Phone</h4>
                                 <p>
                                     <a href="tel:+91XXXXXXXXXX" class="hover:text-light transition-colors">
-                                        +91 8778418859
+                                        +91 9994481257
                                     </a>
                                 </p>
                                 <p class="text-sm">Mon-Fri 9am to 6pm</p>
@@ -1015,12 +1367,12 @@
                             <div>
                                 <h4 class="font-semibold mb-1">Email</h4>
                                 <p>
-                                    <a href="mailto:contact@infiniteai.in" class="hover:text-light transition-colors">
-                                        contact@infiniteai.in
+                                    <a href="mailto:infiniteaitechsol@gmail.com" class="hover:text-light transition-colors">
+                                        infiniteaitechsol@gmail.com
                                     </a>
                                 </p>
                                 <p>
-                                    <a href="mailto:support@infiniteai.in" class="hover:text-light transition-colors">
+                                    <a href="mailto:infiniteaitechsol@gmail.com" class="hover:text-light transition-colors">
                                         support@infiniteai.in
                                     </a>
                                 </p>
@@ -1228,9 +1580,6 @@
             return isValid;
         }
 
-        function isValidEmail(email) {
-            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-        }
 
         // Contact form submission
         const contactForm = document.getElementById('contactForm');
