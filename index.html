@@ -1703,180 +1703,41 @@ Trust Indicators Section
             observer.observe(section);
         });
 
-        // Rasa Webchat Integration
-        function initRasaWebchat() {
-            // IMPORTANT: Replace with your current Ngrok URL or Rasa server URL
-            const RASA_SERVER_URL = 'https://e978-20-192-21-49.ngrok-free.app';
+        function sendMessage() {
+          const userMessage = document.getElementById('userInput').value;
+          const chatbotUrl = 'https://e978-20-192-21-49.ngrok-free.app/webhooks/rest/webhook';
         
-            // Create chat button
-            const chatButton = document.createElement('button');
-            chatButton.innerHTML = '<i class="fas fa-comment-dots"></i>';
-            chatButton.id = 'rasa-chat-button';
-            chatButton.className = 'fixed bottom-8 right-8 bg-purple-600 text-white p-4 rounded-full shadow-xl hover:bg-purple-700 z-50';
-            
-            // Chat window container
-            const chatContainer = document.createElement('div');
-            chatContainer.id = 'rasa-chat-container';
-            chatContainer.innerHTML = `
-                <div id="rasa-chat-window" class="fixed bottom-8 right-8 w-96 bg-white rounded-xl shadow-2xl z-50 hidden">
-                    <div class="bg-purple-600 text-white p-4 rounded-t-xl flex justify-between">
-                        <h3 class="font-bold">Infinite AI Assistant</h3>
-                        <button id="close-rasa-chat" class="hover:bg-purple-500 rounded-full p-1">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div id="rasa-messages" class="p-4 h-96 overflow-y-auto flex flex-col space-y-2"></div>
-                    <div class="p-4 border-t flex">
-                        <input 
-                            type="text" 
-                            id="rasa-chat-input" 
-                            placeholder="Type your message..." 
-                            class="flex-1 p-2 border rounded-l-lg"
-                        >
-                        <button 
-                            id="rasa-send-btn" 
-                            class="bg-purple-600 text-white px-4 rounded-r-lg"
-                        >
-                            Send
-                        </button>
-                    </div>
-                </div>
-            `;
-        
-            // Append to body
-            document.body.appendChild(chatButton);
-            document.body.appendChild(chatContainer);
-        
-            // Get elements
-            const chatWindow = document.getElementById('rasa-chat-window');
-            const closeButton = document.getElementById('close-rasa-chat');
-            const sendButton = document.getElementById('rasa-send-btn');
-            const chatInput = document.getElementById('rasa-chat-input');
-            const messagesContainer = document.getElementById('rasa-messages');
-        
-            // Toggle chat window
-            chatButton.addEventListener('click', () => {
-                chatWindow.classList.remove('hidden');
-                chatButton.classList.add('hidden');
-            });
-        
-            closeButton.addEventListener('click', () => {
-                chatWindow.classList.add('hidden');
-                chatButton.classList.remove('hidden');
-            });
-        
-            // Send message handler
-            async function handleSendMessage(payload = null) {
-                const message = payload || chatInput.value.trim();
-                if (!message) return;
-        
-                console.log('Sending message:', message);
-                console.log('Payload:', payload);
-        
-                // Add user message
-                const userMessageEl = document.createElement('div');
-                userMessageEl.className = 'self-end max-w-[80%] mb-2';
-                userMessageEl.innerHTML = `
-                    <span class="bg-purple-600 text-white px-3 py-2 rounded-lg inline-block">
-                        ${message}
-                    </span>
-                `;
-                messagesContainer.appendChild(userMessageEl);
-                
-                // Clear input if not using a payload
-                if (!payload) {
-                    chatInput.value = '';
-                }
-        
-                // Send to Rasa
-                try {
-                    const response = await fetch(`${RASA_SERVER_URL}/webhooks/rest/webhook`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            sender: `user_${Date.now()}`,
-                            message: message
-                        })
-                    });
-        
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-        
-                    const botReplies = await response.json();
-                    console.log('Full Rasa Replies:', JSON.stringify(botReplies, null, 2));
-                    
-                    // Process bot replies
-                    botReplies.forEach(reply => {
-                        // Add text message
-                        if (reply.text) {
-                            const botMessageEl = document.createElement('div');
-                            botMessageEl.className = 'self-start max-w-[80%] mb-2';
-                            botMessageEl.innerHTML = `
-                                <span class="bg-gray-200 text-gray-800 px-3 py-2 rounded-lg inline-block">
-                                    ${reply.text}
-                                </span>
-                            `;
-                            messagesContainer.appendChild(botMessageEl);
-                        }
-        
-                        // ENHANCED Button Handling
-                        if (reply.buttons && reply.buttons.length > 0) {
-                            console.log('Buttons received:', reply.buttons);  // Debug log
-                            const buttonContainer = document.createElement('div');
-                            buttonContainer.className = 'self-start flex flex-wrap gap-2 mt-2';
-                            
-                            reply.buttons.forEach(button => {
-                                const buttonEl = document.createElement('button');
-                                buttonEl.className = 'bg-purple-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-purple-600 transition-colors';
-                                buttonEl.textContent = button.title;
-                                
-                                // Remove backslash escaping from payload
-                                const cleanPayload = button.payload.replace(/\\/g, '');
-                                
-                                buttonEl.addEventListener('click', () => {
-                                    // Send the cleaned payload
-                                    handleSendMessage(cleanPayload);
-                                });
-                                
-                                buttonContainer.appendChild(buttonEl);
-                            });
-                            
-                            messagesContainer.appendChild(buttonContainer);
-                        }
-                    });
-        
-                    // Scroll to bottom after processing all replies
-                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                } catch (error) {
-                    console.error('Detailed Rasa communication error:', error);
-                    const errorMessageEl = document.createElement('div');
-                    errorMessageEl.className = 'self-start max-w-[80%]';
-                    errorMessageEl.innerHTML = `
-                        <span class="bg-red-200 text-red-800 px-3 py-2 rounded-lg inline-block">
-                            Sorry, I am having trouble connecting right now. Please try again later.
-                        </span>
-                    `;
-                    messagesContainer.appendChild(errorMessageEl);
-        
-                    // Scroll to bottom
-                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                }
-            }
-        
-            // Event listeners for sending messages
-            sendButton.addEventListener('click', () => handleSendMessage());
-            chatInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') handleSendMessage();
-            });
+          fetch(chatbotUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              sender: 'user',
+              message: userMessage
+            })
+          })
+          .then(response => response.json())
+          .then(data => {
+            // Display the chatbot's response
+            const chatbotResponse = data[0].text;
+            displayMessage(chatbotResponse);
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
         }
-        
-        // Initialize Rasa Webchat
-        initRasaWebchat();
-    });
+
+        function displayMessage(message) {
+          const chatContainer = document.getElementById('chatContainer');
+          const messageElement = document.createElement('div');
+          messageElement.textContent = message;
+          chatContainer.appendChild(messageElement);
+        }
+
+        <div id="chatContainer"></div>
+        <input type="text" id="userInput" placeholder="Type your message...">
+        <button onclick="sendMessage()">Send</button>
 </script>
 </body>
 </html>
