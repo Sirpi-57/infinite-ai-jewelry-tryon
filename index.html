@@ -1533,6 +1533,11 @@ Trust Indicators Section
     </div>
 </div>
 
+<!-- Chatbot UI (HTML) -->
+<div id="chatContainer"></div>
+<input type="text" id="userInput" placeholder="Type your message...">
+<button onclick="sendMessage()">Send</button>
+    
 <!-- JavaScript -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -1734,10 +1739,6 @@ Trust Indicators Section
           messageElement.textContent = message;
           chatContainer.appendChild(messageElement);
         }
-
-        <div id="chatContainer"></div>
-        <input type="text" id="userInput" placeholder="Type your message...">
-        <button onclick="sendMessage()">Send</button>
 </script>
 </body>
 </html>
