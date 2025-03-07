@@ -1532,6 +1532,191 @@ Trust Indicators Section
         </div>
     </div>
 </div>
+
+<!-- Chat Widget -->
+<div id="rasa-chat-widget" class="fixed bottom-0 right-0 m-6 z-50">
+    <!-- Chat Icon Button -->
+    <button id="chat-toggle" class="w-14 h-14 rounded-full bg-purple-600 text-white shadow-lg flex items-center justify-center">
+        <i class="fas fa-comment-dots text-2xl"></i>
+    </button>
+    
+    <!-- Chat Container (Hidden by Default) -->
+    <div id="chat-container" class="hidden bg-white rounded-lg shadow-xl overflow-hidden" style="width: 350px; height: 500px;">
+        <div class="bg-purple-600 text-white p-4 flex justify-between items-center">
+            <h3 class="font-bold">Infinite AI Assistant</h3>
+            <button id="close-chat" class="text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="chat-messages" class="p-4 overflow-y-auto" style="height: 400px;"></div>
+        <div class="border-t p-4 flex">
+            <input id="user-message" type="text" placeholder="Type a message..." class="flex-1 px-3 py-2 border rounded-l-lg focus:outline-none">
+            <button id="send-button" class="bg-purple-600 text-white px-4 py-2 rounded-r-lg">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatToggle = document.getElementById('chat-toggle');
+        const closeChat = document.getElementById('close-chat');
+        const chatContainer = document.getElementById('chat-container');
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-message');
+        const sendButton = document.getElementById('send-button');
+        
+        // Replace with your actual Rasa endpoint
+        const RASA_ENDPOINT = 'https://your-ngrok-url.ngrok.io';
+        
+        let sessionId = generateSessionId();
+        
+        // Toggle chat window
+        chatToggle.addEventListener('click', () => {
+            chatContainer.classList.toggle('hidden');
+            // Add welcome message if this is first open
+            if (chatMessages.children.length === 0) {
+                addBotMessage("Hi there! I'm Diya from Infinite AI. How can I help you today?");
+            }
+        });
+        
+        closeChat.addEventListener('click', () => {
+            chatContainer.classList.add('hidden');
+        });
+        
+        // Send message when button clicked
+        sendButton.addEventListener('click', sendMessage);
+        
+        // Send message when Enter key pressed
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+            
+            // Add user message to chat
+            addUserMessage(message);
+            userInput.value = '';
+            
+            // Send to Rasa
+            fetch(`${RASA_ENDPOINT}/webhooks/rest/webhook`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    sender: sessionId,
+                    message: message
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Process bot responses
+                if (data && data.length > 0) {
+                    data.forEach(response => {
+                        if (response.text) {
+                            addBotMessage(response.text);
+                        }
+                        
+                        // Handle buttons if present
+                        if (response.buttons && response.buttons.length > 0) {
+                            addButtons(response.buttons);
+                        }
+                    });
+                } else {
+                    addBotMessage("I'm sorry, I didn't get a response. Please try again.");
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                addBotMessage("Sorry, I'm having trouble connecting. Please try again later.");
+            });
+        }
+        
+        function addUserMessage(text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex justify-end mb-3';
+            messageDiv.innerHTML = `
+                <div class="bg-purple-600 text-white rounded-lg py-2 px-4 max-w-xs">
+                    ${text}
+                </div>
+            `;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function addBotMessage(text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex mb-3';
+            messageDiv.innerHTML = `
+                <div class="bg-gray-200 rounded-lg py-2 px-4 max-w-xs">
+                    ${text}
+                </div>
+            `;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function addButtons(buttons) {
+            const buttonsDiv = document.createElement('div');
+            buttonsDiv.className = 'flex flex-wrap gap-2 mb-3';
+            
+            buttons.forEach(button => {
+                const buttonEl = document.createElement('button');
+                buttonEl.className = 'bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm';
+                buttonEl.textContent = button.title;
+                buttonEl.addEventListener('click', () => {
+                    // Extract the intent from the payload
+                    addUserMessage(button.title);
+                    
+                    // Send the payload to Rasa
+                    fetch(`${RASA_ENDPOINT}/webhooks/rest/webhook`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            sender: sessionId,
+                            message: button.payload
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.length > 0) {
+                            data.forEach(response => {
+                                if (response.text) {
+                                    addBotMessage(response.text);
+                                }
+                                
+                                if (response.buttons && response.buttons.length > 0) {
+                                    addButtons(response.buttons);
+                                }
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+                });
+                
+                buttonsDiv.appendChild(buttonEl);
+            });
+            
+            chatMessages.appendChild(buttonsDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function generateSessionId() {
+            return 'user_' + Math.random().toString(36).substring(2, 15);
+        }
+    });
+</script>
+
     
 <!-- JavaScript -->
 <script>
