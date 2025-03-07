@@ -1707,7 +1707,7 @@ Trust Indicators Section
         function initRasaWebchat() {
             // IMPORTANT: Replace with your current Ngrok URL or Rasa server URL
             const RASA_SERVER_URL = 'https://e978-20-192-21-49.ngrok-free.app';
-    
+        
             // Create chat button
             const chatButton = document.createElement('button');
             chatButton.innerHTML = '<i class="fas fa-comment-dots"></i>';
@@ -1742,37 +1742,40 @@ Trust Indicators Section
                     </div>
                 </div>
             `;
-    
+        
             // Append to body
             document.body.appendChild(chatButton);
             document.body.appendChild(chatContainer);
-    
+        
             // Get elements
             const chatWindow = document.getElementById('rasa-chat-window');
             const closeButton = document.getElementById('close-rasa-chat');
             const sendButton = document.getElementById('rasa-send-btn');
             const chatInput = document.getElementById('rasa-chat-input');
             const messagesContainer = document.getElementById('rasa-messages');
-    
+        
             // Toggle chat window
             chatButton.addEventListener('click', () => {
                 chatWindow.classList.remove('hidden');
                 chatButton.classList.add('hidden');
             });
-    
+        
             closeButton.addEventListener('click', () => {
                 chatWindow.classList.add('hidden');
                 chatButton.classList.remove('hidden');
             });
-    
+        
             // Send message handler
             async function handleSendMessage(payload = null) {
                 const message = payload || chatInput.value.trim();
                 if (!message) return;
-    
+        
+                console.log('Sending message:', message);
+                console.log('Payload:', payload);
+        
                 // Add user message
                 const userMessageEl = document.createElement('div');
-                userMessageEl.className = 'self-end max-w-[80%]';
+                userMessageEl.className = 'self-end max-w-[80%] mb-2';
                 userMessageEl.innerHTML = `
                     <span class="bg-purple-600 text-white px-3 py-2 rounded-lg inline-block">
                         ${message}
@@ -1784,7 +1787,7 @@ Trust Indicators Section
                 if (!payload) {
                     chatInput.value = '';
                 }
-    
+        
                 // Send to Rasa
                 try {
                     const response = await fetch(`${RASA_SERVER_URL}/webhooks/rest/webhook`, {
@@ -1798,20 +1801,20 @@ Trust Indicators Section
                             message: message
                         })
                     });
-    
+        
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
-    
+        
                     const botReplies = await response.json();
-                    console.log('Rasa Replies:', botReplies);
+                    console.log('Full Rasa Replies:', JSON.stringify(botReplies, null, 2));
                     
                     // Process bot replies
                     botReplies.forEach(reply => {
                         // Add text message
                         if (reply.text) {
                             const botMessageEl = document.createElement('div');
-                            botMessageEl.className = 'self-start max-w-[80%]';
+                            botMessageEl.className = 'self-start max-w-[80%] mb-2';
                             botMessageEl.innerHTML = `
                                 <span class="bg-gray-200 text-gray-800 px-3 py-2 rounded-lg inline-block">
                                     ${reply.text}
@@ -1819,9 +1822,10 @@ Trust Indicators Section
                             `;
                             messagesContainer.appendChild(botMessageEl);
                         }
-    
-                        // Add buttons
+        
+                        // ENHANCED Button Handling
                         if (reply.buttons && reply.buttons.length > 0) {
+                            console.log('Buttons received:', reply.buttons);  // Debug log
                             const buttonContainer = document.createElement('div');
                             buttonContainer.className = 'self-start flex flex-wrap gap-2 mt-2';
                             
@@ -1829,18 +1833,23 @@ Trust Indicators Section
                                 const buttonEl = document.createElement('button');
                                 buttonEl.className = 'bg-purple-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-purple-600 transition-colors';
                                 buttonEl.textContent = button.title;
+                                
+                                // Remove backslash escaping from payload
+                                const cleanPayload = button.payload.replace(/\\/g, '');
+                                
                                 buttonEl.addEventListener('click', () => {
-                                    // Send button payload when clicked
-                                    handleSendMessage(button.payload);
+                                    // Send the cleaned payload
+                                    handleSendMessage(cleanPayload);
                                 });
+                                
                                 buttonContainer.appendChild(buttonEl);
                             });
                             
                             messagesContainer.appendChild(buttonContainer);
                         }
                     });
-    
-                    // Scroll to bottom
+        
+                    // Scroll to bottom after processing all replies
                     messagesContainer.scrollTop = messagesContainer.scrollHeight;
                 } catch (error) {
                     console.error('Detailed Rasa communication error:', error);
@@ -1852,19 +1861,19 @@ Trust Indicators Section
                         </span>
                     `;
                     messagesContainer.appendChild(errorMessageEl);
+        
+                    // Scroll to bottom
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
                 }
-    
-                // Always scroll to bottom
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
             }
-    
+        
             // Event listeners for sending messages
             sendButton.addEventListener('click', () => handleSendMessage());
             chatInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') handleSendMessage();
             });
         }
-    
+        
         // Initialize Rasa Webchat
         initRasaWebchat();
     });
