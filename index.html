@@ -1705,9 +1705,9 @@ Trust Indicators Section
 
         // Rasa Webchat Integration
         function initRasaWebchat() {
-            // Use your current Ngrok URL
-            const RASA_SERVER_URL = ' https://e978-20-192-21-49.ngrok-free.app';
-
+            // IMPORTANT: Replace with your current Ngrok URL or Rasa server URL
+            const RASA_SERVER_URL = 'https://e978-20-192-21-49.ngrok-free.app';
+    
             // Create chat button
             const chatButton = document.createElement('button');
             chatButton.innerHTML = '<i class="fas fa-comment-dots"></i>';
@@ -1725,7 +1725,7 @@ Trust Indicators Section
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
-                    <div id="rasa-messages" class="p-4 h-96 overflow-y-auto"></div>
+                    <div id="rasa-messages" class="p-4 h-96 overflow-y-auto flex flex-col space-y-2"></div>
                     <div class="p-4 border-t flex">
                         <input 
                             type="text" 
@@ -1742,37 +1742,37 @@ Trust Indicators Section
                     </div>
                 </div>
             `;
-
+    
             // Append to body
             document.body.appendChild(chatButton);
             document.body.appendChild(chatContainer);
-
+    
             // Get elements
             const chatWindow = document.getElementById('rasa-chat-window');
             const closeButton = document.getElementById('close-rasa-chat');
             const sendButton = document.getElementById('rasa-send-btn');
             const chatInput = document.getElementById('rasa-chat-input');
             const messagesContainer = document.getElementById('rasa-messages');
-
+    
             // Toggle chat window
             chatButton.addEventListener('click', () => {
                 chatWindow.classList.remove('hidden');
                 chatButton.classList.add('hidden');
             });
-
+    
             closeButton.addEventListener('click', () => {
                 chatWindow.classList.add('hidden');
                 chatButton.classList.remove('hidden');
             });
-
+    
             // Send message handler
-            async function handleSendMessage() {
-                const message = chatInput.value.trim();
+            async function handleSendMessage(payload = null) {
+                const message = payload || chatInput.value.trim();
                 if (!message) return;
-
+    
                 // Add user message
                 const userMessageEl = document.createElement('div');
-                userMessageEl.className = 'text-right mb-2';
+                userMessageEl.className = 'self-end max-w-[80%]';
                 userMessageEl.innerHTML = `
                     <span class="bg-purple-600 text-white px-3 py-2 rounded-lg inline-block">
                         ${message}
@@ -1780,29 +1780,38 @@ Trust Indicators Section
                 `;
                 messagesContainer.appendChild(userMessageEl);
                 
-                // Clear input
-                chatInput.value = '';
-
+                // Clear input if not using a payload
+                if (!payload) {
+                    chatInput.value = '';
+                }
+    
                 // Send to Rasa
                 try {
                     const response = await fetch(`${RASA_SERVER_URL}/webhooks/rest/webhook`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Access-Control-Allow-Origin': '*'
+                            'Accept': 'application/json'
                         },
                         body: JSON.stringify({
                             sender: `user_${Date.now()}`,
                             message: message
                         })
                     });
+    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+    
                     const botReplies = await response.json();
+                    console.log('Rasa Replies:', botReplies);
                     
-                    // Add bot replies
+                    // Process bot replies
                     botReplies.forEach(reply => {
+                        // Add text message
                         if (reply.text) {
                             const botMessageEl = document.createElement('div');
-                            botMessageEl.className = 'text-left mb-2';
+                            botMessageEl.className = 'self-start max-w-[80%]';
                             botMessageEl.innerHTML = `
                                 <span class="bg-gray-200 text-gray-800 px-3 py-2 rounded-lg inline-block">
                                     ${reply.text}
@@ -1810,30 +1819,52 @@ Trust Indicators Section
                             `;
                             messagesContainer.appendChild(botMessageEl);
                         }
+    
+                        // Add buttons
+                        if (reply.buttons && reply.buttons.length > 0) {
+                            const buttonContainer = document.createElement('div');
+                            buttonContainer.className = 'self-start flex flex-wrap gap-2 mt-2';
+                            
+                            reply.buttons.forEach(button => {
+                                const buttonEl = document.createElement('button');
+                                buttonEl.className = 'bg-purple-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-purple-600 transition-colors';
+                                buttonEl.textContent = button.title;
+                                buttonEl.addEventListener('click', () => {
+                                    // Send button payload when clicked
+                                    handleSendMessage(button.payload);
+                                });
+                                buttonContainer.appendChild(buttonEl);
+                            });
+                            
+                            messagesContainer.appendChild(buttonContainer);
+                        }
                     });
-
+    
                     // Scroll to bottom
                     messagesContainer.scrollTop = messagesContainer.scrollHeight;
                 } catch (error) {
-                    console.error('Rasa communication error:', error);
+                    console.error('Detailed Rasa communication error:', error);
                     const errorMessageEl = document.createElement('div');
-                    errorMessageEl.className = 'text-left mb-2';
+                    errorMessageEl.className = 'self-start max-w-[80%]';
                     errorMessageEl.innerHTML = `
                         <span class="bg-red-200 text-red-800 px-3 py-2 rounded-lg inline-block">
-                            Sorry, I am having trouble connecting right now.
+                            Sorry, I am having trouble connecting right now. Please try again later.
                         </span>
                     `;
                     messagesContainer.appendChild(errorMessageEl);
                 }
+    
+                // Always scroll to bottom
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
             }
-
+    
             // Event listeners for sending messages
-            sendButton.addEventListener('click', handleSendMessage);
+            sendButton.addEventListener('click', () => handleSendMessage());
             chatInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') handleSendMessage();
             });
         }
-
+    
         // Initialize Rasa Webchat
         initRasaWebchat();
     });
