@@ -1554,12 +1554,6 @@ Trust Indicators Section
         mobileMenuButton?.addEventListener('click', () => toggleMobileMenu(true));
         mobileMenuCloseButton?.addEventListener('click', () => toggleMobileMenu(false));
 
-        // Email validation function
-        function isValidEmail(email) {
-            const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-            return re.test(String(email).toLowerCase());
-        }
-
         // Form validation
         function validateForm(form) {
             const requiredFields = form.querySelectorAll('[required]');
@@ -1585,6 +1579,7 @@ Trust Indicators Section
 
             return isValid;
         }
+
 
         // Contact form submission
         const contactForm = document.getElementById('contactForm');
@@ -1702,42 +1697,7 @@ Trust Indicators Section
         document.querySelectorAll('section').forEach(section => {
             observer.observe(section);
         });
-
-        function sendMessage() {
-          const userMessage = document.getElementById('userInput').value;
-          const chatbotUrl = 'https://7aaa-20-192-21-49.ngrok-free.app/webhooks/rest/webhook';
-        
-          fetch(chatbotUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              sender: 'user',
-              message: userMessage
-            })
-          })
-          .then(response => response.json())
-          .then(data => {
-            // Display the chatbot's response
-            const chatbotResponse = data[0].text;
-            displayMessage(chatbotResponse);
-          })
-          .catch(error => {
-            console.error('Error:', error);
-          });
-        }
-
-        function displayMessage(message) {
-          const chatContainer = document.getElementById('chatContainer');
-          const messageElement = document.createElement('div');
-          messageElement.textContent = message;
-          chatContainer.appendChild(messageElement);
-        }
-
-        <div id="chatContainer"></div>
-        <input type="text" id="userInput" placeholder="Type your message...">
-        <button onclick="sendMessage()">Send</button>
+    });
 </script>
 </body>
 </html>
