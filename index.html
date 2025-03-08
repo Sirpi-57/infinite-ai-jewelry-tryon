@@ -1568,7 +1568,7 @@ Trust Indicators Section
         const sendButton = document.getElementById('send-button');
         
         // Replace with your actual Rasa endpoint
-        const RASA_ENDPOINT = 'https://ebbc-4-240-39-197.ngrok-free.app';
+        const RASA_ENDPOINT = 'https://7f35-4-240-39-197.ngrok-free.app';
         
         let sessionId = generateSessionId();
         
@@ -1604,15 +1604,32 @@ Trust Indicators Section
             userInput.value = '';
             
             // Send to Rasa
+            sendToRasa(message);
+        }
+        
+        // Centralized function to send messages to Rasa
+        function sendToRasa(message, isPayload = false) {
+            let requestBody;
+            if (isPayload) {
+                // For payloads from buttons
+                requestBody = {
+                    sender: sessionId,
+                    message: message
+                };
+            } else {
+                // For normal text messages
+                requestBody = {
+                    sender: sessionId,
+                    message: message
+                };
+            }
+            
             fetch(`${RASA_ENDPOINT}/webhooks/rest/webhook`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    sender: sessionId,
-                    message: message
-                })
+                body: JSON.stringify(requestBody)
             })
             .then(response => response.json())
             .then(data => {
@@ -1664,7 +1681,7 @@ Trust Indicators Section
                 
                 // Create a container for the message content
                 const contentContainer = document.createElement('div');
-                contentContainer.className = 'bg-white rounded-lg py-2 px-4 overflow-hidden';
+                contentContainer.className = 'bg-white rounded-lg py-2 px-4 overflow-hidden max-w-md';
                 
                 // Add text heading if it exists
                 if (textPart && textPart.trim()) {
@@ -1708,38 +1725,17 @@ Trust Indicators Section
                 const buttonEl = document.createElement('button');
                 buttonEl.className = 'bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm';
                 buttonEl.textContent = button.title;
-                buttonEl.addEventListener('click', () => {
-                    // Extract the intent from the payload
+                buttonEl.dataset.payload = button.payload; // Store payload as data attribute
+                
+                buttonEl.addEventListener('click', (event) => {
+                    // Get the button's payload from the data attribute
+                    const payload = event.currentTarget.dataset.payload;
+                    
+                    // Show user's selection
                     addUserMessage(button.title);
                     
-                    // Send the payload to Rasa
-                    fetch(`${RASA_ENDPOINT}/webhooks/rest/webhook`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            sender: sessionId,
-                            message: button.payload
-                        })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data && data.length > 0) {
-                            data.forEach(response => {
-                                if (response.text) {
-                                    addBotMessage(response.text);
-                                }
-                                
-                                if (response.buttons && response.buttons.length > 0) {
-                                    addButtons(response.buttons);
-                                }
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                    });
+                    // Send payload to Rasa - this ensures the payload is sent correctly
+                    sendToRasa(payload, true);
                 });
                 
                 buttonsDiv.appendChild(buttonEl);
