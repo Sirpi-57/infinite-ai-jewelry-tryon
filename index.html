@@ -1568,7 +1568,7 @@ Trust Indicators Section
         const sendButton = document.getElementById('send-button');
         
         // Replace with your actual Rasa endpoint
-        const RASA_ENDPOINT = 'https://078d-4-240-39-198.ngrok-free.app';
+        const RASA_ENDPOINT = 'https://ebbc-4-240-39-197.ngrok-free.app';
         
         let sessionId = generateSessionId();
         
@@ -1653,11 +1653,49 @@ Trust Indicators Section
         function addBotMessage(text) {
             const messageDiv = document.createElement('div');
             messageDiv.className = 'flex mb-3';
-            messageDiv.innerHTML = `
-                <div class="bg-gray-200 rounded-lg py-2 px-4 max-w-xs">
-                    ${text}
-                </div>
-            `;
+            
+            // Check if message contains HTML for product cards
+            if (text.includes('<div style=')) {
+                // Handle HTML content for product cards
+                const parts = text.split('<div style=');
+                
+                // Extract the first part (text before HTML)
+                const textPart = parts[0];
+                
+                // Create a container for the message content
+                const contentContainer = document.createElement('div');
+                contentContainer.className = 'bg-white rounded-lg py-2 px-4 overflow-hidden';
+                
+                // Add text heading if it exists
+                if (textPart && textPart.trim()) {
+                    const headingElement = document.createElement('div');
+                    headingElement.className = 'mb-3 text-gray-700';
+                    headingElement.textContent = textPart.trim();
+                    contentContainer.appendChild(headingElement);
+                }
+                
+                // Add the HTML content
+                const htmlContent = document.createElement('div');
+                htmlContent.style.width = '100%';
+                htmlContent.innerHTML = '<div style=' + parts.slice(1).join('<div style=');
+                
+                // Add proper styling for the products container
+                const productsContainer = htmlContent.querySelector('div');
+                if (productsContainer) {
+                    productsContainer.style.maxWidth = '275px'; // Adjust width for chat
+                }
+                
+                contentContainer.appendChild(htmlContent);
+                messageDiv.appendChild(contentContainer);
+            } else {
+                // Regular text message
+                messageDiv.innerHTML = `
+                    <div class="bg-gray-200 rounded-lg py-2 px-4 max-w-xs">
+                        ${text}
+                    </div>
+                `;
+            }
+            
             chatMessages.appendChild(messageDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
