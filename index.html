@@ -1673,36 +1673,38 @@ Trust Indicators Section
             
             // Check if message contains HTML for product cards
             if (text.includes('<div style=')) {
-                // Handle HTML content for product cards
-                const parts = text.split('<div style=');
-                
-                // Extract the first part (text before HTML)
-                const textPart = parts[0];
+                // Parse the message to separate text and HTML
+                const textBeforeHtml = text.split('<div style=')[0].trim();
                 
                 // Create a container for the message content
                 const contentContainer = document.createElement('div');
-                contentContainer.className = 'bg-white rounded-lg py-2 px-4 overflow-hidden max-w-md';
+                contentContainer.className = 'bg-white rounded-lg py-2 px-4 shadow-md overflow-auto';
+                contentContainer.style.maxWidth = '280px'; // Adjust based on your chat width
                 
                 // Add text heading if it exists
-                if (textPart && textPart.trim()) {
-                    const headingElement = document.createElement('div');
+                if (textBeforeHtml) {
+                    const headingElement = document.createElement('p');
                     headingElement.className = 'mb-3 text-gray-700';
-                    headingElement.textContent = textPart.trim();
+                    headingElement.textContent = textBeforeHtml;
                     contentContainer.appendChild(headingElement);
                 }
                 
-                // Add the HTML content
-                const htmlContent = document.createElement('div');
-                htmlContent.style.width = '100%';
-                htmlContent.innerHTML = '<div style=' + parts.slice(1).join('<div style=');
+                // Create a container for the HTML content
+                const htmlContainer = document.createElement('div');
                 
-                // Add proper styling for the products container
-                const productsContainer = htmlContent.querySelector('div');
-                if (productsContainer) {
-                    productsContainer.style.maxWidth = '275px'; // Adjust width for chat
+                // We need to extract the HTML part and make it usable
+                const htmlPart = text.substring(text.indexOf('<div style='));
+                htmlContainer.innerHTML = htmlPart;
+                
+                // Make sure images and grid don't overflow the chat
+                const gridContainer = htmlContainer.querySelector('div');
+                if (gridContainer) {
+                    // Adjust the grid for the chat
+                    gridContainer.style.gridTemplateColumns = '1fr';
+                    gridContainer.style.maxWidth = '100%';
                 }
                 
-                contentContainer.appendChild(htmlContent);
+                contentContainer.appendChild(htmlContainer);
                 messageDiv.appendChild(contentContainer);
             } else {
                 // Regular text message
@@ -1744,6 +1746,24 @@ Trust Indicators Section
             chatMessages.appendChild(buttonsDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
+        
+        // Function to handle "Add to Cart" button clicks
+        function addToCart(productIdx) {
+            // Create a payload to send to Rasa
+            const payload = `/add_to_cart{"product_idx": "${productIdx}"}`;
+            
+            // Add a user message indicating the action
+            addUserMessage(`Adding product to cart`);
+            
+            // Send the payload to Rasa
+            sendToRasa(payload, true);
+        }
+        
+        // Add a document-level event listener for the "addToCart" event
+        document.addEventListener('addToCart', function(e) {
+            const productIdx = e.detail.productIdx;
+            addToCart(productIdx);
+        });
         
         function generateSessionId() {
             return 'user_' + Math.random().toString(36).substring(2, 15);
