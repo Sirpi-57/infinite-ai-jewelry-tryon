@@ -1765,7 +1765,7 @@ Trust Indicators Section
         color: #7b2cbf;
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: center;  /* Changed from space-between to center */
     }
     
     .product-price .original {
@@ -1775,28 +1775,7 @@ Trust Indicators Section
         margin-right: 8px;
     }
     
-    .add-to-cart-btn {
-        background: linear-gradient(135deg, #7b2cbf 0%, #9d4edd 100%);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        padding: 8px 12px;
-        font-size: 14px;
-        cursor: pointer;
-        transition: all 0.2s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .add-to-cart-btn i {
-        margin-right: 6px;
-    }
-    
-    .add-to-cart-btn:hover {
-        transform: scale(1.05);
-        box-shadow: 0 4px 8px rgba(123, 44, 191, 0.2);
-    }
+    /* Removed .add-to-cart-btn style completely since we're not using it anymore */
 </style>
 
 <script>
@@ -2007,7 +1986,7 @@ Trust Indicators Section
                         basePrice = priceElements[0].textContent;
                     }
                     
-                    // Create new card with our enhanced styling
+                    // Create new card with our enhanced styling (removed Add to Cart button)
                     const newCard = document.createElement('div');
                     newCard.className = 'product-card';
                     newCard.innerHTML = `
@@ -2017,25 +1996,15 @@ Trust Indicators Section
                         <div class="product-info">
                             <h3 class="product-title">${productName}</h3>
                             <p class="product-description">${productDesc}</p>
-                            <div class="flex justify-between items-center mt-3">
+                            <div class="mt-3 text-center">
                                 <div class="product-price">
                                     ${discountedPrice ? `<span class="original">${basePrice}</span><span>${discountedPrice}</span>` : `<span>${basePrice}</span>`}
                                 </div>
-                                <button class="add-to-cart-btn">
-                                    <i class="fas fa-shopping-cart"></i> Add
-                                </button>
                             </div>
                         </div>
                     `;
                     
-                    // Add event listener to the Add to Cart button
-                    const addButton = newCard.querySelector('.add-to-cart-btn');
-                    addButton.addEventListener('click', function() {
-                        // Extract product index from the original data
-                        // For demo purposes, we're just using a random index
-                        const productIdx = Math.floor(Math.random() * 100) + 1;
-                        addToCart(productIdx);
-                    });
+                    // No more Add to Cart button or event listener
                     
                     productGrid.appendChild(newCard);
                 });
@@ -2094,7 +2063,7 @@ Trust Indicators Section
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
         
-        // Function to handle "Add to Cart" button clicks
+        // Kept the addToCart function for backward compatibility but removed its usage
         function addToCart(productIdx) {
             // Create a payload to send to Rasa
             const payload = `/add_to_cart{"product_idx": "${productIdx}"}`;
@@ -2109,18 +2078,14 @@ Trust Indicators Section
             sendToRasa(payload, true);
         }
         
-        // Add a document-level event listener for the "addToCart" event
-        document.addEventListener('addToCart', function(e) {
-            const productIdx = e.detail.productIdx;
-            addToCart(productIdx);
-        });
+        // Remove the document-level addToCart event listener since we don't have Add buttons anymore
+        // But keeping the function for backward compatibility in case it's used elsewhere
         
         function generateSessionId() {
             return 'user_' + Math.random().toString(36).substring(2, 15);
         }
     });
 </script>
-
     
 <!-- JavaScript -->
 <script>
