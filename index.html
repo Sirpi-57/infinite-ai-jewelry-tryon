@@ -1820,15 +1820,7 @@ Trust Indicators Section
         chatToggle.addEventListener('click', () => {
             chatContainer.classList.toggle('hidden');
             if (chatMessages.children.length === 0) {
-                addBotMessage("Hi there! 👋 I'm Diya, your jewelry shopping assistant. How can I help you today?");
-                
-                // Add quick buttons for common options
-                const quickButtons = [
-                    {title: "💎 Explore Products", payload: "/explore_products"},
-                    {title: "📦 Track Order", payload: "/track_order"},
-                    {title: "👗 Get Styling Tips", payload: "/get_styling_tips"}
-                ];
-                addButtons(quickButtons);
+                addBotMessage("Hey there! 👋 Welcome to Infinite AI! Type 'Hello' to start your jewelry shopping experience!");
             }
         });
         
