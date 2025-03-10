@@ -684,8 +684,6 @@
             -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
         }
 
-        /* Add these styles to your existing CSS */
-
         /* Ensure video fits correctly in container */
         #cameraFeed {
             position: absolute;
@@ -817,6 +815,7 @@
             </div>
         </div>
 
+        <!-- Replace the existing camera container with this updated version -->
         <div class="camera-container">
             <div class="camera-feed-wrapper">
                 <video id="cameraFeed" autoplay playsinline></video>
@@ -2772,7 +2771,7 @@
                 console.error("Initialization error:", error);
                 showError(error.message || "Error initializing app. Please refresh the page.");
             }
-        }
+        }            
     </script>
 </body>
 </html>
