@@ -1193,16 +1193,51 @@
                 
                 // Check if this is a mobile device
                 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                
+                // Default constraints - no zoom
                 const constraints = {
                     video: {
                         facingMode: 'user',
                         width: { ideal: isMobile ? window.innerWidth : MAX_CAMERA_WIDTH },
-                        height: { ideal: isMobile ? window.innerHeight : MAX_CAMERA_HEIGHT }
+                        height: { ideal: isMobile ? window.innerHeight : MAX_CAMERA_HEIGHT },
+                        // Explicitly set zoom to 1 (no zoom)
+                        advanced: [
+                            { zoom: 1.0 }
+                        ]
                     }
                 };
                 
+                // For iOS devices, we need to be more specific with constraints
+                if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+                    constraints.video.width = { min: 640, ideal: 1280, max: 1920 };
+                    constraints.video.height = { min: 480, ideal: 720, max: 1080 };
+                    // iOS specific constraint
+                    if ("frameRate" in MediaTrackConstraints.prototype) {
+                        constraints.video.frameRate = { max: 30 };
+                    }
+                }
+                
                 const stream = await navigator.mediaDevices.getUserMedia(constraints);
                 elements.video.srcObject = stream;
+                
+                // After getting the stream, try to set zoom to 1x if available on the track
+                const videoTrack = stream.getVideoTracks()[0];
+                if (videoTrack) {
+                    try {
+                        const capabilities = videoTrack.getCapabilities();
+                        // Only attempt to set zoom if the camera supports it
+                        if (capabilities && capabilities.zoom) {
+                            const settings = {
+                                zoom: 1.0  // 1.0 means no zoom
+                            };
+                            await videoTrack.applyConstraints({ advanced: [settings] });
+                            console.log("Applied 1x zoom constraint");
+                        }
+                    } catch (zoomError) {
+                        console.warn("Could not set zoom level:", zoomError);
+                        // Continue anyway - this is not critical
+                    }
+                }
                 
                 await new Promise((resolve) => {
                     elements.video.onloadedmetadata = () => {
