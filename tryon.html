@@ -693,7 +693,6 @@
             height: 100%;
             object-fit: contain; /* Changed from cover to contain */
             transform: scaleX(-1); /* Mirror the camera */
-            z-index: 1; /* Ensure video is above background */
         }
         
         /* Ensure canvas matches video exactly */
@@ -705,80 +704,47 @@
             height: 100%;
             object-fit: contain; /* Match video element */
             transform: scaleX(-1); /* Mirror to match video */
-            z-index: 2; /* Canvas above video */
             pointer-events: none;
         }
         
-        /* Camera container with simpler styling */
+        /* Camera container with fixed aspect ratio */
         .camera-container {
             flex: 1;
             position: relative;
-            background: #120025;
-            width: 100%;
-            min-height: 50vh;
+            background: var(--color-dark);
             overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         
-        /* Camera feed wrapper */
+        /* Create a wrapper around video/canvas with controlled aspect ratio */
         .camera-feed-wrapper {
             position: relative;
-            max-width: 100%;
-            max-height: 100%;
+            width: 100%;
+            height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
             overflow: hidden;
         }
         
-        /* Video and canvas elements - use contain to prevent zooming */
-        #cameraFeed, #jewelryCanvas {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            object-fit: contain; /* This prevents zooming */
-            transform: scaleX(-1); /* Mirror the camera */
-        }
-        
-        /* Center the camera viewport */
-        .camera-viewport-center {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            height: 100%;
-        }
-        
-        /* Responsive adjustments for different screen orientations */
         @media (orientation: portrait) {
             .camera-feed-wrapper {
+                /* In portrait, constrain width to maintain aspect ratio */
                 width: 100%;
-                max-height: 100%;
+                height: auto;
+                aspect-ratio: 3/4; /* Common front camera aspect ratio */
             }
         }
         
         @media (orientation: landscape) {
             .camera-feed-wrapper {
+                /* In landscape, constrain height to maintain aspect ratio */
+                width: auto;
                 height: 100%;
-                max-width: 100%;
+                aspect-ratio: 4/3; /* Common front camera aspect ratio */
             }
-        }
-        
-        /* Adjust the bottom sheet position */
-        .bottom-sheet {
-            z-index: 20;
-        }
-        
-        /* Make sure the capture button is visible */
-        .capture-btn {
-            z-index: 15;
-            position: absolute;
-            bottom: calc(var(--bottom-sheet-height) + 16px);
-            right: 16px;
-        }
-        
-        /* Adjust tabs to be more spaced and readable */
-        .tab-btn {
-            padding: 0.5rem;
         }
     </style>
 </head>
