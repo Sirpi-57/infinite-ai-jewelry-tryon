@@ -717,78 +717,69 @@
             justify-content: center;
             align-items: center;
             width: 100%;
+            min-height: 50vh; /* Take at least half the screen height */
         }
         
-        /* Camera feed wrapper with improved aspect ratio handling */
+        /* Camera feed wrapper */
         .camera-feed-wrapper {
             position: relative;
-            width: 100%;
-            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
             overflow: hidden;
         }
-
-        /* Video and canvas elements */
+        
+        /* Video and canvas elements - use contain to prevent zooming */
         #cameraFeed, #jewelryCanvas {
             position: absolute;
             width: 100%;
             height: 100%;
-            object-fit: cover; /* Fill the container while maintaining aspect ratio */
+            object-fit: contain; /* This prevents zooming */
             transform: scaleX(-1); /* Mirror the camera */
+        }
+        
+        /* Center the camera viewport */
+        .camera-viewport-center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
         }
         
         /* Responsive adjustments for different screen orientations */
         @media (orientation: portrait) {
-            /* For portrait orientation (like in your screenshot) */
-            .camera-container {
-                min-height: 50vh; /* At least 50% of viewport height */
-            }
-            
-            /* Adjust bottom sheet to take less space in portrait */
-            :root {
-                --bottom-sheet-height: 25vh;
-                --bottom-sheet-height-expanded: 60vh;
+            .camera-feed-wrapper {
+                width: 100%;
+                max-height: 100%;
             }
         }
         
         @media (orientation: landscape) {
-            /* For landscape orientation */
-            .camera-container {
-                min-height: 70vh;
-            }
-            
-            /* Adjust bottom sheet to take less space in landscape */
-            :root {
-                --bottom-sheet-height: 20vh;
-                --bottom-sheet-height-expanded: 50vh;
+            .camera-feed-wrapper {
+                height: 100%;
+                max-width: 100%;
             }
         }
         
-        /* Override positioning for small screens to ensure controls are accessible */
-        @media (max-height: 600px) {
-            .capture-btn {
-                bottom: calc(var(--bottom-sheet-height) + 10px);
-                right: 10px;
-                width: 50px;
-                height: 50px;
-            }
+        /* Adjust the bottom sheet position */
+        .bottom-sheet {
+            z-index: 20;
         }
-
-        /* Make tabs more compact for smaller screens */
-        @media (max-width: 360px) {
-            .category-tabs {
-                height: 50px;
-            }
-            
-            .tab-btn i {
-                font-size: 1rem;
-            }
-            
-            .tab-btn span {
-                font-size: 0.7rem;
-            }
+        
+        /* Make sure the capture button is visible */
+        .capture-btn {
+            z-index: 15;
+            position: absolute;
+            bottom: calc(var(--bottom-sheet-height) + 16px);
+            right: 16px;
+        }
+        
+        /* Adjust tabs to be more spaced and readable */
+        .tab-btn {
+            padding: 0.5rem;
         }
     </style>
 </head>
