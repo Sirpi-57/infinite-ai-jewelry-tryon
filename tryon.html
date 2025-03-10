@@ -1653,6 +1653,1025 @@
                 toggleControlsPanel(true, id);
             }
         }
+
+        // AI detection loop
+        async function detectAll() {
+            if (!appState.isInitialized || !appState.isCameraReady) {
+                requestAnimationFrame(detectAll);
+                return;
+            }
+        
+            if (!elements.video.videoWidth) {
+                console.log("Video not ready yet");
+                requestAnimationFrame(detectAll);
+                return;
+            }
+        
+            try {
+                await Promise.all([
+                    faceMesh.send({image: elements.video}),
+                    hands.send({image: elements.video}),
+                    pose.send({image: elements.video})
+                ]);
+            } catch (error) {
+                console.error("Detection error:", error);
+            }
+            
+            requestAnimationFrame(detectAll);
+        }
+        
+        // MediaPipe result handlers
+        function onFaceMeshResults(results) {
+            appState.faceLandmarks = results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0 
+                ? results.multiFaceLandmarks[0] 
+                : null;
+            
+            renderJewelry();
+        }
+        
+        function onHandResults(results) {
+            appState.handLandmarks = results.multiHandLandmarks || [];
+            renderJewelry();
+        }
+        
+        function onPoseResults(results) {
+            appState.poseLandmarks = results.poseLandmarks || null;
+            renderJewelry();
+        }
+        
+        // Main rendering function
+        function renderJewelry() {
+            if (!elements.canvas || !elements.ctx) return;
+            
+            // Make sure canvas dimensions match video
+            if (elements.canvas.width !== elements.video.videoWidth || 
+                elements.canvas.height !== elements.video.videoHeight) {
+                elements.canvas.width = elements.video.videoWidth;
+                elements.canvas.height = elements.video.videoHeight;
+            }
+            
+            // Clear canvas
+            elements.ctx.clearRect(0, 0, elements.canvas.width, elements.canvas.height);
+            
+            // Nothing to render if no jewelry or no landmarks
+            if (appState.activeJewelry.size === 0) return;
+            
+            // Render each active jewelry item
+            appState.activeJewelry.forEach((jewelry, id) => {
+                if (jewelry.type === 'necklace') {
+                    if (appState.poseLandmarks) {
+                        drawNecklace(jewelry, id);
+                    }
+                } else if (jewelry.type === 'earrings') {
+                    if (appState.faceLandmarks) {
+                        drawEarrings(jewelry, id);
+                    }
+                } else if (jewelry.type === 'single') { // tikka, etc.
+                    if (appState.faceLandmarks) {
+                        drawSinglePiece(jewelry, id);
+                    }
+                } else if (jewelry.type === 'hand') {
+                    if (appState.handLandmarks && appState.handLandmarks.length > 0) {
+                        if (id.startsWith('ring')) {
+                            drawRing(jewelry, id);
+                        } else if (id.startsWith('bangle')) {
+                            drawBangle(jewelry, id);
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Add/remove/update jewelry items
+        function addJewelry(id) {
+            const originalJewelry = JEWELRY[id];
+            if (!originalJewelry) return;
+            
+            // Create a deep copy of the jewelry item with loaded images
+            const jewelryCopy = JSON.parse(JSON.stringify(originalJewelry));
+            
+            // Add loaded images (which can't be JSON stringified)
+            if (originalJewelry.type === 'earrings') {
+                jewelryCopy.leftImage = originalJewelry.leftImage;
+                jewelryCopy.rightImage = originalJewelry.rightImage;
+            } else {
+                jewelryCopy.loadedImage = originalJewelry.loadedImage;
+            }
+            
+            // Initialize with default values
+            jewelryCopy.scale = originalJewelry.defaultScale;
+            jewelryCopy.offset = { x: 0, y: 0 };
+            jewelryCopy.visible = true;
+            
+            // For hand jewelry, set default hand and finger
+            if (originalJewelry.type === 'hand') {
+                jewelryCopy.handIndex = 0; // Default to first detected hand
+            }
+            
+            // Add to active jewelry
+            appState.activeJewelry.set(id, jewelryCopy);
+            
+            // Re-render category if it's the current one
+            if (originalJewelry.group === appState.currentCategory) {
+                renderJewelryByCategory(appState.currentCategory);
+            }
+        }
+        
+        function removeJewelry(id) {
+            // Remove from active jewelry
+            appState.activeJewelry.delete(id);
+            
+            // If controls panel is open for this jewelry, close it
+            if (appState.selectedJewelryId === id && appState.isControlsPanelOpen) {
+                toggleControlsPanel(false);
+            }
+            
+            // Re-render active category or current category
+            if (appState.currentCategory === 'active') {
+                renderActiveJewelry();
+            } else {
+                const jewelry = JEWELRY[id];
+                if (jewelry && jewelry.group === appState.currentCategory) {
+                    renderJewelryByCategory(appState.currentCategory);
+                }
+            }
+        }
+        
+        function updateJewelryProperty(id, property, value) {
+            if (!appState.activeJewelry.has(id)) return;
+            
+            const jewelry = appState.activeJewelry.get(id);
+            
+            // Handle nested properties like offset.x
+            if (property.includes('.')) {
+                const [parent, child] = property.split('.');
+                jewelry[parent][child] = value;
+            } else {
+                jewelry[property] = value;
+            }
+        }
+        
+        // Controls panel rendering
+        function renderControlsForJewelry(id) {
+            if (!id || !appState.activeJewelry.has(id)) return;
+            
+            const jewelry = appState.activeJewelry.get(id);
+            const originalJewelry = JEWELRY[id];
+            const controlsContent = elements.controlsContent;
+            
+            // Clear previous controls
+            controlsContent.innerHTML = '';
+            
+            // Add jewelry name and thumbnail
+            const thumbSrc = originalJewelry.thumbnail || 
+                (originalJewelry.type === 'earrings' ? originalJewelry.left.replace('.png', '-thumb.png') : 
+                    originalJewelry.image.replace('.png', '-thumb.png'));
+            
+            const headerHTML = `
+                <div class="flex items-center mb-4">
+                    <img src="${thumbSrc}" alt="${originalJewelry.name}" class="w-12 h-12 object-contain mr-3">
+                    <h3 class="text-lg font-semibold">${originalJewelry.name}</h3>
+                </div>
+            `;
+            
+            // Visibility toggle
+            const visibilityHTML = `
+                <div class="control-group">
+                    <div class="flex justify-between items-center">
+                        <label class="control-label">Visibility</label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" ${jewelry.visible !== false ? 'checked' : ''} 
+                                onchange="updateJewelryProperty('${id}', 'visible', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            `;
+            
+            // Size control
+            const sizeHTML = `
+                <div class="control-group">
+                    <label class="control-label">Size</label>
+                    <div class="size-control">
+                        <input type="range" min="0.1" max="2.0" step="0.05" value="${jewelry.scale}" 
+                            oninput="updateJewelryProperty('${id}', 'scale', parseFloat(this.value))">
+                    </div>
+                </div>
+            `;
+            
+            // Position adjustment
+            const positionHTML = `
+                <div class="control-group">
+                    <label class="control-label">Position Adjustment</label>
+                    <div class="position-control">
+                        <div class="position-grid">
+                            <button class="position-btn" onclick="moveJewelry('${id}', 'up-left')">↖</button>
+                            <button class="position-btn" onclick="moveJewelry('${id}', 'up')">↑</button>
+                            <button class="position-btn" onclick="moveJewelry('${id}', 'up-right')">↗</button>
+                            <button class="position-btn" onclick="moveJewelry('${id}', 'left')">←</button>
+                            <button class="position-btn" onclick="moveJewelry('${id}', 'center')">•</button>
+                            <button class="position-btn" onclick="moveJewelry('${id}', 'right')">→</button>
+                            <button class="position-btn" onclick="moveJewelry('${id}', 'down-left')">↙</button>
+                            <button class="position-btn" onclick="moveJewelry('${id}', 'down')">↓</button>
+                            <button class="position-btn" onclick="moveJewelry('${id}', 'down-right')">↘</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Build specialized controls for different jewelry types
+            let specializedControls = '';
+            
+            if (jewelry.type === 'earrings') {
+                specializedControls = `
+                    <div class="control-group">
+                        <label class="control-label">Width Adjustment</label>
+                        <div class="gap-control">
+                            <input type="range" min="-50" max="50" step="1" value="${jewelry.gap || 0}" 
+                                oninput="updateJewelryProperty('${id}', 'gap', parseInt(this.value))">
+                        </div>
+                    </div>
+                `;
+            } else if (jewelry.type === 'hand' && id.startsWith('ring')) {
+                // Finger selection for rings
+                specializedControls = `
+                    <div class="control-group">
+                        <label class="control-label">Finger Selection</label>
+                        <select class="w-full p-2 border rounded-lg my-2" 
+                            onchange="updateJewelryProperty('${id}', 'fingerIndex', parseInt(this.value))">
+                            <option value="8" ${jewelry.fingerIndex === 8 ? 'selected' : ''}>Index Finger</option>
+                            <option value="12" ${jewelry.fingerIndex === 12 ? 'selected' : ''}>Middle Finger</option>
+                            <option value="16" ${jewelry.fingerIndex === 16 ? 'selected' : ''}>Ring Finger</option>
+                            <option value="20" ${jewelry.fingerIndex === 20 ? 'selected' : ''}>Pinky Finger</option>
+                            <option value="4" ${jewelry.fingerIndex === 4 ? 'selected' : ''}>Thumb</option>
+                        </select>
+                    </div>
+                `;
+            } else if (jewelry.type === 'hand') {
+                // Hand selection for other hand jewelry
+                specializedControls = `
+                    <div class="control-group">
+                        <label class="control-label">Hand Selection</label>
+                        <select class="w-full p-2 border rounded-lg my-2" 
+                            onchange="updateJewelryProperty('${id}', 'handIndex', parseInt(this.value))">
+                            <option value="0" ${jewelry.handIndex === 0 ? 'selected' : ''}>Right Hand</option>
+                            <option value="1" ${jewelry.handIndex === 1 ? 'selected' : ''}>Left Hand</option>
+                        </select>
+                    </div>
+                `;
+            }
+            
+            // Remove button
+            const removeHTML = `
+                <div class="mt-6">
+                    <button class="w-full bg-red-500 text-white py-3 rounded-lg flex justify-center items-center" 
+                        onclick="removeJewelry('${id}'); toggleControlsPanel(false);">
+                        <i class="fas fa-trash mr-2"></i> Remove Item
+                    </button>
+                </div>
+            `;
+            
+            // Combine all controls
+            controlsContent.innerHTML = headerHTML + visibilityHTML + sizeHTML + specializedControls + positionHTML + removeHTML;
+        }
+        
+        // Position adjustment
+        function moveJewelry(id, direction) {
+            if (!appState.activeJewelry.has(id)) return;
+            
+            const jewelry = appState.activeJewelry.get(id);
+            const step = 5; // Pixel adjustment step
+            
+            switch (direction) {
+                case 'up':
+                    jewelry.offset.y -= step;
+                    break;
+                case 'down':
+                    jewelry.offset.y += step;
+                    break;
+                case 'left':
+                    jewelry.offset.x -= step;
+                    break;
+                case 'right':
+                    jewelry.offset.x += step;
+                    break;
+                case 'up-left':
+                    jewelry.offset.x -= step;
+                    jewelry.offset.y -= step;
+                    break;
+                case 'up-right':
+                    jewelry.offset.x += step;
+                    jewelry.offset.y -= step;
+                    break;
+                case 'down-left':
+                    jewelry.offset.x -= step;
+                    jewelry.offset.y += step;
+                    break;
+                case 'down-right':
+                    jewelry.offset.x += step;
+                    jewelry.offset.y += step;
+                    break;
+                case 'center':
+                    jewelry.offset = { x: 0, y: 0 };
+                    break;
+            }
+        }
+        
+        // Drawing functions for each jewelry type
+        function drawNecklace(jewelry, id) {
+            if (!jewelry.loadedImage || !jewelry.visible) return;
+            
+            const leftShoulder = appState.poseLandmarks[11];
+            const rightShoulder = appState.poseLandmarks[12];
+            
+            if (!leftShoulder || !rightShoulder) return;
+        
+            // Calculate base positions from shoulders
+            const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x) * elements.canvas.width;
+            const collarOffset = 0.15;
+            const leftX = leftShoulder.x * elements.canvas.width + shoulderWidth * collarOffset;
+            const rightX = rightShoulder.x * elements.canvas.width - shoulderWidth * collarOffset;
+            const baseY = leftShoulder.y * elements.canvas.height;
+        
+            // Apply measurements with mobile-friendly adjustments
+            // Use constants optimized for the original PC version
+            const VERTICAL_OFFSET = -115;
+            const DROP_HEIGHT = 45;
+            
+            const adjustedY = baseY + VERTICAL_OFFSET + jewelry.offset.y;
+            const centerX = (leftX + rightX) / 2 + jewelry.offset.x;
+            
+            // Calculate necklace dimensions
+            const necklaceWidth = shoulderWidth * jewelry.scale;
+            const necklaceHeight = jewelry.loadedImage.height * (necklaceWidth / jewelry.loadedImage.width);
+        
+            // Calculate the actual drawing position in canvas coordinates
+            const drawX = centerX - necklaceWidth/2;
+            const drawY = adjustedY - DROP_HEIGHT/2;
+        
+            // For mobile, use simplified drawing approach without sub-image calculations
+            elements.ctx.save();
+            elements.ctx.shadowColor = 'rgba(0,0,0,0.3)';
+            elements.ctx.shadowBlur = 8;
+            elements.ctx.shadowOffsetX = 2;
+            elements.ctx.shadowOffsetY = 2;
+        
+            elements.ctx.drawImage(
+                jewelry.loadedImage,
+                drawX, drawY, necklaceWidth, necklaceHeight
+            );
+            
+            elements.ctx.restore();
+        }
+        
+        function drawEarrings(jewelry, id) {
+            if (!jewelry.leftImage || !jewelry.rightImage || !jewelry.visible) return;
+            
+            const landmarks = appState.faceLandmarks;
+            if (!landmarks) return;
+            
+            const nose = landmarks[1];
+            const leftEar = landmarks[234];
+            const rightEar = landmarks[454];
+            
+            if (!nose || !leftEar || !rightEar) return;
+            
+            const faceRotation = (rightEar.z - leftEar.z);
+            let gap = jewelry.gap || 0;
+            
+            // Adjust gap based on face rotation
+            if (Math.abs(faceRotation) <= 0.1) {
+                gap += 3;
+            } else {
+                gap += 24;
+            }
+            
+            const leftLobe = landmarks[177];
+            const rightLobe = landmarks[401];
+            
+            if (!leftLobe || !rightLobe) return;
+            
+            const faceWidth = Math.abs(rightEar.x - leftEar.x) * elements.canvas.width;
+            const gapAdjustment = (gap / 100) * faceWidth;
+            
+            const earHeight = Math.abs(landmarks[234].y - leftLobe.y) * elements.canvas.height;
+            const baseScale = (earHeight * 0.8) / jewelry.leftImage.height;
+            const scale = baseScale * jewelry.scale; // Combine base scale with user adjustable scale
+            
+            elements.ctx.save();
+            elements.ctx.shadowColor = 'rgba(0,0,0,0.3)';
+            elements.ctx.shadowBlur = 5;
+            elements.ctx.shadowOffsetX = 2;
+            elements.ctx.shadowOffsetY = 2;
+            
+            // Draw left earring if face is not turned too far right
+            if (faceRotation > -0.1) {
+                const leftX = leftLobe.x * elements.canvas.width - gapAdjustment + jewelry.offset.x;
+                const leftY = leftLobe.y * elements.canvas.height + jewelry.offset.y;
+                
+                const leftWidth = jewelry.leftImage.width * scale;
+                const leftHeight = jewelry.leftImage.height * scale;
+                elements.ctx.drawImage(
+                    jewelry.leftImage,
+                    leftX - leftWidth/2,
+                    leftY - leftHeight/2,
+                    leftWidth,
+                    leftHeight
+                );
+            }
+            
+            // Draw right earring if face is not turned too far left
+            if (faceRotation < 0.1) {
+                const rightX = rightLobe.x * elements.canvas.width + gapAdjustment + jewelry.offset.x + 15;
+                const rightY = rightLobe.y * elements.canvas.height + jewelry.offset.y;
+                
+                const rightWidth = jewelry.rightImage.width * scale;
+                const rightHeight = jewelry.rightImage.height * scale;
+                elements.ctx.drawImage(
+                    jewelry.rightImage,
+                    rightX - rightWidth/2,
+                    rightY - rightHeight/2,
+                    rightWidth,
+                    rightHeight
+                );
+            }
+            
+            elements.ctx.restore();
+        }
+        
+        function drawSinglePiece(jewelry, id) {
+            if (!jewelry.loadedImage || !jewelry.visible) return;
+            
+            const landmarks = appState.faceLandmarks;
+            if (!landmarks) return;
+            
+            let x, y, baseScale, scale;
+            
+            // For tikka
+            if (jewelry.landmark === 151) {
+                const centerPoint = landmarks[151]; // Center of forehead
+                const topPoint = landmarks[10];     // Top of forehead
+                const refPoint = landmarks[9];      // Reference point
+                
+                if (!centerPoint || !topPoint || !refPoint) return;
+                
+                // Calculate position on the forehead
+                x = ((centerPoint.x + refPoint.x) / 2) * elements.canvas.width + jewelry.offset.x;
+                y = ((centerPoint.y + topPoint.y) / 2) * elements.canvas.height - 20 + jewelry.offset.y;
+                
+                // Scale based on forehead width
+                const foreheadWidth = Math.abs(landmarks[71].x - landmarks[301].x) * elements.canvas.width;
+                baseScale = (foreheadWidth * 0.4) / jewelry.loadedImage.width;
+                scale = baseScale * jewelry.scale;
+            } else {
+                // Default to center of face if landmark isn't recognized
+                const nose = landmarks[1];
+                if (!nose) return;
+                
+                x = nose.x * elements.canvas.width + jewelry.offset.x;
+                y = nose.y * elements.canvas.height + jewelry.offset.y;
+                scale = jewelry.scale;
+            }
+            
+            // Draw the jewelry
+            elements.ctx.save();
+            elements.ctx.shadowColor = 'rgba(0,0,0,0.3)';
+            elements.ctx.shadowBlur = 8;
+            elements.ctx.shadowOffsetX = 2;
+            elements.ctx.shadowOffsetY = 2;
+            
+            const width = jewelry.loadedImage.width * scale;
+            const height = jewelry.loadedImage.height * scale;
+            
+            elements.ctx.drawImage(
+                jewelry.loadedImage,
+                x - width/2,
+                y - height/2,
+                width,
+                height
+            );
+            
+            elements.ctx.restore();
+        }
+        
+        function drawRing(jewelry, id) {
+            if (!jewelry.loadedImage || !jewelry.visible) return;
+            
+            // Check if we have hand landmarks and the right hand index
+            const handIndex = jewelry.handIndex || 0;
+            if (!appState.handLandmarks || !appState.handLandmarks[handIndex]) return;
+            
+            const handLandmarks = appState.handLandmarks[handIndex];
+            const fingerTip = handLandmarks[jewelry.fingerIndex];
+            const fingerBase = handLandmarks[jewelry.fingerIndex - 3];
+            
+            if (!fingerTip || !fingerBase) return;
+            
+            // Calculate position along the finger (closer to base)
+            const positionRatio = 0.3; // 30% from base to tip
+            const x = (fingerBase.x + (fingerTip.x - fingerBase.x) * positionRatio) * elements.canvas.width + jewelry.offset.x;
+            const y = (fingerBase.y + (fingerTip.y - fingerBase.y) * positionRatio) * elements.canvas.height + jewelry.offset.y;
+            
+            // Calculate rotation angle
+            const angle = Math.atan2(
+                fingerTip.y - fingerBase.y,
+                fingerTip.x - fingerBase.x
+            );
+            
+            // Draw rotated ring
+            elements.ctx.save();
+            elements.ctx.translate(x, y);
+            elements.ctx.rotate(angle - Math.PI/2);
+            
+            const width = jewelry.loadedImage.width * jewelry.scale;
+            const height = jewelry.loadedImage.height * jewelry.scale;
+            
+            elements.ctx.drawImage(
+                jewelry.loadedImage,
+                -width/2,
+                -height/2,
+                width,
+                height
+            );
+            
+            elements.ctx.restore();
+        }
+        
+        function drawBangle(jewelry, id) {
+            if (!jewelry.loadedImage || !jewelry.visible) return;
+            
+            // Check if we have hand landmarks and the right hand index
+            const handIndex = jewelry.handIndex || 0;
+            if (!appState.handLandmarks || !appState.handLandmarks[handIndex]) return;
+            
+            const handLandmarks = appState.handLandmarks[handIndex];
+            const wrist = handLandmarks[0];
+            const palmBase = handLandmarks[9];
+            
+            if (!wrist || !palmBase) return;
+            
+            // Add offsets to position bangle
+            const verticalOffset = 30;
+            const horizontalOffset = -20;
+            
+            const x = wrist.x * elements.canvas.width + horizontalOffset + jewelry.offset.x;
+            const y = wrist.y * elements.canvas.height + verticalOffset + jewelry.offset.y;
+            
+            // Calculate rotation angle
+            const angle = Math.atan2(
+                palmBase.y - wrist.y,
+                palmBase.x - wrist.x
+            );
+            
+            // Calculate size based on wrist width
+            const wristLeft = handLandmarks[17];
+            const wristRight = handLandmarks[5];
+            
+            if (!wristLeft || !wristRight) return;
+            
+            const wristWidth = Math.abs(wristRight.x - wristLeft.x) * elements.canvas.width;
+            const baseScale = 3.2;
+            
+            // Draw rotated bangle
+            elements.ctx.save();
+            elements.ctx.translate(x, y);
+            elements.ctx.rotate(angle - Math.PI/2);
+            
+            const width = wristWidth * baseScale * jewelry.scale;
+            const height = jewelry.loadedImage.height * (width / jewelry.loadedImage.width);
+            
+            elements.ctx.drawImage(
+                jewelry.loadedImage,
+                -width/2,
+                -height/2,
+                width,
+                height
+            );
+            
+            elements.ctx.restore();
+        }
+        
+        // Camera access request
+        async function requestCameraAccess() {
+            try {
+                document.getElementById('cameraError').classList.add('hidden');
+                await initializeCamera();
+                if (!appState.isInitialized) {
+                    // If we haven't fully initialized yet, continue initialization
+                    await initializeAIModels();
+                    await preloadJewelryImages();
+                    initializeUI();
+                    appState.isInitialized = true;
+                    requestAnimationFrame(detectAll);
+                }
+            } catch (error) {
+                console.error("Camera request error:", error);
+                document.getElementById('cameraError').classList.remove('hidden');
+            }
+        }
+        
+        // Image capture
+        function captureImage() {
+            // Create a new canvas to combine video and jewelry
+            const captureCanvas = document.createElement('canvas');
+            captureCanvas.width = elements.video.videoWidth;
+            captureCanvas.height = elements.video.videoHeight;
+            const ctx = captureCanvas.getContext('2d');
+            
+            // Draw video frame
+            ctx.drawImage(elements.video, 0, 0, captureCanvas.width, captureCanvas.height);
+            
+            // Draw jewelry canvas on top
+            ctx.drawImage(elements.canvas, 0, 0, captureCanvas.width, captureCanvas.height);
+            
+            // Add a small branding
+            ctx.font = '16px Arial';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.fillText('Infinite AI Virtual Try-On', 10, captureCanvas.height - 20);
+            
+            // Create download link
+            const link = document.createElement('a');
+            link.download = 'jewelry-tryon-' + new Date().toISOString().slice(0, 10) + '.png';
+            
+            try {
+                // Create image URL
+                link.href = captureCanvas.toDataURL('image/png');
+                link.click();
+                
+                // Show success toast
+                showToast('Image saved successfully!');
+            } catch (e) {
+                console.error('Error capturing image:', e);
+                showToast('Error saving image. Check permissions.');
+            }
+        }
+        
+        // Show toast message
+        function showToast(message) {
+            // Check if a toast already exists
+            let toast = document.querySelector('.toast-message');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.className = 'toast-message';
+                toast.style.cssText = `
+                    position: fixed;
+                    bottom: 100px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background-color: rgba(0, 0, 0, 0.7);
+                    color: white;
+                    padding: 10px 20px;
+                    border-radius: 20px;
+                    z-index: 1000;
+                    font-size: 14px;
+                `;
+                document.body.appendChild(toast);
+            }
+            
+            toast.textContent = message;
+            toast.style.opacity = '1';
+            
+            // Hide after 2 seconds
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 300);
+            }, 2000);
+        }
+        
+        // Gesture support for direct manipulation
+        function setupGestureHandlers() {
+            const canvas = elements.canvas;
+            let startTouches = [];
+            let startDistance = 0;
+            let startScale = 1;
+            let startOffset = { x: 0, y: 0 };
+            let isDragging = false;
+            let activeItemId = null;
+            let activePinchId = null;
+            
+            // Touch start
+            canvas.addEventListener('touchstart', (e) => {
+                // Only activate if we have jewelry and landmarks
+                if (appState.activeJewelry.size === 0 || appState.isControlsPanelOpen) return;
+                
+                if (e.touches.length === 1) {
+                    // Single touch - check if we're touching jewelry for drag
+                    const touch = e.touches[0];
+                    activeItemId = findJewelryAtPoint(touch.clientX, touch.clientY);
+                    
+                    if (activeItemId) {
+                        isDragging = true;
+                        const jewelry = appState.activeJewelry.get(activeItemId);
+                        startOffset = { ...jewelry.offset };
+                        startTouches = [{ x: touch.clientX, y: touch.clientY }];
+                        e.preventDefault(); // Prevent scrolling
+                    }
+                } else if (e.touches.length === 2) {
+                    // Two touches - check for pinch to resize
+                    const touch1 = e.touches[0];
+                    const touch2 = e.touches[1];
+                    
+                    // Find midpoint between touches
+                    const midX = (touch1.clientX + touch2.clientX) / 2;
+                    const midY = (touch1.clientY + touch2.clientY) / 2;
+                    
+                    // Check if midpoint is on jewelry
+                    activePinchId = findJewelryAtPoint(midX, midY);
+                    
+                    if (activePinchId) {
+                        const jewelry = appState.activeJewelry.get(activePinchId);
+                        startScale = jewelry.scale;
+                        startDistance = Math.hypot(
+                            touch1.clientX - touch2.clientX,
+                            touch1.clientY - touch2.clientY
+                        );
+                        e.preventDefault(); // Prevent zooming the page
+                    }
+                }
+            });
+            
+            // Touch move
+            canvas.addEventListener('touchmove', (e) => {
+                if (isDragging && activeItemId && e.touches.length === 1) {
+                    // Handle drag
+                    const touch = e.touches[0];
+                    const deltaX = touch.clientX - startTouches[0].x;
+                    const deltaY = touch.clientY - startTouches[0].y;
+                    
+                    // Get the pixel ratio for accurate movement
+                    const pixelRatio = window.devicePixelRatio || 1;
+                    
+                    // Update jewelry position
+                    const jewelry = appState.activeJewelry.get(activeItemId);
+                    jewelry.offset.x = startOffset.x + (deltaX / pixelRatio);
+                    jewelry.offset.y = startOffset.y + (deltaY / pixelRatio);
+                    
+                    e.preventDefault(); // Prevent scrolling
+                } else if (activePinchId && e.touches.length === 2) {
+                    // Handle pinch to resize
+                    const touch1 = e.touches[0];
+                    const touch2 = e.touches[1];
+                    
+                    // Calculate new distance
+                    const newDistance = Math.hypot(
+                        touch1.clientX - touch2.clientX,
+                        touch1.clientY - touch2.clientY
+                    );
+                    
+                    // Calculate scale factor
+                    const scaleFactor = newDistance / startDistance;
+                    
+                    // Apply new scale with limits
+                    const jewelry = appState.activeJewelry.get(activePinchId);
+                    jewelry.scale = Math.max(0.1, Math.min(2.0, startScale * scaleFactor));
+                    
+                    e.preventDefault(); // Prevent zooming the page
+                }
+            });
+            
+            // Touch end
+            canvas.addEventListener('touchend', (e) => {
+                // Reset touch interactions
+                if (isDragging && activeItemId) {
+                    // If it was a short tap with minimal movement, open controls for the item
+                    const jewelry = appState.activeJewelry.get(activeItemId);
+                    const deltaX = Math.abs(jewelry.offset.x - startOffset.x);
+                    const deltaY = Math.abs(jewelry.offset.y - startOffset.y);
+                    
+                    if (deltaX < 5 && deltaY < 5) {
+                        // This was essentially a tap - open controls
+                        toggleControlsPanel(true, activeItemId);
+                    }
+                    
+                    isDragging = false;
+                }
+                
+                activeItemId = null;
+                activePinchId = null;
+            });
+            
+            // Touch cancel - reset all interactions
+            canvas.addEventListener('touchcancel', () => {
+                isDragging = false;
+                activeItemId = null;
+                activePinchId = null;
+            });
+        }
+        
+        // Helper to find jewelry at touch point
+        function findJewelryAtPoint(clientX, clientY) {
+            if (appState.activeJewelry.size === 0) return null;
+            
+            // Convert client coordinates to canvas coordinates
+            const rect = elements.canvas.getBoundingClientRect();
+            const x = (clientX - rect.left) * (elements.canvas.width / rect.width);
+            const y = (clientY - rect.top) * (elements.canvas.height / rect.height);
+            
+            // Simple hit testing for jewelry items
+            for (const [id, jewelry] of appState.activeJewelry.entries()) {
+                if (!jewelry.visible) continue;
+                
+                // Get position and size based on jewelry type
+                let hitX, hitY, hitWidth, hitHeight;
+                
+                if (jewelry.type === 'necklace' && appState.poseLandmarks) {
+                    // Approximate necklace position
+                    const leftShoulder = appState.poseLandmarks[11];
+                    const rightShoulder = appState.poseLandmarks[12];
+                    
+                    if (!leftShoulder || !rightShoulder) continue;
+                    
+                    const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x) * elements.canvas.width;
+                    const centerX = (leftShoulder.x + rightShoulder.x) / 2 * elements.canvas.width + jewelry.offset.x;
+                    const centerY = leftShoulder.y * elements.canvas.height - 100 + jewelry.offset.y;
+                    
+                    hitX = centerX - (shoulderWidth * jewelry.scale) / 2;
+                    hitY = centerY - (shoulderWidth * jewelry.scale) / 4;
+                    hitWidth = shoulderWidth * jewelry.scale;
+                    hitHeight = shoulderWidth * jewelry.scale / 2;
+                } else if (jewelry.type === 'single' && appState.faceLandmarks) {
+                    // Approximate tikka position
+                    const centerPoint = appState.faceLandmarks[151];
+                    if (!centerPoint) continue;
+                    
+                    hitX = centerPoint.x * elements.canvas.width - 50 * jewelry.scale + jewelry.offset.x;
+                    hitY = centerPoint.y * elements.canvas.height - 50 * jewelry.scale + jewelry.offset.y;
+                    hitWidth = 100 * jewelry.scale;
+                    hitHeight = 100 * jewelry.scale;
+                } else if (jewelry.type === 'earrings' && appState.faceLandmarks) {
+                    // Check both earrings
+                    const leftLobe = appState.faceLandmarks[177];
+                    const rightLobe = appState.faceLandmarks[401];
+                    
+                    if (!leftLobe || !rightLobe) continue;
+                    
+                    // Check left earring hit
+                    let leftX = leftLobe.x * elements.canvas.width + jewelry.offset.x;
+                    let leftY = leftLobe.y * elements.canvas.height + jewelry.offset.y;
+                    let hitSize = 50 * jewelry.scale;
+                    
+                    if (x >= leftX - hitSize && x <= leftX + hitSize && 
+                        y >= leftY - hitSize && y <= leftY + hitSize) {
+                        return id;
+                    }
+                    
+                    // Check right earring hit
+                    let rightX = rightLobe.x * elements.canvas.width + jewelry.offset.x;
+                    let rightY = rightLobe.y * elements.canvas.height + jewelry.offset.y;
+                    
+                    if (x >= rightX - hitSize && x <= rightX + hitSize && 
+                        y >= rightY - hitSize && y <= rightY + hitSize) {
+                        return id;
+                    }
+                    
+                    // Not a hit on either earring
+                    continue;
+                } else {
+                    // Skip other jewelry types or those without landmarks
+                    continue;
+                }
+                
+                // Check if point is inside the jewelry's bounding box
+                if (x >= hitX && x <= hitX + hitWidth && y >= hitY && y <= hitY + hitHeight) {
+                    return id;
+                }
+            }
+            
+            // No jewelry found at this point
+            return null;
+        }
+        
+        // Double tap to toggle controls
+        function setupDoubleTapHandler() {
+            const canvas = elements.canvas;
+            let lastTap = 0;
+            let lastTapX = 0;
+            let lastTapY = 0;
+            
+            canvas.addEventListener('touchend', (e) => {
+                // Ignore multi-touch
+                if (e.changedTouches.length !== 1) return;
+                
+                const currentTime = new Date().getTime();
+                const tapLength = currentTime - lastTap;
+                const touch = e.changedTouches[0];
+                
+                // Check if it's close to the last tap position
+                const lastX = lastTapX;
+                const lastY = lastTapY;
+                const currentX = touch.clientX;
+                const currentY = touch.clientY;
+                const distanceSquared = Math.pow(currentX - lastX, 2) + Math.pow(currentY - lastY, 2);
+                
+                if (tapLength < 500 && distanceSquared < 900) {
+                    // Double tap detected - find jewelry at this position
+                    const jewelryId = findJewelryAtPoint(currentX, currentY);
+                    if (jewelryId) {
+                        toggleControlsPanel(true, jewelryId);
+                        e.preventDefault();
+                    }
+                }
+                
+                // Store data for next tap comparison
+                lastTap = currentTime;
+                lastTapX = currentX;
+                lastTapY = currentY;
+            });
+        }
+        
+        // Set up all the gesture handlers
+        function initializeGestureSupport() {
+            setupGestureHandlers();
+            setupDoubleTapHandler();
+        }
+        
+        // Add this to init() function before hideLoadingScreen():
+        // initializeGestureSupport();
+        
+        // Browser compatibility check
+        function checkBrowserCompatibility() {
+            // Check for WebGL support
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            if (!gl) {
+                return {
+                    compatible: false,
+                    reason: 'WebGL is not supported. Try a different browser.'
+                };
+            }
+            
+            // Check for MediaDevices API
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                return {
+                    compatible: false,
+                    reason: 'Camera access is not supported. Try a different browser.'
+                };
+            }
+            
+            // Check for touch support for mobile devices
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            if (isMobile && !('ontouchstart' in window)) {
+                return {
+                    compatible: false,
+                    reason: 'Touch events are not supported on your device.'
+                };
+            }
+            
+            return { compatible: true };
+        }
+        
+        // Update the init() function to check compatibility first
+        async function init() {
+            try {
+                console.log("Starting initialization...");
+                updateLoadingStatus("Checking compatibility...");
+                
+                // Check browser compatibility
+                const compatibility = checkBrowserCompatibility();
+                if (!compatibility.compatible) {
+                    throw new Error(compatibility.reason);
+                }
+                
+                updateLoadingStatus("Initializing...");
+                
+                // Get DOM elements
+                initializeElements();
+                
+                // Setup gesture handlers
+                setupEventListeners();
+                
+                // Initialize camera
+                await initializeCamera();
+                
+                // Initialize MediaPipe models
+                await initializeAIModels();
+                
+                // Preload jewelry images
+                await preloadJewelryImages();
+                
+                // Initialize UI
+                initializeUI();
+                
+                // Initialize gesture support
+                initializeGestureSupport();
+                
+                // Start detection loop
+                appState.isInitialized = true;
+                requestAnimationFrame(detectAll);
+                
+                // Hide loading screen
+                hideLoadingScreen();
+                
+                console.log("Initialization complete!");
+            } catch (error) {
+                console.error("Initialization error:", error);
+                showError(error.message || "Error initializing app. Please refresh the page.");
+            }
+        }
     </script>
 </body>
 </html>
