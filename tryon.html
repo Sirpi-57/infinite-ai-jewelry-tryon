@@ -693,6 +693,7 @@
             height: 100%;
             object-fit: contain; /* Changed from cover to contain */
             transform: scaleX(-1); /* Mirror the camera */
+            z-index: 1; /* Ensure video is above background */
         }
         
         /* Ensure canvas matches video exactly */
@@ -704,20 +705,18 @@
             height: 100%;
             object-fit: contain; /* Match video element */
             transform: scaleX(-1); /* Mirror to match video */
+            z-index: 2; /* Canvas above video */
             pointer-events: none;
         }
         
-        /* Camera container that takes maximum available space */
+        /* Camera container with simpler styling */
         .camera-container {
             flex: 1;
             position: relative;
-            background: #120025; /* Darker background to blend with camera edges */
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            background: #120025;
             width: 100%;
-            min-height: 50vh; /* Take at least half the screen height */
+            min-height: 50vh;
+            overflow: hidden;
         }
         
         /* Camera feed wrapper */
