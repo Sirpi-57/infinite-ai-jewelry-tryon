@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Infinite AI - Virtual Try-On Experience</title>
     
-    <!-- Load MediaPipe dependencies first -->
+    <!-- Load MediaPipe dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4.1633559619/face_mesh.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3.1620248257/drawing_utils.js" defer></script>
@@ -15,7 +15,8 @@
     <!-- Stylesheets -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
+    
+    <!-- Our custom CSS will be added here -->
     <style>
         :root {
             --color-primary: #7B2CBF;
@@ -27,22 +28,52 @@
             --color-surface: #ffffff;
             --color-border: rgba(36, 0, 70, 0.1);
             --color-text: #2D3748;
-            --brand-primary: #C0392B; /* Tanishq brand color */
-            --brand-secondary: #9B1B30;
+            
+            /* Mobile-specific dimensions */
+            --bottom-sheet-height: 30vh;
+            --bottom-sheet-height-expanded: 70vh;
+            --bottom-sheet-handle-height: 24px;
+            --tab-height: 60px;
+            --nav-height: 56px;
+            --controls-height: 40vh;
+            --sheet-border-radius: 16px;
+            
+            /* Transitions */
+            --transition-speed: 0.3s;
+            --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
         }
-
+        
+        /* Base Styles */
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: var(--color-background);
             margin: 0;
             padding: 0;
             color: var(--color-text);
             height: 100vh;
+            width: 100vw;
+            overscroll-behavior: none; /* Prevent pull-to-refresh */
             overflow: hidden;
-            overscroll-behavior: none; /* Prevent pull-to-refresh on mobile */
+            position: fixed; /* Prevent body scrolling */
         }
-
-        /* Loading screen */
+        
+        /* Disable long-press menu on mobile */
+        * {
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* Main Container */
+        .app-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        /* Loading Screen */
         .loading-screen {
             position: fixed;
             inset: 0;
@@ -57,33 +88,43 @@
             visibility: visible;
             transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
         }
-
+        
         .loading-screen.hidden {
             opacity: 0;
             visibility: hidden;
+            pointer-events: none;
         }
-
+        
+        .loading-error {
+            color: #dc2626;
+            margin-top: 1rem;
+            text-align: center;
+            max-width: 80%;
+        }
+        
+        /* Infinity Loader */
         .loading-spinner {
             width: 80px;
             height: 40px;
             position: relative;
+            margin-bottom: 2rem;
         }
-
+        
         .loading-spinner svg {
             width: 100%;
             height: 100%;
         }
-
+        
         .infinity-path {
             fill: none;
-            stroke: rgba(192, 57, 43, 0.2); /* Brand color faded */
+            stroke: rgba(123, 44, 191, 0.2);
             stroke-width: 4;
             stroke-linecap: round;
         }
-
+        
         .infinity-highlight {
             fill: none;
-            stroke: var(--brand-primary);
+            stroke: var(--color-primary);
             stroke-width: 4;
             stroke-linecap: round;
             stroke-linejoin: round;
@@ -91,49 +132,172 @@
             stroke-dashoffset: 0;
             animation: moveHighlight 2s linear infinite;
         }
-
+        
         @keyframes moveHighlight {
             from { stroke-dashoffset: 0; }
             to { stroke-dashoffset: -200; }
         }
-
-        .loading-error {
-            color: #dc2626;
-            margin-top: 1rem;
+        
+        /* Loading Quote */
+        .loading-quote {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 400px;
             text-align: center;
-            max-width: 80%;
+            color: var(--color-dark);
+            font-style: italic;
+            line-height: 1.4;
         }
-
-        /* Brand logo on loading screen */
-        .brand-logo {
-            width: 160px;
-            margin-bottom: 20px;
+        
+        .quote-text {
+            font-size: clamp(1.2rem, 5vw, 1.8rem);
+            margin-bottom: 0.5rem;
+            opacity: 0.9;
+            font-weight: 500;
         }
-
-        /* Layout */
-        .app-container {
+        
+        .quote-author {
+            font-size: clamp(0.9rem, 3vw, 1.2rem);
+            color: var(--color-secondary);
+            font-weight: 500;
+        }
+        
+        .loading-brand {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.2rem;
+            color: var(--color-primary);
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .brand-text {
+            font-weight: 700;
+            background: linear-gradient(45deg, var(--color-primary), var(--color-secondary));
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Top Navigation */
+        .top-nav {
+            height: var(--nav-height);
+            background-color: var(--color-primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1rem;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav-brand {
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+        
+        .nav-controls {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .menu-toggle {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Category Tabs */
+        .category-tabs {
+            height: var(--tab-height);
+            background-color: var(--color-surface);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            z-index: 5;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none; /* Firefox */
+        }
+        
+        .category-tabs::-webkit-scrollbar {
+            display: none; /* Chrome, Safari */
+        }
+        
+        .tabs-container {
+            display: flex;
+            min-width: 100%;
+            height: 100%;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            min-width: 80px;
+            height: 100%;
+            background: none;
+            border: none;
             display: flex;
             flex-direction: column;
-            height: 100vh;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-text);
+            font-size: 0.85rem;
+            gap: 0.5rem;
+            transition: color 0.2s ease;
             position: relative;
         }
-
-        /* Camera container - fills the screen */
+        
+        .tab-btn.active {
+            color: var(--color-primary);
+        }
+        
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 20%;
+            width: 60%;
+            height: 3px;
+            background-color: var(--color-primary);
+            border-radius: 3px 3px 0 0;
+        }
+        
+        .tab-btn i {
+            font-size: 1.2rem;
+        }
+        
+        /* Camera Container */
         .camera-container {
             flex: 1;
             position: relative;
-            width: 100%;
-            height: 100%;
-            background-color: #000;
+            background: var(--color-dark);
             overflow: hidden;
         }
-
+        
         #cameraFeed {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-
+        
         #jewelryCanvas {
             position: absolute;
             top: 0;
@@ -142,627 +306,726 @@
             height: 100%;
             pointer-events: none;
         }
-
-        /* Camera error message */
+        
+        /* Camera Error */
         .camera-error {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(255, 255, 255, 0.9);
-            padding: 20px;
-            border-radius: 12px;
+            background: var(--color-surface);
+            padding: 2rem;
+            border-radius: 1rem;
             text-align: center;
-            max-width: 80%;
+            width: 85%;
+            max-width: 400px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            z-index: 50;
+            z-index: 5;
         }
-
-        /* Bottom tabs navigation */
-        .jewelry-tabs {
+        
+        .camera-error.hidden {
+            display: none;
+        }
+        
+        /* Bottom Sheet */
+        .bottom-sheet {
             position: absolute;
             bottom: 0;
             left: 0;
-            right: 0;
-            display: flex;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(0, 0, 0, 0.1);
-            z-index: 10;
-            padding-bottom: env(safe-area-inset-bottom, 0);
-        }
-
-        .tab-item {
-            flex: 1;
-            text-align: center;
-            padding: 12px 4px;
-            color: #666;
-            font-size: 12px;
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }
-
-        .tab-item.active {
-            color: var(--brand-primary);
-        }
-
-        .tab-item i {
-            font-size: 20px;
-            display: block;
-            margin-bottom: 4px;
-        }
-
-        /* Jewelry selector panel - slides up from bottom */
-        .jewelry-panel {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            border-radius: 20px 20px 0 0;
-            transform: translateY(100%);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 100;
-            max-height: 70vh;
-            overflow-y: auto;
+            width: 100%;
+            height: var(--bottom-sheet-height);
+            background-color: var(--color-surface);
+            border-radius: var(--sheet-border-radius) var(--sheet-border-radius) 0 0;
             box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
-            padding-bottom: env(safe-area-inset-bottom, 20px);
+            transition: transform var(--transition-speed) var(--transition-timing);
+            z-index: 20;
+            overflow: hidden;
+            touch-action: none;
         }
-
-        .jewelry-panel.visible {
-            transform: translateY(0);
+        
+        .bottom-sheet.expanded {
+            height: var(--bottom-sheet-height-expanded);
+            transform: translateY(0) !important;
         }
-
-        .panel-handle {
+        
+        .bottom-sheet.hidden {
+            transform: translateY(100%);
+        }
+        
+        .sheet-handle {
+            height: var(--bottom-sheet-handle-height);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: grab;
+            touch-action: none;
+        }
+        
+        .handle-bar {
             width: 40px;
             height: 5px;
-            background: #ddd;
+            background-color: #ddd;
             border-radius: 3px;
-            margin: 12px auto 8px;
         }
-
-        .panel-header {
-            padding: 0 20px 12px;
-            border-bottom: 1px solid #eee;
+        
+        .sheet-content {
+            height: calc(100% - var(--bottom-sheet-handle-height));
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 0 1rem 2rem;
         }
-
-        .panel-title {
-            font-size: 18px;
+        
+        .sheet-title {
+            font-size: 1.1rem;
             font-weight: 600;
-            color: #333;
-            text-align: center;
+            margin: 0 0 1rem;
+            color: var(--color-dark);
         }
-
-        /* Jewelry grid */
+        
+        /* Jewelry Grid */
         .jewelry-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            padding: 16px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            padding-bottom: 1rem;
         }
-
+        
+        @media (min-width: 480px) {
+            .jewelry-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
         .jewelry-item {
-            aspect-ratio: 1;
             background: white;
             border-radius: 12px;
+            border: 1px solid var(--color-border);
             overflow: hidden;
-            border: 1px solid #eee;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            transition: transform 0.2s ease, border-color 0.2s ease;
         }
-
+        
         .jewelry-item:active {
-            transform: scale(0.96);
+            transform: scale(0.97);
         }
-
+        
         .jewelry-item.active {
-            border: 2px solid var(--brand-primary);
+            border-color: var(--color-primary);
+            background: linear-gradient(to right, var(--color-light), var(--color-surface));
         }
-
-        .jewelry-image {
+        
+        .jewelry-img {
             width: 100%;
-            height: 100%;
+            aspect-ratio: 1;
             object-fit: contain;
-            padding: 8px;
+            padding: 0.5rem;
         }
-
-        /* Controls panel */
+        
+        .jewelry-name {
+            font-size: 0.8rem;
+            text-align: center;
+            padding: 0.5rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        /* Controls Panel */
         .controls-panel {
-            position: fixed;
-            top: 16px;
-            right: 16px;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-radius: 12px;
-            padding: 12px;
-            z-index: 20;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            max-width: 250px;
-            transform: translateX(110%);
-            transition: transform 0.3s ease;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: var(--controls-height);
+            background-color: var(--color-surface);
+            border-radius: var(--sheet-border-radius) var(--sheet-border-radius) 0 0;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+            transition: transform var(--transition-speed) var(--transition-timing);
+            z-index: 25;
+            overflow: hidden;
         }
-
-        .controls-panel.visible {
-            transform: translateX(0);
+        
+        .controls-panel.hidden {
+            transform: translateY(100%);
         }
-
-        .control-section {
-            margin-bottom: 12px;
+        
+        .panel-handle {
+            height: var(--bottom-sheet-handle-height);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
         }
-
+        
+        .close-btn {
+            position: absolute;
+            right: 1rem;
+            top: 0;
+            height: var(--bottom-sheet-handle-height);
+            background: none;
+            border: none;
+            color: var(--color-text);
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .panel-content {
+            height: calc(100% - var(--bottom-sheet-handle-height));
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 0 1rem 2rem;
+        }
+        
+        /* Control Styles */
+        .control-group {
+            margin-bottom: 1.5rem;
+        }
+        
         .control-label {
-            font-size: 14px;
+            font-size: 0.9rem;
             font-weight: 500;
-            margin-bottom: 6px;
-            color: #444;
+            margin-bottom: 0.5rem;
+            color: var(--color-dark);
         }
-
-        /* Slider styling */
+        
+        .size-control, .position-control, .gap-control {
+            padding: 0.5rem 0;
+        }
+        
+        /* Sliders */
         input[type="range"] {
             -webkit-appearance: none;
             appearance: none;
             width: 100%;
             height: 6px;
-            background: #eee;
+            background: var(--color-light);
             border-radius: 3px;
             outline: none;
+            margin: 1rem 0;
         }
-
+        
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 18px;
-            height: 18px;
-            background: var(--brand-primary);
+            width: 22px;
+            height: 22px;
+            background: var(--color-primary);
             border-radius: 50%;
-            cursor: pointer;
-        }
-
-        /* Direction controls */
-        .direction-controls {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 4px;
-        }
-
-        .direction-btn {
-            aspect-ratio: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-            cursor: pointer;
-        }
-
-        .direction-btn:active {
-            background: #f5f5f5;
-            color: var(--brand-primary);
-        }
-
-        /* Action buttons */
-        .action-buttons {
-            position: fixed;
-            bottom: 80px;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: center;
-            gap: 16px;
-            z-index: 20;
-            padding-bottom: env(safe-area-inset-bottom, 0);
-        }
-
-        .action-btn {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: #666;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             cursor: pointer;
             transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         }
-
-        .action-btn:active {
-            transform: scale(0.95);
-        }
-
-        .action-btn.primary {
-            background: var(--brand-primary);
-            color: white;
-        }
-
-        /* Toggle UI button */
-        .toggle-controls {
-            position: fixed;
-            top: 16px;
-            left: 16px;
-            width: 44px;
-            height: 44px;
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 22px;
+            height: 22px;
+            background: var(--color-primary);
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Position Controls */
+        .position-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        
+        .position-btn {
+            background-color: #f1f1f1;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
-            color: #666;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            z-index: 20;
+            font-size: 1rem;
+            color: var(--color-text);
+            transition: all 0.2s ease;
+        }
+        
+        .position-btn:active {
+            background-color: var(--color-light);
+            color: var(--color-primary);
+            transform: scale(0.95);
+        }
+        
+        /* Capture Button */
+        .capture-btn {
+            position: absolute;
+            bottom: calc(var(--bottom-sheet-height) + 20px);
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: var(--color-primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            z-index: 15;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+        }
+        
+        .capture-btn:active {
+            transform: scale(0.95);
+            background-color: var(--color-secondary);
+        }
+        
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
             cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            border-radius: 34px;
+            transition: .4s;
         }
-
-        /* Desktop adjustments */
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            border-radius: 50%;
+            transition: .4s;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: var(--color-primary);
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+        
+        /* Responsive adjustments */
         @media (min-width: 768px) {
-            .app-container {
-                flex-direction: row;
+            :root {
+                --bottom-sheet-height: 25vh;
+                --controls-height: 35vh;
             }
             
-            .camera-container {
-                flex: 1;
+            .jewelry-grid {
+                grid-template-columns: repeat(4, 1fr);
             }
             
-            .jewelry-tabs {
-                display: none;
-            }
-            
-            .jewelry-panel {
-                position: relative;
-                transform: none;
-                max-height: 100vh;
-                width: 320px;
-                border-radius: 0;
-                z-index: 5;
-                box-shadow: -2px 0 10px rgba(0, 0, 0, 0.05);
-            }
-            
-            .panel-handle {
-                display: none;
-            }
-            
-            .controls-panel {
-                position: absolute;
-                top: 20px;
-                right: 20px;
-                transform: none;
-            }
-            
-            .action-buttons {
-                bottom: 20px;
-                right: 20px;
-                left: auto;
-                justify-content: flex-end;
-            }
-            
-            .toggle-controls {
-                display: none;
+            .capture-btn {
+                width: 70px;
+                height: 70px;
+                font-size: 1.8rem;
             }
         }
-
-        /* iOS Safe Areas Support */
-        @supports (padding-top: env(safe-area-inset-top)) {
-            .toggle-controls {
-                top: calc(16px + env(safe-area-inset-top));
+        
+        @media (min-width: 1024px) {
+            .bottom-sheet {
+                max-width: 600px;
+                left: 50%;
+                transform: translateX(-50%);
+                border-radius: var(--sheet-border-radius);
+                height: 40vh;
             }
             
             .controls-panel {
-                top: calc(16px + env(safe-area-inset-top));
+                max-width: 600px;
+                left: 50%;
+                transform: translateX(-50%);
+                border-radius: var(--sheet-border-radius);
             }
             
-            .jewelry-tabs {
-                padding-bottom: env(safe-area-inset-bottom);
+            .bottom-sheet.hidden {
+                transform: translate(-50%, 100%);
             }
             
-            .action-buttons {
-                bottom: calc(80px + env(safe-area-inset-bottom));
+            .controls-panel.hidden {
+                transform: translate(-50%, 100%);
             }
+        }
+        
+        /* Utility Classes */
+        .hidden {
+            display: none;
+        }
+        
+        .button-primary {
+            background: var(--color-primary);
+            color: white;
+            border: none;
+            font-weight: 500;
+        }
+        
+        /* Touch highlight for iOS */
+        .touchable {
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
-<body>
+<body class="bg-gray-100 font-sans overflow-hidden">
     <!-- Loading Screen -->
     <div class="loading-screen" id="loadingScreen">
-        <img src="https://www.tanishq.co.in/on/demandware.static/Sites-Tanishq-Site/-/default/dwf39c2388/images/logo.svg" alt="Tanishq" class="brand-logo">
         <div class="loading-spinner">
             <svg viewBox="0 0 100 50" xmlns="http://www.w3.org/2000/svg">
                 <path class="infinity-path" 
-                    d="M10,25 C10,5 40,5 50,25 C60,45 90,45 90,25 C90,5 60,5 50,25 C40,45 10,45 10,25 Z" />
+                      d="M10,25 C10,5 40,5 50,25 C60,45 90,45 90,25 C90,5 60,5 50,25 C40,45 10,45 10,25 Z" 
+                      fill="none" stroke="black" stroke-width="2"/>
                 <path class="infinity-highlight" 
-                    d="M10,25 C10,5 40,5 50,25 C60,45 90,45 90,25 C90,5 60,5 50,25 C40,45 10,45 10,25 Z" />
+                      d="M10,25 C10,5 40,5 50,25 C60,45 90,45 90,25 C90,5 60,5 50,25 C40,45 10,45 10,25 Z" 
+                      fill="none" stroke="gray" stroke-width="2"/>
             </svg>
         </div>
-        <p>Initializing Virtual Try-On Experience...</p>
+        <p class="text-gray-600">Initializing Virtual Try-On Experience...</p>
         <p class="loading-error hidden"></p>
+        
+        <div class="loading-quote">
+            <p class="quote-text">"Style is a way to say who you are without having to speak"</p>
+            <p class="quote-author">— Rachel Zoe</p>
+        </div>
+        
+        <div class="loading-brand">
+            <i class="fas fa-infinity"></i>
+            <span class="brand-text">Powered by InfiniteAI</span>
+        </div>
     </div>
 
+    <!-- Main App Container -->
     <div class="app-container">
-        <!-- Camera View -->
+        <!-- Top Navigation Bar -->
+        <nav class="top-nav">
+            <div class="nav-brand">
+                <span>Virtual Try-On</span>
+            </div>
+            <div class="nav-controls">
+                <button id="menuToggleBtn" class="menu-toggle">
+                    <i class="fas fa-sliders-h"></i>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Jewelry Category Tabs -->
+        <div class="category-tabs">
+            <div class="tabs-container">
+                <button class="tab-btn active" data-category="face">
+                    <i class="fas fa-mask"></i>
+                    <span>Face</span>
+                </button>
+                <button class="tab-btn" data-category="ear">
+                    <i class="fas fa-ear"></i>
+                    <span>Ear</span>
+                </button>
+                <button class="tab-btn" data-category="neck">
+                    <i class="fas fa-gem"></i>
+                    <span>Neck</span>
+                </button>
+                <button class="tab-btn" data-category="hand">
+                    <i class="fas fa-hand-sparkles"></i>
+                    <span>Hand</span>
+                </button>
+                <button class="tab-btn" data-category="active">
+                    <i class="fas fa-th-list"></i>
+                    <span>Active</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Camera View Container -->
         <div class="camera-container">
             <video id="cameraFeed" autoplay playsinline></video>
             <canvas id="jewelryCanvas"></canvas>
             
-            <!-- Camera Error Message (hidden by default) -->
+            <!-- Camera Error Message -->
             <div class="camera-error hidden" id="cameraError">
                 <i class="fas fa-video-slash text-3xl text-red-500 mb-4"></i>
-                <h3 class="text-xl font-bold mb-2">Camera Access Required</h3>
-                <p class="mb-4">Please allow camera access to use the virtual try-on experience.</p>
-                <button onclick="requestCameraAccess()" class="px-6 py-2 bg-red-600 text-white rounded-lg">
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Camera Access Required</h3>
+                <p class="text-gray-600 mb-4">Please allow camera access to use the virtual try-on experience.</p>
+                <button onclick="requestCameraAccess()" class="button-primary px-6 py-2 rounded-lg text-white">
                     Enable Camera
                 </button>
             </div>
         </div>
 
-        <!-- Bottom Tabs (Mobile) -->
-        <div class="jewelry-tabs">
-            <div class="tab-item active" data-category="earrings">
-                <i class="fas fa-gem"></i>
-                <span>Earrings</span>
+        <!-- Bottom Sheet for Jewelry Selection -->
+        <div class="bottom-sheet" id="jewelrySheet">
+            <div class="sheet-handle">
+                <div class="handle-bar"></div>
             </div>
-            <div class="tab-item" data-category="necklace">
-                <i class="fas fa-link"></i>
-                <span>Necklaces</span>
-            </div>
-            <div class="tab-item" data-category="tikka">
-                <i class="fas fa-crown"></i>
-                <span>Tikka</span>
-            </div>
-            <div class="tab-item" data-category="ring">
-                <i class="fas fa-ring"></i>
-                <span>Rings</span>
-            </div>
-            <div class="tab-item" data-category="bangle">
-                <i class="fas fa-circle"></i>
-                <span>Bangles</span>
+            <div class="sheet-content">
+                <h3 class="sheet-title" id="sheetTitle">Select Jewelry</h3>
+                
+                <!-- Container for jewelry items (populated by JS) -->
+                <div class="jewelry-grid" id="jewelryGrid"></div>
             </div>
         </div>
 
-        <!-- Jewelry Selection Panel -->
-        <div class="jewelry-panel visible" id="jewelryPanel">
-            <div class="panel-handle"></div>
-            <div class="panel-header">
-                <h2 class="panel-title">Select Jewelry</h2>
+        <!-- Bottom Controls for Selected Jewelry -->
+        <div class="controls-panel hidden" id="controlsPanel">
+            <div class="panel-handle">
+                <div class="handle-bar"></div>
+                <button id="closeControlsBtn" class="close-btn">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-            <div class="jewelry-grid" id="jewelryGrid">
-                <!-- Jewelry items will be added here dynamically -->
-            </div>
-        </div>
-
-        <!-- Controls Panel -->
-        <div class="controls-panel" id="controlsPanel">
-            <div class="control-section" id="sizeControlSection">
-                <div class="control-label">Size</div>
-                <input type="range" id="sizeControl" min="0.1" max="3.0" step="0.05" value="1">
-            </div>
-            <div class="control-section" id="gapControlSection" style="display: none;">
-                <div class="control-label">Width Adjustment</div>
-                <input type="range" id="gapControl" min="-50" max="50" step="1" value="0">
-            </div>
-            <div class="control-section">
-                <div class="control-label">Position</div>
-                <div class="direction-controls">
-                    <button class="direction-btn" data-direction="up-left">↖</button>
-                    <button class="direction-btn" data-direction="up">↑</button>
-                    <button class="direction-btn" data-direction="up-right">↗</button>
-                    <button class="direction-btn" data-direction="left">←</button>
-                    <button class="direction-btn" data-direction="center">•</button>
-                    <button class="direction-btn" data-direction="right">→</button>
-                    <button class="direction-btn" data-direction="down-left">↙</button>
-                    <button class="direction-btn" data-direction="down">↓</button>
-                    <button class="direction-btn" data-direction="down-right">↘</button>
-                </div>
+            <div class="panel-content" id="controlsContent">
+                <!-- Controls will be populated dynamically -->
             </div>
         </div>
 
-        <!-- Toggle Controls Button (Mobile) -->
-        <div class="toggle-controls" id="toggleControls">
-            <i class="fas fa-sliders-h"></i>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="action-buttons">
-            <div class="action-btn" id="clearButton">
-                <i class="fas fa-trash-alt"></i>
-            </div>
-            <div class="action-btn primary" id="captureButton">
-                <i class="fas fa-camera"></i>
-            </div>
-        </div>
+        <!-- Capture Button -->
+        <button class="capture-btn" id="captureBtn">
+            <i class="fas fa-camera"></i>
+        </button>
     </div>
 
     <script>
-        // Global variables
-        let video, canvas, ctx;
-        let faceMesh, hands, pose;
-        let activeJewelry = null;
-        let handLandmarks = null;
-        let poseLandmarks = null;
-        let currentCategory = 'earrings';
-        let isControlsPanelVisible = false;
-        let isDesktop = window.innerWidth >= 768;
-        
-        // Constants
-        const PERFECT_SCALE = 0.55;
-        const VERTICAL_OFFSET = -115;
-        const DROP_HEIGHT = 45;
-        
-        // Jewelry data
         const JEWELRY = {
+            // Face jewelry (tikka)
+            tikka1: {
+                name: "Tikka Design 1",
+                type: 'single',
+                image: 'tikka1.png',
+                thumbnail: 'thumbnails/tikka1-thumb.png',
+                landmark: 151,
+                offset: { x: 0, y: 0 },
+                defaultScale: 1.3,
+                group: 'face',
+                category: 'Face Jewelry'
+            },
+            tikka2: {
+                name: "Tikka Design 2",
+                type: 'single',
+                image: 'tikka2.png',
+                thumbnail: 'thumbnails/tikka2-thumb.png',
+                landmark: 151,
+                offset: { x: 0, y: 0 },
+                defaultScale: 1,
+                group: 'face',
+                category: 'Face Jewelry'
+            },
+            tikka3: {
+                name: "Tikka Design 3",
+                type: 'single',
+                image: 'tikka3.png',
+                thumbnail: 'thumbnails/tikka3-thumb.png',
+                landmark: 151,
+                offset: { x: 0, y: 0 },
+                defaultScale: 1,
+                group: 'face',
+                category: 'Face Jewelry'
+            },
+            tikka4: {
+                name: "Tikka Design 4",
+                type: 'single',
+                image: 'tikka4.png',
+                thumbnail: 'thumbnails/tikka4-thumb.png',
+                landmark: 151,
+                offset: { x: 0, y: 0 },
+                defaultScale: 0.8,
+                group: 'face',
+                category: 'Face Jewelry'
+            },
+            
+            // Ear jewelry (jhumka/earrings)
             jhumka1: {
                 name: "Earring Design 1",
                 type: 'earrings',
                 left: 'earing1left.png',
                 right: 'earing1right.png',
+                thumbnail: 'thumbnails/earring1-thumb.png',
                 landmarks: [177, 401],
-                landmarkOptions: [
-                    { label: "Ear Lobe", left: 177, right: 401 },
-                    { label: "Ear Alternate", left: 132, right: 361 },
-                    { label: "Ear Base", left: 234, right: 454 }
-                ],
                 offset: { x: 0, y: 0 },
                 defaultScale: 0.75,
                 gap: 0,
-                group: 'earrings',
-                thumbnail: 'thumbnails/earring1-thumb.png'
+                group: 'ear',
+                category: 'Ear Jewelry'
             },
             jhumka2: {
                 name: "Earring Design 2",
                 type: 'earrings',
                 left: 'earing2left.png',
                 right: 'earing2right.png',
+                thumbnail: 'thumbnails/earring2-thumb.png',
                 landmarks: [177, 401],
-                landmarkOptions: [
-                    { label: "Ear Lobe", left: 177, right: 401 },
-                    { label: "Ear Alternate", left: 132, right: 361 },
-                    { label: "Ear Base", left: 234, right: 454 }
-                ],
                 offset: { x: 0, y: 0 },
                 defaultScale: 1.5,
                 gap: 0,
-                group: 'earrings',
-                thumbnail: 'thumbnails/earring2-thumb.png'
+                group: 'ear',
+                category: 'Ear Jewelry'
             },
             jhumka3: {
                 name: "Earring Design 3",
                 type: 'earrings',
                 left: 'earing3left.png',
                 right: 'earing3right.png',
+                thumbnail: 'thumbnails/earring3-thumb.png',
                 landmarks: [177, 401],
-                landmarkOptions: [
-                    { label: "Ear Lobe", left: 177, right: 401 },
-                    { label: "Ear Alternate", left: 132, right: 361 },
-                    { label: "Ear Base", left: 234, right: 454 }
-                ],
                 offset: { x: 0, y: 0 },
                 defaultScale: 1.5,
                 gap: 0,
-                group: 'earrings',
-                thumbnail: 'thumbnails/earring3-thumb.png'
+                group: 'ear',
+                category: 'Ear Jewelry'
             },
             jhumka4: {
                 name: "Earring Design 4",
                 type: 'earrings',
                 left: 'earing4left.png',
                 right: 'earing4right.png',
+                thumbnail: 'thumbnails/earring4-thumb.png',
                 landmarks: [177, 401],
-                landmarkOptions: [
-                    { label: "Ear Lobe", left: 177, right: 401 },
-                    { label: "Ear Alternate", left: 132, right: 361 },
-                    { label: "Ear Base", left: 234, right: 454 }
-                ],
                 offset: { x: 0, y: 0 },
                 defaultScale: 1.5,
                 gap: 0,
-                group: 'earrings',
-                thumbnail: 'thumbnails/earring4-thumb.png'
+                group: 'ear',
+                category: 'Ear Jewelry'
             },
+            
+            // Neck jewelry (necklaces)
             necklace1: {
                 name: "Necklace Design 1",
                 type: 'necklace',
                 image: 'necklace1.png',
+                thumbnail: 'thumbnails/necklace1-thumb.png',
                 offset: { x: 0, y: 0 },
-                defaultScale: PERFECT_SCALE,
-                group: 'necklace',
-                thumbnail: 'thumbnails/necklace1-thumb.png'
+                defaultScale: 0.55,
+                group: 'neck',
+                category: 'Neck Jewelry'
             },
             necklace2: {
                 name: "Necklace Design 2",
                 type: 'necklace',
                 image: 'necklace2.png',
+                thumbnail: 'thumbnails/necklace2-thumb.png',
                 offset: { x: 0, y: 0 },
-                defaultScale: PERFECT_SCALE,
-                group: 'necklace',
-                thumbnail: 'thumbnails/necklace2-thumb.png'
+                defaultScale: 0.55,
+                group: 'neck',
+                category: 'Neck Jewelry'
             },
             necklace3: {
                 name: "Necklace Design 3",
                 type: 'necklace',
                 image: 'necklace3.png',
+                thumbnail: 'thumbnails/necklace3-thumb.png',
                 offset: { x: 0, y: 0 },
-                defaultScale: PERFECT_SCALE,
-                group: 'necklace',
-                thumbnail: 'thumbnails/necklace3-thumb.png'
+                defaultScale: 0.55,
+                group: 'neck',
+                category: 'Neck Jewelry'
             },
             necklace4: {
                 name: "Necklace Design 4",
                 type: 'necklace',
                 image: 'necklace4.png',
+                thumbnail: 'thumbnails/necklace4-thumb.png',
                 offset: { x: 0, y: 0 },
                 defaultScale: 0.4,
-                group: 'necklace',
-                thumbnail: 'thumbnails/necklace4-thumb.png'
+                group: 'neck',
+                category: 'Neck Jewelry'
             },
-            tikka1: {
-                name: "Tikka Design 1",
-                type: 'single',
-                image: 'tikka1.png',
-                landmark: 151,
-                landmarkOptions: [
-                    { label: "Forehead Center", value: 151 },
-                    { label: "Upper Forehead", value: 10 }
-                ],
+            necklace5: {
+                name: "Necklace Design 5",
+                type: 'necklace',
+                image: 'necklace5.png',
+                thumbnail: 'thumbnails/necklace5-thumb.png',
                 offset: { x: 0, y: 0 },
-                defaultScale: 1.3,
-                group: 'tikka',
-                thumbnail: 'thumbnails/tikka1-thumb.png'
+                defaultScale: 0.4,
+                group: 'neck',
+                category: 'Neck Jewelry'
             },
-            tikka2: {
-                name: "Tikka Design 2",
-                type: 'single',
-                image: 'tikka2.png',
-                landmark: 151,
-                landmarkOptions: [
-                    { label: "Forehead Center", value: 151 },
-                    { label: "Upper Forehead", value: 10 }
-                ],
+            necklace6: {
+                name: "Necklace Design 6",
+                type: 'necklace',
+                image: 'necklace6.png',
+                thumbnail: 'thumbnails/necklace6-thumb.png',
                 offset: { x: 0, y: 0 },
-                defaultScale: 1,
-                group: 'tikka',
-                thumbnail: 'thumbnails/tikka2-thumb.png'
+                defaultScale: 0.4,
+                group: 'neck',
+                category: 'Neck Jewelry'
             },
+            necklace7: {
+                name: "Necklace Design 7",
+                type: 'necklace',
+                image: 'necklace7.png',
+                thumbnail: 'thumbnails/necklace7-thumb.png',
+                offset: { x: 0, y: 0 },
+                defaultScale: 0.4,
+                group: 'neck',
+                category: 'Neck Jewelry'
+            },
+            
+            // Hand jewelry (rings, bangles)
             ring1: {
                 name: "Ring Design",
                 type: 'hand',
                 image: 'ring1.png',
+                thumbnail: 'thumbnails/ring1-thumb.png',
                 landmark: 'custom',
                 fingerIndex: 8,
                 handIndex: 0,
                 offset: { x: 0, y: 0 },
                 defaultScale: 0.2,
-                group: 'ring',
-                thumbnail: 'thumbnails/ring1-thumb.png'
+                group: 'hand',
+                category: 'Hand Jewelry'
             },
             bangle1: {
                 name: "Bangle Design 1",
                 type: 'hand',
                 image: 'bangle1.png',
+                thumbnail: 'thumbnails/bangle1-thumb.png',
                 landmark: 'custom',
                 wristIndex: 0,
                 handIndex: 0,
                 offset: { x: 0, y: 0 },
                 defaultScale: 0.35,
-                group: 'bangle',
-                thumbnail: 'thumbnails/bangle1-thumb.png'
+                group: 'hand',
+                category: 'Hand Jewelry'
             },
             bangle2: {
                 name: "Bangle Design 2",
                 type: 'hand',
                 image: 'bangle2.png',
+                thumbnail: 'thumbnails/bangle2-thumb.png',
                 landmark: 'custom',
                 wristIndex: 0,
                 handIndex: 0,
                 offset: { x: 0, y: 0 },
                 defaultScale: 0.35,
-                group: 'bangle',
-                thumbnail: 'thumbnails/bangle2-thumb.png'
+                group: 'hand',
+                category: 'Hand Jewelry'
+            },
+            bangle3: {
+                name: "Bangle Design 3",
+                type: 'hand',
+                image: 'bangle3.png',
+                thumbnail: 'thumbnails/bangle3-thumb.png',
+                landmark: 'custom',
+                wristIndex: 0,
+                handIndex: 0,
+                offset: { x: 0, y: 0 },
+                defaultScale: 0.35,
+                group: 'hand',
+                category: 'Hand Jewelry'
             }
         };
 
@@ -780,536 +1043,87 @@
             }
         };
 
-        // Initialize the application
+        // App State
+        let appState = {
+            activeJewelry: new Map(),
+            currentCategory: 'face',
+            selectedJewelryId: null,
+            isControlsPanelOpen: false,
+            isBottomSheetExpanded: false,
+            sheetStartY: 0,
+            sheetCurrentY: 0,
+            isDragging: false,
+            faceLandmarks: null,
+            handLandmarks: null,
+            poseLandmarks: null,
+            isCameraReady: false,
+            isResourcesLoaded: false,
+            isInitialized: false
+        };
+
+        // DOM Elements
+        let elements = {
+            video: null,
+            canvas: null,
+            ctx: null,
+            loadingScreen: null,
+            jewelrySheet: null,
+            controlsPanel: null,
+            captureBtn: null,
+            categoryBtns: null,
+            jewelryGrid: null,
+            controlsContent: null
+        };
+
+        // MediaPipe Models
+        let faceMesh, hands, pose;
+
+        // Camera constants
+        const MAX_CAMERA_HEIGHT = 1280;
+        const MAX_CAMERA_WIDTH = 720;
+        const ASPECT_RATIO = MAX_CAMERA_WIDTH / MAX_CAMERA_HEIGHT;
+
+        // Initialization
+        document.addEventListener('DOMContentLoaded', init);
+
         async function init() {
             try {
                 console.log("Starting initialization...");
+                updateLoadingStatus("Initializing...");
                 
                 // Get DOM elements
-                video = document.getElementById('cameraFeed');
-                canvas = document.getElementById('jewelryCanvas');
-                ctx = canvas.getContext('2d');
-                const loadingScreen = document.getElementById('loadingScreen');
-                const loadingError = document.querySelector('.loading-error');
-
-                if (!video || !canvas || !ctx) {
-                    throw new Error("Required elements not found");
-                }
+                initializeElements();
                 
-                // Check if desktop or mobile
-                isDesktop = window.innerWidth >= 768;
-                
-                // Initialize UI
-                setupUI();
+                // Setup gesture handlers
+                setupEventListeners();
                 
                 // Initialize camera
-                try {
-                    const constraints = {
-                        video: {
-                            width: { ideal: isDesktop ? 1280 : 720 },
-                            height: { ideal: isDesktop ? 720 : 1280 },
-                            facingMode: 'user'
-                        }
-                    };
-                    
-                    const stream = await navigator.mediaDevices.getUserMedia(constraints);
-                    video.srcObject = stream;
-                    
-                    await new Promise((resolve) => {
-                        video.onloadedmetadata = () => {
-                            canvas.width = video.videoWidth;
-                            canvas.height = video.videoHeight;
-                            console.log("Video dimensions:", video.videoWidth, video.videoHeight);
-                            resolve();
-                        };
-                    });
-
-                    await video.play();
-                    console.log("Camera initialized successfully");
-                    
-                    // Hide camera error if shown
-                    document.getElementById('cameraError').classList.add('hidden');
-                } catch (error) {
-                    console.error("Camera access error:", error);
-                    document.getElementById('cameraError').classList.remove('hidden');
-                    throw new Error("Camera access denied. Please enable camera permissions.");
-                }
-
+                await initializeCamera();
+                
                 // Initialize MediaPipe models
-               updateLoadingStatus("Initializing AI models...");
-               
-               try {
-                   // Light model for mobile, full model for desktop
-                   const modelComplexity = isDesktop ? 1 : 0;
-                   
-                   // Initialize FaceMesh
-                   faceMesh = new FaceMesh({
-                       locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4.1633559619/${file}`
-                   });
-
-                   // Initialize Hands
-                   hands = new Hands({
-                       locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/${file}`
-                   });
-
-                   // Initialize Pose
-                   pose = new Pose({
-                       locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${file}`
-                   });
-
-                   // Configure models with appropriate settings
-                   faceMesh.setOptions({
-                       maxNumFaces: 1,
-                       refineLandmarks: true,
-                       minDetectionConfidence: 0.5,
-                       minTrackingConfidence: 0.5
-                   });
-
-                   hands.setOptions({
-                       maxNumHands: 2,
-                       modelComplexity: modelComplexity,
-                       minDetectionConfidence: 0.5,
-                       minTrackingConfidence: 0.5
-                   });
-
-                   pose.setOptions({
-                       modelComplexity: modelComplexity,
-                       smoothLandmarks: true,
-                       minDetectionConfidence: 0.5,
-                       minTrackingConfidence: 0.5
-                   });
-
-                   // Initialize models sequentially
-                   updateLoadingStatus("Loading face detection...");
-                   await faceMesh.initialize();
-                   
-                   updateLoadingStatus("Loading hand detection...");
-                   await hands.initialize();
-                   
-                   updateLoadingStatus("Loading pose detection...");
-                   await pose.initialize();
-
-                   console.log("AI models initialized successfully");
-               } catch (error) {
-                   console.error("Model initialization error:", error);
-                   throw new Error("Failed to initialize AI models. Please try refreshing the page.");
-               }
-
-               // Set up callbacks
-               faceMesh.onResults(onFaceMeshResults);
-               hands.onResults(onHandResults);
-               pose.onResults(onPoseResults);
-
-               // Preload images
-               updateLoadingStatus("Loading jewelry assets...");
-               try {
-                   await preloadImages();
-                   console.log("Images preloaded successfully");
-               } catch (error) {
-                   console.error("Image preload error:", error);
-                   throw new Error("Failed to load jewelry images. Please check your connection.");
-               }
-
-               // Start detection loop
-               detectAll();
-               
-               // Set up window resize handling
-               window.addEventListener('resize', handleResize);
-
-               // Hide loading screen
-               loadingScreen.classList.add('hidden');
-               console.log("Initialization complete!");
-           } catch (error) {
-               console.error("Initialization error:", error);
-               const loadingError = document.querySelector('.loading-error');
-               if (loadingError) {
-                   loadingError.textContent = error.message || "Error initializing app. Please refresh the page.";
-                   loadingError.classList.remove('hidden');
-               }
-           }
-       }
-
-       // Set up UI elements and event listeners
-       function setupUI() {
-           // Set up category tabs
-           const tabs = document.querySelectorAll('.tab-item');
-           tabs.forEach(tab => {
-               tab.addEventListener('click', () => {
-                   // Update active tab
-                   tabs.forEach(t => t.classList.remove('active'));
-                   tab.classList.add('active');
-                   
-                   // Update current category
-                   currentCategory = tab.dataset.category;
-                   
-                   // Update jewelry grid
-                   loadJewelryItems(currentCategory);
-               });
-           });
-           
-           // Populate initial jewelry grid
-           loadJewelryItems(currentCategory);
-           
-           // Set up panel handle for mobile
-           if (!isDesktop) {
-               const panelHandle = document.querySelector('.panel-handle');
-               let startY, currentY, currentHeight;
-               
-               panelHandle.addEventListener('touchstart', e => {
-                   startY = e.touches[0].clientY;
-                   const panel = document.getElementById('jewelryPanel');
-                   currentHeight = panel.offsetHeight;
-                   panel.style.transition = 'none';
-               });
-               
-               panelHandle.addEventListener('touchmove', e => {
-                   if (!startY) return;
-                   currentY = e.touches[0].clientY;
-                   const deltaY = currentY - startY;
-                   const panel = document.getElementById('jewelryPanel');
-                   
-                   if (deltaY > 0) { // Dragging down
-                       panel.style.transform = `translateY(${deltaY}px)`;
-                   }
-               });
-               
-               panelHandle.addEventListener('touchend', e => {
-                   const panel = document.getElementById('jewelryPanel');
-                   panel.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-                   
-                   if (currentY && startY && (currentY - startY > 50)) {
-                       // If dragged down significantly, close the panel
-                       panel.classList.remove('visible');
-                   } else {
-                       // Otherwise, snap back to open position
-                       panel.style.transform = '';
-                   }
-                   
-                   startY = null;
-                   currentY = null;
-               });
-           }
-           
-           // Set up toggle controls button
-           const toggleBtn = document.getElementById('toggleControls');
-           toggleBtn.addEventListener('click', () => {
-               const controlsPanel = document.getElementById('controlsPanel');
-               isControlsPanelVisible = !isControlsPanelVisible;
-               
-               if (isControlsPanelVisible) {
-                   controlsPanel.classList.add('visible');
-               } else {
-                   controlsPanel.classList.remove('visible');
-               }
-           });
-           
-           // Set up direction controls
-           const directionBtns = document.querySelectorAll('.direction-btn');
-           directionBtns.forEach(btn => {
-               btn.addEventListener('click', () => {
-                   if (activeJewelry) {
-                       moveJewelry(activeJewelry.id, btn.dataset.direction);
-                   }
-               });
-           });
-           
-           // Set up size control
-           const sizeControl = document.getElementById('sizeControl');
-           sizeControl.addEventListener('input', () => {
-               if (activeJewelry) {
-                   updateJewelrySize(activeJewelry.id, sizeControl.value);
-               }
-           });
-           
-           // Set up gap control
-           const gapControl = document.getElementById('gapControl');
-           gapControl.addEventListener('input', () => {
-               if (activeJewelry && activeJewelry.type === 'earrings') {
-                   updateJewelryGap(activeJewelry.id, gapControl.value);
-               }
-           });
-           
-           // Set up capture button
-           const captureBtn = document.getElementById('captureButton');
-           captureBtn.addEventListener('click', captureImage);
-           
-           // Set up clear button
-           const clearBtn = document.getElementById('clearButton');
-           clearBtn.addEventListener('click', clearJewelry);
-       }
-
-       // Load jewelry items based on category
-       function loadJewelryItems(category) {
-           const grid = document.getElementById('jewelryGrid');
-           grid.innerHTML = '';
-           
-           // Filter jewelry items by category
-           const items = Object.entries(JEWELRY).filter(([id, item]) => item.group === category);
-           
-           // Create jewelry item elements
-           items.forEach(([id, item]) => {
-               const div = document.createElement('div');
-               div.className = 'jewelry-item';
-               div.dataset.id = id;
-               
-               // Check if this item is currently active
-               if (activeJewelry && activeJewelry.id === id) {
-                   div.classList.add('active');
-               }
-               
-               // Add thumbnail image
-               const img = document.createElement('img');
-               img.className = 'jewelry-image';
-               img.src = item.thumbnail || (item.type === 'earrings' ? item.left : item.image);
-               img.alt = item.name;
-               div.appendChild(img);
-               
-               // Add click handler
-               div.addEventListener('click', () => {
-                   toggleJewelry(id);
-               });
-               
-               grid.appendChild(div);
-           });
-           
-           // Update panel title
-           const panelTitle = document.querySelector('.panel-title');
-           const categoryNames = {
-               'earrings': 'Earrings',
-               'necklace': 'Necklaces',
-               'tikka': 'Tikka',
-               'ring': 'Rings',
-               'bangle': 'Bangles'
-           };
-           panelTitle.textContent = `Select ${categoryNames[category]}`;
-       }
-       
-       // Toggle jewelry selection
-       function toggleJewelry(id) {
-           // Check if the item is already active
-           if (activeJewelry && activeJewelry.id === id) {
-               // Deselect current item
-               activeJewelry = null;
-               
-               // Update UI
-               document.querySelectorAll('.jewelry-item').forEach(item => {
-                   item.classList.remove('active');
-               });
-               
-               // Hide controls panel on mobile
-               if (!isDesktop) {
-                   document.getElementById('controlsPanel').classList.remove('visible');
-                   isControlsPanelVisible = false;
-               }
-               
-               return;
-           }
-           
-           // Create a deep copy of the jewelry item
-           const jewelryItem = JSON.parse(JSON.stringify(JEWELRY[id]));
-           jewelryItem.id = id;
-           
-           // Handle images based on jewelry type
-           if (jewelryItem.type === 'earrings') {
-               jewelryItem.leftImage = JEWELRY[id].leftImage;
-               jewelryItem.rightImage = JEWELRY[id].rightImage;
-               
-               // Show gap control for earrings
-               document.getElementById('gapControlSection').style.display = 'block';
-               document.getElementById('gapControl').value = jewelryItem.gap || 0;
-           } else {
-               jewelryItem.loadedImage = JEWELRY[id].loadedImage;
-               
-               // Hide gap control for non-earrings
-               document.getElementById('gapControlSection').style.display = 'none';
-           }
-           
-           // Initialize with default scale and offset
-           jewelryItem.scale = jewelryItem.defaultScale;
-           jewelryItem.offset = { x: 0, y: 0 };
-           
-           // Handle hand jewelry specific properties
-           if (jewelryItem.type === 'hand') {
-               jewelryItem.handIndex = 0; // Default to right hand
-               if (id.startsWith('ring')) {
-                   jewelryItem.fingerIndex = 8; // Default to index finger
-               }
-           }
-           
-           // Set as active jewelry
-           activeJewelry = jewelryItem;
-           
-           // Update UI
-           document.querySelectorAll('.jewelry-item').forEach(item => {
-               item.classList.remove('active');
-               if (item.dataset.id === id) {
-                   item.classList.add('active');
-               }
-           });
-           
-           // Update size control
-           document.getElementById('sizeControl').value = jewelryItem.scale;
-           
-           // Show controls panel on mobile
-           if (!isDesktop) {
-               document.getElementById('controlsPanel').classList.add('visible');
-               isControlsPanelVisible = true;
-               
-               // On mobile, hide the jewelry panel after selection
-               if (window.innerWidth < 768) {
-                   document.getElementById('jewelryPanel').classList.remove('visible');
-               }
-           }
-       }
-       
-       // Update jewelry size
-       function updateJewelrySize(id, value) {
-           if (activeJewelry && activeJewelry.id === id) {
-               activeJewelry.scale = parseFloat(value);
-           }
-       }
-       
-       // Update jewelry gap (for earrings)
-       function updateJewelryGap(id, value) {
-           if (activeJewelry && activeJewelry.id === id && activeJewelry.type === 'earrings') {
-               activeJewelry.gap = parseInt(value);
-           }
-       }
-       
-       // Move jewelry in a direction
-       function moveJewelry(id, direction) {
-           if (!activeJewelry || activeJewelry.id !== id) return;
-           
-           const step = 5;
-           const offset = activeJewelry.offset;
-           
-           switch (direction) {
-               case 'up':
-                   offset.y -= step;
-                   break;
-               case 'down':
-                   offset.y += step;
-                   break;
-               case 'left':
-                   offset.x -= step;
-                   break;
-               case 'right':
-                   offset.x += step;
-                   break;
-               case 'up-left':
-                   offset.x -= step;
-                   offset.y -= step;
-                   break;
-               case 'up-right':
-                   offset.x += step;
-                   offset.y -= step;
-                   break;
-               case 'down-left':
-                   offset.x -= step;
-                   offset.y += step;
-                   break;
-               case 'down-right':
-                   offset.x += step;
-                   offset.y += step;
-                   break;
-               case 'center':
-                   offset.x = 0;
-                   offset.y = 0;
-                   break;
-           }
-       }
-       
-       // Clear all jewelry
-       function clearJewelry() {
-           activeJewelry = null;
-           
-           // Update UI
-           document.querySelectorAll('.jewelry-item').forEach(item => {
-               item.classList.remove('active');
-           });
-           
-           // Hide controls panel on mobile
-           if (!isDesktop) {
-               document.getElementById('controlsPanel').classList.remove('visible');
-               isControlsPanelVisible = false;
-           }
-       }
-       
-       // Capture image
-       function captureImage() {
-           try {
-               // For iOS devices, we need to handle saving differently
-               if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-                   // Show feedback that image is ready
-                   const feedbackDiv = document.createElement('div');
-                   feedbackDiv.style.position = 'fixed';
-                   feedbackDiv.style.top = '50%';
-                   feedbackDiv.style.left = '50%';
-                   feedbackDiv.style.transform = 'translate(-50%, -50%)';
-                   feedbackDiv.style.backgroundColor = 'rgba(0,0,0,0.7)';
-                   feedbackDiv.style.color = 'white';
-                   feedbackDiv.style.padding = '20px';
-                   feedbackDiv.style.borderRadius = '10px';
-                   feedbackDiv.style.zIndex = '9999';
-                   feedbackDiv.style.textAlign = 'center';
-                   feedbackDiv.innerHTML = `
-                       <p>Image is ready! Press and hold to save.</p>
-                       <img src="${canvas.toDataURL()}" style="max-width: 90%; margin-top: 15px; border: 2px solid white;">
-                   `;
-                   document.body.appendChild(feedbackDiv);
-                   
-                   // Remove the feedback after 5 seconds
-                   setTimeout(() => {
-                       document.body.removeChild(feedbackDiv);
-                   }, 5000);
-               } else {
-                   // Standard download approach for other devices
-                   const link = document.createElement('a');
-                   link.download = 'tanishq-jewelry-tryon.png';
-                   link.href = canvas.toDataURL();
-                   link.click();
-                   
-                   // Show success toast
-                   showToast('Image saved successfully!');
-               }
-           } catch (error) {
-               console.error('Error capturing image:', error);
-               showToast('Failed to save image. Please try again.');
-           }
-       }
-
-       // Show toast message
-       function showToast(message) {
-            const toast = document.createElement('div');
-            toast.textContent = message;
-            toast.style.position = 'fixed';
-            toast.style.bottom = '120px';
-            toast.style.left = '50%';
-            toast.style.transform = 'translateX(-50%)';
-            toast.style.backgroundColor = 'rgba(0,0,0,0.7)';
-            toast.style.color = 'white';
-            toast.style.padding = '12px 20px';
-            toast.style.borderRadius = '20px';
-            toast.style.zIndex = '9999';
-            toast.style.opacity = '0';
-            toast.style.transition = 'opacity 0.3s ease';
-            document.body.appendChild(toast);
-            
-            // Fade in
-            setTimeout(() => {
-                toast.style.opacity = '1';
-            }, 10);
-            
-            // Auto dismiss after 2 seconds
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                setTimeout(() => {
-                    document.body.removeChild(toast);
-                }, 300);
-            }, 2000);
+                await initializeAIModels();
+                
+                // Preload jewelry images
+                await preloadJewelryImages();
+                
+                // Initialize UI
+                initializeUI();
+                
+                // Start detection loop
+                appState.isInitialized = true;
+                requestAnimationFrame(detectAll);
+                
+                // Hide loading screen
+                hideLoadingScreen();
+                
+                console.log("Initialization complete!");
+            } catch (error) {
+                console.error("Initialization error:", error);
+                showError(error.message || "Error initializing app. Please refresh the page.");
+            }
         }
-        
-        // Update loading status
+
+        // Helper for loading status updates
         function updateLoadingStatus(message) {
             const loadingScreen = document.getElementById('loadingScreen');
             const statusText = loadingScreen.querySelector('p:not(.loading-error)');
@@ -1317,428 +1131,528 @@
                 statusText.textContent = message;
             }
         }
-        
-        // Handle window resize
-        function handleResize() {
-            const wasDesktop = isDesktop;
-            isDesktop = window.innerWidth >= 768;
-            
-            // If device type changed, update UI
-            if (wasDesktop !== isDesktop) {
-                setupUI();
-            }
-            
-            // Adjust canvas size to match video dimensions
-            if (video && canvas) {
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
+
+        function showError(message) {
+            const loadingScreen = document.getElementById('loadingScreen');
+            const errorElement = loadingScreen.querySelector('.loading-error');
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.classList.remove('hidden');
             }
         }
-        
-        // Camera access request function
-        async function requestCameraAccess() {
+
+        function hideLoadingScreen() {
+            document.getElementById('loadingScreen').classList.add('hidden');
+        }
+
+        // Initialize DOM elements
+        function initializeElements() {
+            elements.video = document.getElementById('cameraFeed');
+            elements.canvas = document.getElementById('jewelryCanvas');
+            elements.ctx = elements.canvas.getContext('2d');
+            elements.loadingScreen = document.getElementById('loadingScreen');
+            elements.jewelrySheet = document.getElementById('jewelrySheet');
+            elements.controlsPanel = document.getElementById('controlsPanel');
+            elements.captureBtn = document.getElementById('captureBtn');
+            elements.categoryBtns = document.querySelectorAll('.tab-btn');
+            elements.jewelryGrid = document.getElementById('jewelryGrid');
+            elements.controlsContent = document.getElementById('controlsContent');
+            elements.sheetTitle = document.getElementById('sheetTitle');
+            
+            if (!elements.video || !elements.canvas || !elements.ctx) {
+                throw new Error("Required elements not found");
+            }
+        }
+
+        // Setup event listeners for UI
+        function setupEventListeners() {
+            // Category tab buttons
+            elements.categoryBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const category = btn.dataset.category;
+                    switchCategory(category);
+                });
+            });
+            
+            // Capture button
+            elements.captureBtn.addEventListener('click', captureImage);
+            
+            // Bottom sheet handle
+            setupBottomSheetDrag();
+            
+            // Controls panel close button
+            document.getElementById('closeControlsBtn').addEventListener('click', () => {
+                toggleControlsPanel(false);
+            });
+        }
+
+        // Initialize camera
+        async function initializeCamera() {
             try {
-                document.getElementById('cameraError').classList.add('hidden');
-                await init();
-            } catch (error) {
-                console.error("Camera request error:", error);
-                document.getElementById('cameraError').classList.remove('hidden');
-            }
-        }
-        
-        // Run detection on video frames
-        async function detectAll() {
-            if (!video || !video.videoWidth || !video.videoHeight) {
-                requestAnimationFrame(detectAll);
-                return;
-            }
-
-            try {
-                // Process with MediaPipe
-                await Promise.all([
-                    faceMesh.send({image: video}),
-                    hands.send({image: video}),
-                    pose.send({image: video})
-                ]);
-            } catch (error) {
-                console.error("Detection error:", error);
-            }
-            
-            requestAnimationFrame(detectAll);
-        }
-        
-        // Handle hand detection results
-        function onHandResults(results) {
-            handLandmarks = results.multiHandLandmarks;
-        }
-        
-        // Handle pose detection results
-        function onPoseResults(results) {
-            poseLandmarks = results.poseLandmarks;
-        }
-        
-        // Handle face mesh detection results
-        function onFaceMeshResults(results) {
-            if (!canvas || !ctx) {
-                return;
-            }
-
-            // Ensure canvas size matches video
-            if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-            }
-
-            // Clear canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Draw active jewelry if exists
-            if (activeJewelry && results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
-                const landmarks = results.multiFaceLandmarks[0];
+                updateLoadingStatus("Accessing camera...");
                 
-                // Draw based on jewelry type
-                switch(activeJewelry.type) {
-                    case 'earrings':
-                        drawEarrings(activeJewelry, landmarks);
-                        break;
-                    case 'necklace':
-                        if (poseLandmarks) {
-                            drawNecklace(activeJewelry, poseLandmarks);
-                        }
-                        break;
-                    case 'single': // For tikka
-                        drawSinglePiece(activeJewelry, landmarks);
-                        break;
-                    case 'hand':
-                        if (handLandmarks && handLandmarks.length > 0) {
-                            const handIndex = activeJewelry.handIndex || 0;
-                            if (handIndex < handLandmarks.length) {
-                                if (activeJewelry.id.startsWith('ring')) {
-                                    drawRing(activeJewelry, handLandmarks[handIndex]);
-                                } else if (activeJewelry.id.startsWith('bangle')) {
-                                    drawBangle(activeJewelry, handLandmarks[handIndex]);
-                                }
-                            }
-                        }
-                        break;
+                // Check if this is a mobile device
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                const constraints = {
+                    video: {
+                        facingMode: 'user',
+                        width: { ideal: isMobile ? window.innerWidth : MAX_CAMERA_WIDTH },
+                        height: { ideal: isMobile ? window.innerHeight : MAX_CAMERA_HEIGHT }
+                    }
+                };
+                
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                elements.video.srcObject = stream;
+                
+                await new Promise((resolve) => {
+                    elements.video.onloadedmetadata = () => {
+                        elements.canvas.width = elements.video.videoWidth;
+                        elements.canvas.height = elements.video.videoHeight;
+                        console.log("Video dimensions:", elements.video.videoWidth, elements.video.videoHeight);
+                        appState.isCameraReady = true;
+                        resolve();
+                    };
+                });
+                
+                await elements.video.play();
+                console.log("Camera initialized successfully");
+                
+            } catch (error) {
+                console.error("Camera access error:", error);
+                document.getElementById('cameraError').classList.remove('hidden');
+                throw new Error("Camera access denied. Please enable camera permissions.");
+            }
+        }
+
+        // Initialize AI models
+        async function initializeAIModels() {
+            try {
+                updateLoadingStatus("Loading AI models...");
+                
+                // Initialize FaceMesh
+                faceMesh = new FaceMesh({
+                    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4.1633559619/${file}`
+                });
+                
+                // Initialize Hands
+                hands = new Hands({
+                    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/${file}`
+                });
+                
+                // Initialize Pose
+                pose = new Pose({
+                    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${file}`
+                });
+                
+                // Configure models - use lighter settings for mobile
+                faceMesh.setOptions({
+                    maxNumFaces: 1,
+                    refineLandmarks: true,
+                    minDetectionConfidence: 0.5,
+                    minTrackingConfidence: 0.5
+                });
+                
+                hands.setOptions({
+                    maxNumHands: 2,
+                    modelComplexity: 0, // Use lighter model for mobile
+                    minDetectionConfidence: 0.5,
+                    minTrackingConfidence: 0.5
+                });
+                
+                pose.setOptions({
+                    modelComplexity: 0, // Use lighter model for mobile
+                    smoothLandmarks: true,
+                    minDetectionConfidence: 0.5,
+                    minTrackingConfidence: 0.5
+                });
+                
+                // Set up callbacks
+                faceMesh.onResults(onFaceMeshResults);
+                hands.onResults(onHandResults);
+                pose.onResults(onPoseResults);
+                
+                // Initialize models
+                updateLoadingStatus("Loading face detection...");
+                await faceMesh.initialize();
+                
+                updateLoadingStatus("Loading hand detection...");
+                await hands.initialize();
+                
+                updateLoadingStatus("Loading pose detection...");
+                await pose.initialize();
+                
+                console.log("AI models initialized successfully");
+                return true;
+            } catch (error) {
+                console.error("Model initialization error:", error);
+                throw new Error("Failed to initialize AI models. Please try refreshing the page.");
+            }
+        }
+
+        // Preload jewelry images
+        async function preloadJewelryImages() {
+            updateLoadingStatus("Loading jewelry assets...");
+            const preloadPromises = [];
+            
+            for (const [id, jewelry] of Object.entries(JEWELRY)) {
+                try {
+                    if (jewelry.type === 'earrings') {
+                        const leftImg = new Image();
+                        const rightImg = new Image();
+                        
+                        leftImg.src = jewelry.left;
+                        rightImg.src = jewelry.right;
+                        
+                        const leftPromise = new Promise((resolve, reject) => {
+                            leftImg.onload = resolve;
+                            leftImg.onerror = () => reject(new Error(`Failed to load ${jewelry.left}`));
+                        });
+                        
+                        const rightPromise = new Promise((resolve, reject) => {
+                            rightImg.onload = resolve;
+                            rightImg.onerror = () => reject(new Error(`Failed to load ${jewelry.right}`));
+                        });
+                        
+                        preloadPromises.push(Promise.all([leftPromise, rightPromise])
+                            .then(() => {
+                                jewelry.leftImage = leftImg;
+                                jewelry.rightImage = rightImg;
+                            }));
+                    } else {
+                        const img = new Image();
+                        img.src = jewelry.image;
+                        
+                        const imgPromise = new Promise((resolve, reject) => {
+                            img.onload = resolve;
+                            img.onerror = () => reject(new Error(`Failed to load ${jewelry.image}`));
+                        });
+                        
+                        preloadPromises.push(imgPromise.then(() => {
+                            jewelry.loadedImage = img;
+                        }));
+                    }
+                    
+                    // Also preload thumbnail
+                    if (jewelry.thumbnail) {
+                        const thumbImg = new Image();
+                        thumbImg.src = jewelry.thumbnail;
+                        
+                        const thumbPromise = new Promise((resolve) => {
+                            thumbImg.onload = resolve;
+                            thumbImg.onerror = resolve; // Continue even if thumbnail fails
+                        });
+                        
+                        preloadPromises.push(thumbPromise.then(() => {
+                            jewelry.thumbnailImage = thumbImg;
+                        }));
+                    }
+                } catch (error) {
+                    console.warn(`Error setting up preload for ${id}:`, error);
                 }
             }
+            
+            // Wait for all preload promises with a timeout for mobile
+            try {
+                await Promise.all(preloadPromises);
+                console.log("All jewelry images preloaded successfully");
+            } catch (error) {
+                console.warn("Some images failed to preload:", error);
+                // Continue anyway - we'll handle missing images gracefully
+            }
+            
+            appState.isResourcesLoaded = true;
         }
 
-        // Preload all jewelry images
-       async function preloadImages() {
-           const promises = [];
-           
-           for (const [id, jewelry] of Object.entries(JEWELRY)) {
-               if (jewelry.type === 'earrings') {
-                   // Load left and right earring images
-                   const leftImg = new Image();
-                   const rightImg = new Image();
-                   
-                   leftImg.src = jewelry.left;
-                   rightImg.src = jewelry.right;
-                   
-                   const leftPromise = new Promise((resolve, reject) => {
-                       leftImg.onload = resolve;
-                       leftImg.onerror = () => {
-                           console.error(`Failed to load ${jewelry.left}`);
-                           reject(new Error(`Failed to load ${jewelry.left}`));
-                       };
-                   });
-                   
-                   const rightPromise = new Promise((resolve, reject) => {
-                       rightImg.onload = resolve;
-                       rightImg.onerror = () => {
-                           console.error(`Failed to load ${jewelry.right}`);
-                           reject(new Error(`Failed to load ${jewelry.right}`));
-                       };
-                   });
-                   
-                   promises.push(leftPromise, rightPromise);
-                   
-                   // Store the image objects for later use
-                   jewelry.leftImage = leftImg;
-                   jewelry.rightImage = rightImg;
-               } else {
-                   // Load single image for other jewelry types
-                   const img = new Image();
-                   img.src = jewelry.image;
-                   
-                   const promise = new Promise((resolve, reject) => {
-                       img.onload = resolve;
-                       img.onerror = () => {
-                           console.error(`Failed to load ${jewelry.image}`);
-                           reject(new Error(`Failed to load ${jewelry.image}`));
-                       };
-                   });
-                   
-                   promises.push(promise);
-                   
-                   // Store the image object for later use
-                   jewelry.loadedImage = img;
-               }
-           }
-           
-           // Wait for all images to load
-           await Promise.all(promises);
-       }
-       
-       // Draw earrings on face landmarks
-       function drawEarrings(jewelry, landmarks) {
-           const leftEar = landmarks[234];
-           const rightEar = landmarks[454];
-           
-           // Determine face rotation for visibility
-           const faceRotation = (rightEar.z - leftEar.z);
-           let gap = jewelry.gap || 0;
-           
-           // Adjust gap based on face rotation
-           if (Math.abs(faceRotation) <= 0.1) {
-               gap += 3;
-           } else {
-               gap += 24;
-           }
-           
-           // Get ear lobe landmarks
-           const leftLobe = landmarks[jewelry.landmarks[0]];
-           const rightLobe = landmarks[jewelry.landmarks[1]];
-           
-           // Calculate sizing based on face dimensions
-           const faceWidth = Math.abs(rightEar.x - leftEar.x) * canvas.width;
-           const gapAdjustment = (gap / 100) * faceWidth;
-           
-           const earHeight = Math.abs(landmarks[234].y - leftLobe.y) * canvas.height;
-           const baseScale = (earHeight * 0.8) / jewelry.leftImage.height;
-           const scale = baseScale * jewelry.scale;
-           
-           // Draw left earring if face is not turned too far right
-           if (faceRotation > -0.1) {
-               const leftX = leftLobe.x * canvas.width - gapAdjustment + jewelry.offset.x;
-               const leftY = leftLobe.y * canvas.height + jewelry.offset.y;
-               
-               ctx.save();
-               ctx.shadowColor = 'rgba(0,0,0,0.3)';
-               ctx.shadowBlur = 5;
-               ctx.shadowOffsetX = 2;
-               ctx.shadowOffsetY = 2;
-               
-               const leftWidth = jewelry.leftImage.width * scale;
-               const leftHeight = jewelry.leftImage.height * scale;
-               ctx.drawImage(jewelry.leftImage,
-                   leftX - leftWidth/2,
-                   leftY - leftHeight/2,
-                   leftWidth,
-                   leftHeight
-               );
-               ctx.restore();
-           }
-           
-           // Draw right earring if face is not turned too far left
-           if (faceRotation < 0.1) {
-               const rightX = rightLobe.x * canvas.width + gapAdjustment + jewelry.offset.x;
-               const rightY = rightLobe.y * canvas.height + jewelry.offset.y;
-               
-               ctx.save();
-               ctx.shadowColor = 'rgba(0,0,0,0.3)';
-               ctx.shadowBlur = 5;
-               ctx.shadowOffsetX = 2;
-               ctx.shadowOffsetY = 2;
-               
-               const rightWidth = jewelry.rightImage.width * scale;
-               const rightHeight = jewelry.rightImage.height * scale;
-               ctx.drawImage(jewelry.rightImage,
-                   rightX - rightWidth/2,
-                   rightY - rightHeight/2,
-                   rightWidth,
-                   rightHeight
-               );
-               ctx.restore();
-           }
-       }
-       
-       // Draw necklace using pose landmarks
-       function drawNecklace(jewelry, poseLandmarks) {
-           const leftShoulder = poseLandmarks[11];
-           const rightShoulder = poseLandmarks[12];
+        // Initialize UI
+        function initializeUI() {
+            // Show the first category by default
+            switchCategory('face');
+            
+            // Set up bottom sheet initial state
+            const bottomSheetHeight = parseInt(getComputedStyle(document.documentElement)
+                .getPropertyValue('--bottom-sheet-height'));
+            elements.jewelrySheet.style.transform = `translateY(0)`;
+            
+            // Update capture button position based on bottom sheet
+            updateCaptureButtonPosition();
+        }
 
-           // Calculate position based on shoulders
-           const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x) * canvas.width;
-           const collarOffset = 0.15;
-           const leftX = leftShoulder.x * canvas.width + shoulderWidth * collarOffset;
-           const rightX = rightShoulder.x * canvas.width - shoulderWidth * collarOffset;
-           const baseY = leftShoulder.y * canvas.height;
+        // Bottom sheet drag functionality
+        function setupBottomSheetDrag() {
+            const sheetHandle = elements.jewelrySheet.querySelector('.sheet-handle');
+            const controlsHandle = elements.controlsPanel.querySelector('.panel-handle');
+            
+            // For bottom sheet
+            sheetHandle.addEventListener('touchstart', handleDragStart);
+            sheetHandle.addEventListener('touchmove', handleDragMove);
+            sheetHandle.addEventListener('touchend', handleDragEnd);
+            
+            // For controls panel
+            controlsHandle.addEventListener('touchstart', handleControlsDragStart);
+            controlsHandle.addEventListener('touchmove', handleControlsDragMove);
+            controlsHandle.addEventListener('touchend', handleControlsDragEnd);
+        }
 
-           // Position adjustments
-           const adjustedY = baseY + VERTICAL_OFFSET + jewelry.offset.y;
-           const centerX = (leftX + rightX) / 2 + jewelry.offset.x;
-           
-           // Calculate necklace dimensions
-           const necklaceWidth = shoulderWidth * jewelry.scale;
-           const necklaceHeight = jewelry.loadedImage.height * (necklaceWidth / jewelry.loadedImage.width);
+        function handleDragStart(e) {
+            appState.isDragging = true;
+            appState.sheetStartY = e.touches[0].clientY;
+            appState.sheetCurrentY = 0;
+            elements.jewelrySheet.style.transition = 'none';
+        }
 
-           // Draw position
-           const drawX = centerX - necklaceWidth/2;
-           const drawY = adjustedY - DROP_HEIGHT/2;
+        function handleDragMove(e) {
+            if (!appState.isDragging) return;
+            
+            const currentY = e.touches[0].clientY;
+            const deltaY = currentY - appState.sheetStartY;
+            
+            // Only allow dragging down from normal position or up from expanded position
+            if ((!appState.isBottomSheetExpanded && deltaY < 0) || 
+                (appState.isBottomSheetExpanded && deltaY > 0)) {
+                appState.sheetCurrentY = deltaY;
+                const newTransform = `translateY(${deltaY}px)`;
+                elements.jewelrySheet.style.transform = newTransform;
+            }
+        }
 
-           // Add shadow effect
-           ctx.save();
-           ctx.shadowColor = 'rgba(0,0,0,0.3)';
-           ctx.shadowBlur = 8;
-           ctx.shadowOffsetX = 2;
-           ctx.shadowOffsetY = 2;
+        function handleDragEnd() {
+            if (!appState.isDragging) return;
+            appState.isDragging = false;
+            elements.jewelrySheet.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            
+            // Determine whether to expand or collapse
+            const threshold = 50; // Pixels to trigger action
+            
+            if (!appState.isBottomSheetExpanded && appState.sheetCurrentY < -threshold) {
+                // Expand sheet
+                expandBottomSheet(true);
+            } else if (appState.isBottomSheetExpanded && appState.sheetCurrentY > threshold) {
+                // Collapse sheet
+                expandBottomSheet(false);
+            } else {
+                // Return to original position
+                elements.jewelrySheet.style.transform = appState.isBottomSheetExpanded ? 
+                    'translateY(0)' : 'translateY(0)';
+            }
+        }
 
-           // Draw necklace image
-           ctx.drawImage(
-               jewelry.loadedImage,
-               drawX,
-               drawY,
-               necklaceWidth,
-               necklaceHeight
-           );
-           
-           ctx.restore();
-       }
-       
-       // Draw single piece (like tikka) on face
-       function drawSinglePiece(jewelry, landmarks) {
-           if (!jewelry.loadedImage) {
-               console.error('Image not loaded:', jewelry);
-               return;
-           }
+        // Controls panel drag handlers
+        function handleControlsDragStart(e) {
+            appState.isDragging = true;
+            appState.sheetStartY = e.touches[0].clientY;
+            appState.sheetCurrentY = 0;
+            elements.controlsPanel.style.transition = 'none';
+        }
 
-           let x, y, scale;
+        function handleControlsDragMove(e) {
+            if (!appState.isDragging) return;
+            
+            const currentY = e.touches[0].clientY;
+            const deltaY = currentY - appState.sheetStartY;
+            
+            // Only allow dragging down (to dismiss)
+            if (deltaY > 0) {
+                appState.sheetCurrentY = deltaY;
+                const newTransform = `translateY(${deltaY}px)`;
+                elements.controlsPanel.style.transform = newTransform;
+            }
+        }
 
-           // Position based on landmark type
-           if (jewelry.landmark === 151) { // Tikka
-               const centerPoint = landmarks[LANDMARKS.tikka.center];
-               const topPoint = landmarks[LANDMARKS.tikka.top];
-               const refPoint = landmarks[LANDMARKS.tikka.reference];
-               
-               x = ((centerPoint.x + refPoint.x) / 2) * canvas.width + jewelry.offset.x;
-               y = ((centerPoint.y + topPoint.y) / 2) * canvas.height - 20 + jewelry.offset.y;
-               
-               const foreheadWidth = Math.abs(landmarks[71].x - landmarks[301].x) * canvas.width;
-               const baseScale = (foreheadWidth * 0.4) / jewelry.loadedImage.width;
-               scale = baseScale * jewelry.scale;
-           }
+        function handleControlsDragEnd() {
+            if (!appState.isDragging) return;
+            appState.isDragging = false;
+            elements.controlsPanel.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            
+            // Determine whether to close
+            const threshold = 80; // Pixels to trigger close
+            
+            if (appState.sheetCurrentY > threshold) {
+                // Close controls panel
+                toggleControlsPanel(false);
+            } else {
+                // Return to original position
+                elements.controlsPanel.style.transform = 'translateY(0)';
+            }
+        }
 
-           // Add shadow effect
-           ctx.save();
-           ctx.shadowColor = 'rgba(0,0,0,0.3)';
-           ctx.shadowBlur = 8;
-           ctx.shadowOffsetX = 2;
-           ctx.shadowOffsetY = 2;
-           
-           // Calculate dimensions
-           const width = jewelry.loadedImage.width * scale;
-           const height = jewelry.loadedImage.height * scale;
-           
-           // Draw the image
-           ctx.drawImage(jewelry.loadedImage,
-               x - width/2,
-               y - height/2,
-               width,
-               height
-           );
-           ctx.restore();
-       }
-       
-       // Draw ring on hand
-       function drawRing(jewelry, handLandmarks) {
-           const fingerTip = handLandmarks[jewelry.fingerIndex];
-           const fingerBase = handLandmarks[jewelry.fingerIndex - 3];
-           
-           if (!fingerTip || !fingerBase) {
-               return;
-           }
-           
-           // Position ring 1/3 of the way from base to tip
-           const positionRatio = 0.3;
-           const x = (fingerBase.x + (fingerTip.x - fingerBase.x) * positionRatio) * canvas.width + jewelry.offset.x;
-           const y = (fingerBase.y + (fingerTip.y - fingerBase.y) * positionRatio) * canvas.height + jewelry.offset.y;
-           
-           // Calculate angle based on finger direction
-           const angle = Math.atan2(
-               fingerTip.y - fingerBase.y,
-               fingerTip.x - fingerBase.x
-           );
+        // Expand/collapse bottom sheet
+        function expandBottomSheet(expand) {
+            appState.isBottomSheetExpanded = expand;
+            if (expand) {
+                elements.jewelrySheet.classList.add('expanded');
+                elements.jewelrySheet.style.transform = 'translateY(0)';
+            } else {
+                elements.jewelrySheet.classList.remove('expanded');
+                elements.jewelrySheet.style.transform = 'translateY(0)';
+            }
+            updateCaptureButtonPosition();
+        }
 
-           // Draw with rotation
-           ctx.save();
-           ctx.translate(x, y);
-           ctx.rotate(angle - Math.PI/2);
-           
-           const width = jewelry.loadedImage.width * jewelry.scale;
-           const height = jewelry.loadedImage.height * jewelry.scale;
-           
-           // Add shadow
-           ctx.shadowColor = 'rgba(0,0,0,0.3)';
-           ctx.shadowBlur = 5;
-           ctx.shadowOffsetX = 1;
-           ctx.shadowOffsetY = 1;
-           
-           ctx.drawImage(jewelry.loadedImage,
-               -width/2,
-               -height/2,
-               width,
-               height
-           );
-           ctx.restore();
-       }
-       
-       // Draw bangle on wrist
-       function drawBangle(jewelry, handLandmarks) {
-           const wrist = handLandmarks[0];
-           const palmBase = handLandmarks[9];
-           
-           if (!wrist || !palmBase) {
-               return;
-           }
-           
-           // Position adjustments
-           const verticalOffset = 30;   
-           const horizontalOffset = -20; 
-           
-           const x = wrist.x * canvas.width + horizontalOffset + jewelry.offset.x;
-           const y = wrist.y * canvas.height + verticalOffset + jewelry.offset.y;
-           
-           // Calculate angle based on wrist orientation
-           const angle = Math.atan2(
-               palmBase.y - wrist.y,
-               palmBase.x - wrist.x
-           );
+        // Update capture button position based on bottom sheet state
+        function updateCaptureButtonPosition() {
+            const sheet = elements.jewelrySheet;
+            const sheetHeight = parseInt(getComputedStyle(document.documentElement)
+                .getPropertyValue(appState.isBottomSheetExpanded ? 
+                    '--bottom-sheet-height-expanded' : '--bottom-sheet-height'));
+            
+            elements.captureBtn.style.bottom = `calc(${sheetHeight}px + 20px)`;
+        }
 
-           // Calculate size based on wrist width
-           const wristLeft = handLandmarks[17];
-           const wristRight = handLandmarks[5];
-           const wristWidth = Math.abs(wristRight.x - wristLeft.x) * canvas.width;
-           
-           // Draw with rotation
-           ctx.save();
-           ctx.translate(x, y);
-           ctx.rotate(angle - Math.PI/2);
+        // Toggle controls panel
+        function toggleControlsPanel(show, jewelryId = null) {
+            if (show) {
+                appState.isControlsPanelOpen = true;
+                appState.selectedJewelryId = jewelryId;
+                elements.controlsPanel.style.transform = 'translateY(0)';
+                elements.controlsPanel.classList.remove('hidden');
+                renderControlsForJewelry(jewelryId);
+            } else {
+                appState.isControlsPanelOpen = false;
+                elements.controlsPanel.style.transform = 'translateY(100%)';
+                // Use a timeout to add the hidden class after the animation
+                setTimeout(() => {
+                    if (!appState.isControlsPanelOpen) {
+                        elements.controlsPanel.classList.add('hidden');
+                    }
+                }, 300);
+            }
+        }
 
-           const baseScale = 3.2;
-           const width = wristWidth * baseScale * jewelry.scale;
-           const height = jewelry.loadedImage.height * (width / jewelry.loadedImage.width);
-           
-           // Add shadow
-           ctx.shadowColor = 'rgba(0,0,0,0.3)';
-           ctx.shadowBlur = 5;
-           ctx.shadowOffsetX = 2;
-           ctx.shadowOffsetY = 2;
-           
-           ctx.drawImage(jewelry.loadedImage,
-               -width/2,
-               -height/2,
-               width,
-               height
-           );
-           ctx.restore();
-       }
+        // Switch category tab
+        function switchCategory(category) {
+            appState.currentCategory = category;
+            
+            // Update tab buttons
+            elements.categoryBtns.forEach(btn => {
+                if (btn.dataset.category === category) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            
+            // Update title and contents based on category
+            if (category === 'active') {
+                renderActiveJewelry();
+                elements.sheetTitle.textContent = 'Active Jewelry';
+            } else {
+                renderJewelryByCategory(category);
+                elements.sheetTitle.textContent = `${category.charAt(0).toUpperCase() + category.slice(1)} Jewelry`;
+            }
+        }
 
-       // Initialize on page load
-       window.addEventListener('load', init);
-   </script>
+        // Render jewelry grid by category
+        function renderJewelryByCategory(category) {
+            const grid = elements.jewelryGrid;
+            grid.innerHTML = '';
+            
+            // Filter jewelry by category
+            const categoryJewelry = Object.entries(JEWELRY)
+                .filter(([_, item]) => item.group === category);
+            
+            if (categoryJewelry.length === 0) {
+                grid.innerHTML = '<p class="text-center py-4 text-gray-500">No items available in this category</p>';
+                return;
+            }
+            
+            // Create jewelry items
+            categoryJewelry.forEach(([id, jewelry]) => {
+                const isActive = appState.activeJewelry.has(id);
+                const item = document.createElement('div');
+                item.className = `jewelry-item ${isActive ? 'active' : ''}`;
+                
+                // Thumbnail image path
+                const thumbSrc = jewelry.thumbnail || 
+                    (jewelry.type === 'earrings' ? 
+                        jewelry.left.replace('.png', '-thumb.png') : 
+                        jewelry.image.replace('.png', '-thumb.png'));
+                
+                item.innerHTML = `
+                    <img src="${thumbSrc}" alt="${jewelry.name}" class="jewelry-img">
+                    <div class="jewelry-name">${jewelry.name}</div>
+                `;
+                
+                item.addEventListener('click', () => handleJewelryItemClick(id));
+                grid.appendChild(item);
+            });
+        }
+
+        // Render active jewelry items
+        function renderActiveJewelry() {
+            const grid = elements.jewelryGrid;
+            grid.innerHTML = '';
+            
+            if (appState.activeJewelry.size === 0) {
+                grid.innerHTML = '<p class="text-center py-4 text-gray-500">No active jewelry items. Select items from the category tabs.</p>';
+                return;
+            }
+            
+            // Create active jewelry items
+            appState.activeJewelry.forEach((jewelry, id) => {
+                const originalJewelry = JEWELRY[id];
+                const item = document.createElement('div');
+                item.className = 'jewelry-item active';
+                
+                // Use the correct thumbnail
+                const thumbSrc = originalJewelry.thumbnail || 
+                    (originalJewelry.type === 'earrings' ? 
+                        originalJewelry.left.replace('.png', '-thumb.png') : 
+                        originalJewelry.image.replace('.png', '-thumb.png'));
+                
+                item.innerHTML = `
+                    <img src="${thumbSrc}" alt="${originalJewelry.name}" class="jewelry-img">
+                    <div class="jewelry-name">${originalJewelry.name}</div>
+                    <div class="mx-auto mt-2 flex justify-center">
+                        <button class="adjust-btn bg-purple-100 text-purple-700 px-3 py-1 rounded-l-lg">
+                            <i class="fas fa-sliders-h"></i>
+                        </button>
+                        <button class="remove-btn bg-red-100 text-red-700 px-3 py-1 rounded-r-lg">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                
+                // Add event listeners
+                item.querySelector('.adjust-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleControlsPanel(true, id);
+                });
+                
+                item.querySelector('.remove-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    removeJewelry(id);
+                    renderActiveJewelry(); // Refresh the active items list
+                });
+                
+                grid.appendChild(item);
+            });
+        }
+
+        // Handle jewelry item click
+        function handleJewelryItemClick(id) {
+            const originalJewelry = JEWELRY[id];
+            
+            // Check if this jewelry is already active
+            if (appState.activeJewelry.has(id)) {
+                // Open controls for this jewelry
+                toggleControlsPanel(true, id);
+            } else {
+                // Add new jewelry
+                addJewelry(id);
+                
+                // Update the UI
+                const categoryItems = document.querySelectorAll('.jewelry-item');
+                categoryItems.forEach(item => {
+                    const itemName = item.querySelector('.jewelry-name').textContent;
+                    if (itemName === originalJewelry.name) {
+                        item.classList.add('active');
+                    }
+                });
+                
+                // Show controls panel for the newly added jewelry
+                toggleControlsPanel(true, id);
+            }
+        }
+    </script>
 </body>
 </html>
