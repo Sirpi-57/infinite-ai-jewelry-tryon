@@ -2439,16 +2439,16 @@
         }
         
         function captureScreenshot() {
-            // Show a toast notification that we're preparing the screenshot
-            showToast("Preparing screenshot...");
+            // Pause the video stream
+            elements.video.pause();
             
-            // Create a new canvas with the same dimensions as the video
+            // Create a canvas to capture the current frame
             const captureCanvas = document.createElement('canvas');
             captureCanvas.width = elements.video.videoWidth;
             captureCanvas.height = elements.video.videoHeight;
             const ctx = captureCanvas.getContext('2d');
             
-            // Draw the video frame
+            // Draw the current video frame
             ctx.save();
             ctx.scale(-1, 1); // Mirror horizontally
             ctx.drawImage(elements.video, -captureCanvas.width, 0, captureCanvas.width, captureCanvas.height);
@@ -2457,21 +2457,58 @@
             // Draw the jewelry canvas on top
             ctx.drawImage(elements.canvas, 0, 0, captureCanvas.width, captureCanvas.height);
             
-            // Create a download link
-            const link = document.createElement('a');
-            link.download = 'jewelry-tryon-screenshot-' + new Date().toISOString().slice(0, 10) + '.png';
+            // Create a modal or overlay to show the captured image
+            const modal = document.createElement('div');
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+            modal.style.backgroundColor = 'rgba(0,0,0,0.8)';
+            modal.style.zIndex = '1000';
+            modal.style.display = 'flex';
+            modal.style.flexDirection = 'column';
+            modal.style.alignItems = 'center';
+            modal.style.justifyContent = 'center';
             
-            try {
-                // Create image URL
+            const img = document.createElement('img');
+            img.src = captureCanvas.toDataURL('image/png');
+            img.style.maxWidth = '90%';
+            img.style.maxHeight = '80%';
+            img.style.objectFit = 'contain';
+            
+            const buttonContainer = document.createElement('div');
+            buttonContainer.style.marginTop = '20px';
+            
+            const saveButton = document.createElement('button');
+            saveButton.textContent = 'Save';
+            saveButton.style.margin = '0 10px';
+            saveButton.style.padding = '10px 20px';
+            saveButton.onclick = () => {
+                const link = document.createElement('a');
+                link.download = 'jewelry-tryon-' + new Date().toISOString().slice(0, 10) + '.png';
                 link.href = captureCanvas.toDataURL('image/png');
                 link.click();
-                
-                // Show success toast
-                showToast('Screenshot saved successfully!');
-            } catch (e) {
-                console.error('Error capturing screenshot:', e);
-                showToast('Error saving screenshot. Check permissions.');
-            }
+                document.body.removeChild(modal);
+                elements.video.play(); // Resume video
+            };
+            
+            const cancelButton = document.createElement('button');
+            cancelButton.textContent = 'Cancel';
+            cancelButton.style.margin = '0 10px';
+            cancelButton.style.padding = '10px 20px';
+            cancelButton.onclick = () => {
+                document.body.removeChild(modal);
+                elements.video.play(); // Resume video
+            };
+            
+            buttonContainer.appendChild(saveButton);
+            buttonContainer.appendChild(cancelButton);
+            
+            modal.appendChild(img);
+            modal.appendChild(buttonContainer);
+            
+            document.body.appendChild(modal);
         }
         
         // 15. Setup Gesture Handlers
