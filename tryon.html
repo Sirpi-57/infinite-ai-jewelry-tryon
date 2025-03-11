@@ -11,7 +11,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3.1620248257/drawing_utils.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1620248257/camera_utils.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js" defer></script>
-
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    
     <!-- Stylesheets -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -19,15 +20,15 @@
     <!-- Our custom CSS -->
     <style>
         :root {
-            --color-primary: #832729;
-            --color-secondary: #832729;
-            --color-accent: #C77DFF;
-            --color-dark: #240046;
-            --color-light: rgba(131, 39, 41, 0.05);
-            --color-background: #f8f9fa;
-            --color-surface: #ffffff;
-            --color-border: rgba(131, 39, 41, 0.2);
-            --color-text: #2D3748;
+            --color-primary: #3B82F6;      /* Vibrant blue - represents innovation and technology */
+            --color-secondary: #10B981;    /* Emerald green - suggests growth and intelligence */
+            --color-accent: #6366F1;       /* Indigo - adds depth and sophistication */
+            --color-dark: #1F2937;         /* Deep charcoal - professional and strong */
+            --color-light: rgba(59, 130, 246, 0.05); /* Soft blue with low opacity */
+            --color-background: #F9FAFB;   /* Very light gray - clean, modern background */
+            --color-surface: #FFFFFF;      /* Pure white for surface elements */
+            --color-border: rgba(59, 130, 246, 0.2); /* Soft blue border */
+            --color-text: #374151;         /* Dark gray for text - slightly softer than pure black */
             
             /* Mobile-specific dimensions */
             --nav-height: 56px;
@@ -1248,7 +1249,7 @@
             });
             
             // Capture button
-            elements.captureBtn.addEventListener('click', captureImage);
+            elements.captureBtn.addEventListener('click', captureScreenshot);
             
             // Menu button
             elements.menuButton.addEventListener('click', showAppSettings);
@@ -2437,44 +2438,38 @@
             }
         }
         
-        // Image capture
-        function captureImage() {
-            // Create a new canvas to combine video and jewelry
-            const captureCanvas = document.createElement('canvas');
-            captureCanvas.width = elements.video.videoWidth;
-            captureCanvas.height = elements.video.videoHeight;
-            const ctx = captureCanvas.getContext('2d');
+        function captureScreenshot() {
+            // Show a toast notification that we're preparing the screenshot
+            showToast("Preparing screenshot...");
             
-            // Draw video frame
-            ctx.save();
-            // Mirror the video horizontally to match what user sees
-            ctx.scale(-1, 1);
-            ctx.drawImage(elements.video, -captureCanvas.width, 0, captureCanvas.width, captureCanvas.height);
-            ctx.restore();
+            // Get the camera container
+            const cameraContainer = document.querySelector('.camera-container');
             
-            // Draw jewelry canvas on top
-            ctx.drawImage(elements.canvas, 0, 0, captureCanvas.width, captureCanvas.height);
-            
-            // Add a small branding
-            ctx.font = '16px Arial';
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-            ctx.fillText('Infinite AI Virtual Try-On', 10, captureCanvas.height - 20);
-            
-            // Create download link
-            const link = document.createElement('a');
-            link.download = 'jewelry-tryon-' + new Date().toISOString().slice(0, 10) + '.png';
-            
-            try {
-                // Create image URL
-                link.href = captureCanvas.toDataURL('image/png');
-                link.click();
+            // Use html2canvas to capture the camera container
+            html2canvas(cameraContainer, { 
+                backgroundColor: null, 
+                useCORS: true, 
+                scale: 2 // Increase quality
+            }).then(canvas => {
+                // Create a download link
+                const link = document.createElement('a');
+                link.download = 'jewelry-tryon-screenshot-' + new Date().toISOString().slice(0, 10) + '.png';
                 
-                // Show success toast
-                showToast('Image saved successfully!');
-            } catch (e) {
-                console.error('Error capturing image:', e);
-                showToast('Error saving image. Check permissions.');
-            }
+                try {
+                    // Create image URL
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    
+                    // Show success toast
+                    showToast('Screenshot saved successfully!');
+                } catch (e) {
+                    console.error('Error capturing screenshot:', e);
+                    showToast('Error saving screenshot. Check permissions.');
+                }
+            }).catch(error => {
+                console.error('Screenshot error:', error);
+                showToast('Failed to take screenshot');
+            });
         }
         
         // 15. Setup Gesture Handlers
