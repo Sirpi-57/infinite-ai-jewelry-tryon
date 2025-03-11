@@ -2442,22 +2442,35 @@
             // Pause the video stream
             elements.video.pause();
             
-            // Create a canvas to capture the current frame
+            // Create a new full-size canvas matching video dimensions
             const captureCanvas = document.createElement('canvas');
             captureCanvas.width = elements.video.videoWidth;
             captureCanvas.height = elements.video.videoHeight;
             const ctx = captureCanvas.getContext('2d');
             
-            // Draw the current video frame
+            // Draw the video frame
             ctx.save();
-            ctx.scale(-1, 1); // Mirror horizontally
-            ctx.drawImage(elements.video, -captureCanvas.width, 0, captureCanvas.width, captureCanvas.height);
+            
+            // Apply mirroring 
+            ctx.scale(-1, 1);
+            ctx.drawImage(
+                elements.video, 
+                -captureCanvas.width, 0, 
+                captureCanvas.width, 
+                captureCanvas.height
+            );
+            
             ctx.restore();
             
-            // Draw the jewelry canvas on top
-            ctx.drawImage(elements.canvas, 0, 0, captureCanvas.width, captureCanvas.height);
+            // Draw jewelry canvas on top
+            ctx.drawImage(
+                elements.canvas, 
+                0, 0, 
+                captureCanvas.width, 
+                captureCanvas.height
+            );
             
-            // Create a modal or overlay to show the captured image
+            // Create modal for preview and save
             const modal = document.createElement('div');
             modal.style.position = 'fixed';
             modal.style.top = '0';
@@ -2471,11 +2484,11 @@
             modal.style.alignItems = 'center';
             modal.style.justifyContent = 'center';
             
-            const img = document.createElement('img');
-            img.src = captureCanvas.toDataURL('image/png');
-            img.style.maxWidth = '90%';
-            img.style.maxHeight = '80%';
-            img.style.objectFit = 'contain';
+            const previewImg = document.createElement('img');
+            previewImg.src = captureCanvas.toDataURL('image/png');
+            previewImg.style.maxWidth = '90%';
+            previewImg.style.maxHeight = '80%';
+            previewImg.style.objectFit = 'contain';
             
             const buttonContainer = document.createElement('div');
             buttonContainer.style.marginTop = '20px';
@@ -2490,7 +2503,7 @@
                 link.href = captureCanvas.toDataURL('image/png');
                 link.click();
                 document.body.removeChild(modal);
-                elements.video.play(); // Resume video
+                elements.video.play();
             };
             
             const cancelButton = document.createElement('button');
@@ -2499,13 +2512,13 @@
             cancelButton.style.padding = '10px 20px';
             cancelButton.onclick = () => {
                 document.body.removeChild(modal);
-                elements.video.play(); // Resume video
+                elements.video.play();
             };
             
             buttonContainer.appendChild(saveButton);
             buttonContainer.appendChild(cancelButton);
             
-            modal.appendChild(img);
+            modal.appendChild(previewImg);
             modal.appendChild(buttonContainer);
             
             document.body.appendChild(modal);
