@@ -2121,60 +2121,107 @@
             });
         }
         
+        // Drawing functions for each jewelry type
+        function drawNecklace(jewelry, id) {
+            if (!jewelry.loadedImage) return;
+            
+            const leftShoulder = appState.poseLandmarks[11];
+            const rightShoulder = appState.poseLandmarks[12];
+            
+            if (!leftShoulder || !rightShoulder) return;
+        
+            // Calculate base positions from shoulders
+            const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x) * elements.canvas.width;
+            const collarOffset = 0.15;
+            const leftX = leftShoulder.x * elements.canvas.width + shoulderWidth * collarOffset;
+            const rightX = rightShoulder.x * elements.canvas.width - shoulderWidth * collarOffset;
+            const baseY = leftShoulder.y * elements.canvas.height;
+        
+            // Apply measurements with mobile-friendly adjustments
+            const VERTICAL_OFFSET = -115;
+            const DROP_HEIGHT = 45;
+            
+            const adjustedY = baseY + VERTICAL_OFFSET + jewelry.offset.y;
+            const centerX = (leftX + rightX) / 2 + jewelry.offset.x;
+            
+            // Calculate necklace dimensions
+            const necklaceWidth = shoulderWidth * jewelry.scale;
+            const necklaceHeight = jewelry.loadedImage.height * (necklaceWidth / jewelry.loadedImage.width);
+        
+            // Calculate the actual drawing position in canvas coordinates
+            const drawX = centerX - necklaceWidth/2;
+            const drawY = adjustedY - DROP_HEIGHT/2;
+        
+            // Set opacity if defined
+            if (jewelry.opacity !== undefined) {
+                elements.ctx.globalAlpha = jewelry.opacity;
+            }
+        
+            // Draw the necklace
+            elements.ctx.save();
+            elements.ctx.shadowColor = 'rgba(0,0,0,0.3)';
+            elements.ctx.shadowBlur = 8;
+            elements.ctx.shadowOffsetX = 2;
+            elements.ctx.shadowOffsetY = 2;
+        
+            elements.ctx.drawImage(
+                jewelry.loadedImage,
+                drawX, drawY, necklaceWidth, necklaceHeight
+            );
+            
+            elements.ctx.restore();
+        }
+        
         function drawEarrings(jewelry, id) {
             if (!jewelry.leftImage || !jewelry.rightImage) return;
-
+            
             const landmarks = appState.faceLandmarks;
             if (!landmarks) return;
-
+            
             const nose = landmarks[1];
             const leftEar = landmarks[234];
             const rightEar = landmarks[454];
-
+            
             if (!nose || !leftEar || !rightEar) return;
-
+            
             const faceRotation = (rightEar.z - leftEar.z);
             let gap = jewelry.gap || 0;
-
+            
             // Adjust gap based on face rotation
             if (Math.abs(faceRotation) <= 0.1) {
                 gap += 3;
             } else {
                 gap += 24;
             }
-
+            
             const leftLobe = landmarks[177];
             const rightLobe = landmarks[401];
-
+            
             if (!leftLobe || !rightLobe) return;
-
+            
             const faceWidth = Math.abs(rightEar.x - leftEar.x) * elements.canvas.width;
             const gapAdjustment = (gap / 100) * faceWidth;
-
+            
             const earHeight = Math.abs(landmarks[234].y - leftLobe.y) * elements.canvas.height;
             const baseScale = (earHeight * 0.8) / jewelry.leftImage.height;
             const scale = baseScale * jewelry.scale; // Combine base scale with user adjustable scale
-
+            
             // Set opacity if defined
             if (jewelry.opacity !== undefined) {
                 elements.ctx.globalAlpha = jewelry.opacity;
             }
-
+            
             elements.ctx.save();
             elements.ctx.shadowColor = 'rgba(0,0,0,0.3)';
             elements.ctx.shadowBlur = 5;
             elements.ctx.shadowOffsetX = 2;
             elements.ctx.shadowOffsetY = 2;
-
-            // Add adjustment values for positioning
-            const stepSize = -5; // Each "click" in the moveJewelry function moves by this much
-            const rightAdjustment = 2 * stepSize; // 2 clicks to the right
-
+            
             // Draw left earring if face is not turned too far right
             if (faceRotation > -0.1) {
                 const leftX = leftLobe.x * elements.canvas.width - gapAdjustment + jewelry.offset.x;
                 const leftY = leftLobe.y * elements.canvas.height + jewelry.offset.y;
-
+                
                 const leftWidth = jewelry.leftImage.width * scale;
                 const leftHeight = jewelry.leftImage.height * scale;
                 elements.ctx.drawImage(
@@ -2185,12 +2232,12 @@
                     leftHeight
                 );
             }
-
+            
             // Draw right earring if face is not turned too far left
             if (faceRotation < 0.1) {
-                const rightX = rightLobe.x * elements.canvas.width + gapAdjustment + jewelry.offset.x + 15 + rightAdjustment;
+                const rightX = rightLobe.x * elements.canvas.width + gapAdjustment + jewelry.offset.x + 15;
                 const rightY = rightLobe.y * elements.canvas.height + jewelry.offset.y;
-
+                
                 const rightWidth = jewelry.rightImage.width * scale;
                 const rightHeight = jewelry.rightImage.height * scale;
                 elements.ctx.drawImage(
@@ -2201,7 +2248,7 @@
                     rightHeight
                 );
             }
-
+            
             elements.ctx.restore();
         }
         
@@ -2401,45 +2448,27 @@
             captureCanvas.height = elements.video.videoHeight;
             const ctx = captureCanvas.getContext('2d');
             
-            // Draw the video frame with mirroring if enabled
+            // Draw the video frame
             ctx.save();
-            if (appState.mirrorCamera) {
-                ctx.scale(-1, 1);
-                ctx.drawImage(
-                    elements.video, 
-                    -captureCanvas.width, 0, 
-                    captureCanvas.width, 
-                    captureCanvas.height
-                );
-            } else {
-                ctx.drawImage(
-                    elements.video,
-                    0, 0,
-                    captureCanvas.width,
-                    captureCanvas.height
-                );
-            }
+            
+            // Apply mirroring 
+            ctx.scale(-1, 1);
+            ctx.drawImage(
+                elements.video, 
+                -captureCanvas.width, 0, 
+                captureCanvas.width, 
+                captureCanvas.height
+            );
+            
             ctx.restore();
             
-            // Draw jewelry canvas with the same mirroring if enabled
-            ctx.save();
-            if (appState.mirrorCamera) {
-                ctx.scale(-1, 1);
-                ctx.drawImage(
-                    elements.canvas, 
-                    -captureCanvas.width, 0, 
-                    captureCanvas.width, 
-                    captureCanvas.height
-                );
-            } else {
-                ctx.drawImage(
-                    elements.canvas,
-                    0, 0,
-                    captureCanvas.width,
-                    captureCanvas.height
-                );
-            }
-            ctx.restore();
+            // Draw jewelry canvas on top
+            ctx.drawImage(
+                elements.canvas, 
+                0, 0, 
+                captureCanvas.width, 
+                captureCanvas.height
+            );
             
             // Create modal for preview and save
             const modal = document.createElement('div');
