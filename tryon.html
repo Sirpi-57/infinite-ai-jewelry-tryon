@@ -31,8 +31,9 @@
             
             /* Mobile-specific dimensions */
             --nav-height: 56px;
-            --preview-bar-height: 100px;
+            --preview-bar-height: 150px;
             --preview-bar-collapsed-height: 10px;
+            --capture-btn-offset: 140px; /* New variable for capture button positioning */
             --controls-width: 300px;
             
             /* Transitions */
@@ -298,7 +299,7 @@
         /* Preview bar (swipeable jewelry selector) */
         .preview-bar {
             position: absolute;
-            bottom: 0;
+            bottom: 50px;
             left: 0;
             width: 100%;
             height: var(--preview-bar-height);
@@ -507,7 +508,7 @@
         /* Capture Button */
         .capture-btn {
             position: absolute;
-            bottom: calc(var(--preview-bar-height) + 20px);
+            bottom: calc(var(--preview-bar-height) + 40px);
             right: 20px;
             width: 60px;
             height: 60px;
@@ -712,6 +713,37 @@
                 aspect-ratio: 4/3; /* Common front camera aspect ratio */
             }
         }
+
+        .action-buttons {
+            margin-top: 20px;
+        }
+        
+        .secondary-button {
+            background: rgba(255, 255, 255, 0.8);
+            color: var(--color-dark);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: all 0.2s ease;
+        }
+        
+        .secondary-button:active {
+            background: rgba(255, 255, 255, 0.6);
+            transform: scale(0.98);
+        }
+        
+        .remove-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
     </style>
 </head>
 <body>
@@ -884,7 +916,7 @@
                 right: 'earing1right.png',
                 thumbnail: 'thumbnails/earring1-thumb.png',
                 landmarks: [177, 401],
-                offset: { x: 0, y: 0 },
+                offset: { x: -5, y: 0 },
                 defaultScale: 0.75,
                 gap: 0,
                 group: 'ear',
@@ -897,7 +929,7 @@
                 right: 'earing2right.png',
                 thumbnail: 'thumbnails/earring2-thumb.png',
                 landmarks: [177, 401],
-                offset: { x: 0, y: 0 },
+                offset: { x: -5, y: 0 },
                 defaultScale: 1.5,
                 gap: 0,
                 group: 'ear',
@@ -910,7 +942,7 @@
                 right: 'earing3right.png',
                 thumbnail: 'thumbnails/earring3-thumb.png',
                 landmarks: [177, 401],
-                offset: { x: 0, y: 0 },
+                offset: { x: -5, y: 0 },
                 defaultScale: 1.5,
                 gap: 0,
                 group: 'ear',
@@ -923,7 +955,7 @@
                 right: 'earing4right.png',
                 thumbnail: 'thumbnails/earring4-thumb.png',
                 landmarks: [177, 401],
-                offset: { x: 0, y: 0 },
+                offset: { x: -5, y: 0 },
                 defaultScale: 1.5,
                 gap: 0,
                 group: 'ear',
@@ -1528,10 +1560,10 @@
         function handleItemClick(id) {
             const item = JEWELRY[id];
             
-            // If item is already active, show controls
+            // If item is already active, remove it instead of showing controls
             if (appState.activeJewelry.has(id)) {
-                renderFloatingControls(id);
-                showFloatingControls(id);
+                removeJewelry(id);
+                showToast(`${item.name} removed`);
                 return;
             }
             
@@ -1548,12 +1580,6 @@
                     card.classList.add('active');
                 }
             });
-            
-            // Show controls for the new item after a small delay
-            setTimeout(() => {
-                renderFloatingControls(id);
-                showFloatingControls(id);
-            }, 500);
         }
         
         // Product Details Function
@@ -1639,17 +1665,22 @@
                 </div>
             `;
             
-            // Remove button
-            const removeHTML = `
+            // Action buttons - combined Close and Remove into one row
+            const actionButtonsHTML = `
                 <div class="control-group">
-                    <button class="remove-btn w-full" onclick="removeJewelry('${id}')">
-                        Remove Item
-                    </button>
+                    <div class="flex gap-2">
+                        <button class="secondary-button w-full" onclick="hideFloatingControls()">
+                            <i class="fas fa-times"></i> Close
+                        </button>
+                        <button class="remove-btn w-full" onclick="removeJewelry('${id}')">
+                            <i class="fas fa-trash"></i> Remove
+                        </button>
+                    </div>
                 </div>
             `;
             
             // Combine all controls
-            elements.controlContent.innerHTML = sizeHTML + positionHTML + opacityHTML + removeHTML;
+            elements.controlContent.innerHTML = sizeHTML + positionHTML + opacityHTML + actionButtonsHTML;
         }
 
         function showFloatingControls(id) {
@@ -1864,6 +1895,16 @@
             const jewelry = appState.activeJewelry.get(id);
             const step = 5; // Movement step in pixels
             
+            // Reverse left/right directions if camera is mirrored
+            if (appState.mirrorCamera) {
+                if (direction === 'left') direction = 'right';
+                else if (direction === 'right') direction = 'left';
+                else if (direction === 'up-left') direction = 'up-right';
+                else if (direction === 'up-right') direction = 'up-left';
+                else if (direction === 'down-left') direction = 'down-right';
+                else if (direction === 'down-right') direction = 'down-left';
+            }
+            
             switch (direction) {
                 case 'up':
                     jewelry.offset.y -= step;
@@ -1901,7 +1942,6 @@
             // Reset auto-hide timer on interaction
             resetControlsTimer();
         }
-
         // 5. Add Jewelry Function
         function addJewelry(id) {
             const originalJewelry = JEWELRY[id];
