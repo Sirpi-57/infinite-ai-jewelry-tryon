@@ -2121,57 +2121,60 @@
             });
         }
         
-        // Drawing functions for each jewelry type
         function drawEarrings(jewelry, id) {
             if (!jewelry.leftImage || !jewelry.rightImage) return;
-
+            
             const landmarks = appState.faceLandmarks;
             if (!landmarks) return;
-
+            
             const nose = landmarks[1];
             const leftEar = landmarks[234];
             const rightEar = landmarks[454];
-
+            
             if (!nose || !leftEar || !rightEar) return;
-
+            
             const faceRotation = (rightEar.z - leftEar.z);
             let gap = jewelry.gap || 0;
-
+            
             // Adjust gap based on face rotation
             if (Math.abs(faceRotation) <= 0.1) {
                 gap += 3;
             } else {
                 gap += 24;
             }
-
+            
             const leftLobe = landmarks[177];
             const rightLobe = landmarks[401];
-
+            
             if (!leftLobe || !rightLobe) return;
-
+            
             const faceWidth = Math.abs(rightEar.x - leftEar.x) * elements.canvas.width;
             const gapAdjustment = (gap / 100) * faceWidth;
-
+            
             const earHeight = Math.abs(landmarks[234].y - leftLobe.y) * elements.canvas.height;
             const baseScale = (earHeight * 0.8) / jewelry.leftImage.height;
-            const scale = baseScale * jewelry.scale; // Combine base scale with user adjustable scale
-
+            const scale = baseScale * jewelry.scale;
+            
             // Set opacity if defined
             if (jewelry.opacity !== undefined) {
                 elements.ctx.globalAlpha = jewelry.opacity;
             }
-
+            
             elements.ctx.save();
             elements.ctx.shadowColor = 'rgba(0,0,0,0.3)';
             elements.ctx.shadowBlur = 5;
             elements.ctx.shadowOffsetX = 2;
             elements.ctx.shadowOffsetY = 2;
-
+            
+            // Add adjustment values for positioning
+            const stepSize = 5; // Each "click" in the moveJewelry function moves by this much
+            const rightAdjustment = 2 * stepSize; // 2 clicks to the right
+            
             // Draw left earring if face is not turned too far right
             if (faceRotation > -0.1) {
                 const leftX = leftLobe.x * elements.canvas.width - gapAdjustment + jewelry.offset.x;
                 const leftY = leftLobe.y * elements.canvas.height + jewelry.offset.y;
-
+                
                 const leftWidth = jewelry.leftImage.width * scale;
                 const leftHeight = jewelry.leftImage.height * scale;
                 elements.ctx.drawImage(
@@ -2182,12 +2185,13 @@
                     leftHeight
                 );
             }
-
+            
             // Draw right earring if face is not turned too far left
             if (faceRotation < 0.1) {
-                const rightX = rightLobe.x * elements.canvas.width + gapAdjustment + jewelry.offset.x + 15;
+                // Add rightAdjustment to move the earring more to your right
+                const rightX = rightLobe.x * elements.canvas.width + gapAdjustment + jewelry.offset.x + 15 + rightAdjustment;
                 const rightY = rightLobe.y * elements.canvas.height + jewelry.offset.y;
-
+                
                 const rightWidth = jewelry.rightImage.width * scale;
                 const rightHeight = jewelry.rightImage.height * scale;
                 elements.ctx.drawImage(
@@ -2198,7 +2202,28 @@
                     rightHeight
                 );
             }
-
+            
+            // Now add basic face masking to hide parts of earrings that would be behind the face
+            elements.ctx.globalCompositeOperation = 'destination-out';
+            elements.ctx.fillStyle = 'white';
+            
+            // Draw a simplified face shape
+            elements.ctx.beginPath();
+            elements.ctx.moveTo(leftEar.x * elements.canvas.width, leftEar.y * elements.canvas.height);
+            
+            // Add points to define the face outline
+            const chin = landmarks[152]; // Chin point
+            const leftCheek = landmarks[192]; // Left cheek
+            const rightCheek = landmarks[416]; // Right cheek
+            
+            elements.ctx.lineTo(leftCheek.x * elements.canvas.width, leftCheek.y * elements.canvas.height);
+            elements.ctx.lineTo(chin.x * elements.canvas.width, chin.y * elements.canvas.height);
+            elements.ctx.lineTo(rightCheek.x * elements.canvas.width, rightCheek.y * elements.canvas.height);
+            elements.ctx.lineTo(rightEar.x * elements.canvas.width, rightEar.y * elements.canvas.height);
+            
+            elements.ctx.closePath();
+            elements.ctx.fill();
+            
             elements.ctx.restore();
         }
         
