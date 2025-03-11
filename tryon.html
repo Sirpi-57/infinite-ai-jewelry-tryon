@@ -2462,19 +2462,13 @@
             
             ctx.restore();
             
-            const JEWELRY_OFFSET_X = 0; // Move about 15% to the left
-            const JEWELRY_OFFSET_Y = 0; // Slight upward adjustment
-            
-            // Draw jewelry canvas with offset
-            ctx.save();
-            ctx.translate(JEWELRY_OFFSET_X, JEWELRY_OFFSET_Y);
+            // Draw jewelry canvas on top
             ctx.drawImage(
                 elements.canvas, 
                 0, 0, 
                 captureCanvas.width, 
                 captureCanvas.height
             );
-            ctx.restore();
             
             // Create modal for preview and save
             const modal = document.createElement('div');
