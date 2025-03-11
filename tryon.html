@@ -2448,27 +2448,45 @@
             captureCanvas.height = elements.video.videoHeight;
             const ctx = captureCanvas.getContext('2d');
             
-            // Draw the video frame
+            // Draw the video frame with mirroring if enabled
             ctx.save();
-            
-            // Apply mirroring 
-            ctx.scale(-1, 1);
-            ctx.drawImage(
-                elements.video, 
-                -captureCanvas.width, 0, 
-                captureCanvas.width, 
-                captureCanvas.height
-            );
-            
+            if (appState.mirrorCamera) {
+                ctx.scale(-1, 1);
+                ctx.drawImage(
+                    elements.video, 
+                    -captureCanvas.width, 0, 
+                    captureCanvas.width, 
+                    captureCanvas.height
+                );
+            } else {
+                ctx.drawImage(
+                    elements.video,
+                    0, 0,
+                    captureCanvas.width,
+                    captureCanvas.height
+                );
+            }
             ctx.restore();
             
-            // Draw jewelry canvas on top
-            ctx.drawImage(
-                elements.canvas, 
-                0, 0, 
-                captureCanvas.width, 
-                captureCanvas.height
-            );
+            // Draw jewelry canvas with the same mirroring if enabled
+            ctx.save();
+            if (appState.mirrorCamera) {
+                ctx.scale(-1, 1);
+                ctx.drawImage(
+                    elements.canvas, 
+                    -captureCanvas.width, 0, 
+                    captureCanvas.width, 
+                    captureCanvas.height
+                );
+            } else {
+                ctx.drawImage(
+                    elements.canvas,
+                    0, 0,
+                    captureCanvas.width,
+                    captureCanvas.height
+                );
+            }
+            ctx.restore();
             
             // Create modal for preview and save
             const modal = document.createElement('div');
