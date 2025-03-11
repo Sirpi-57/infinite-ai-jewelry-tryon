@@ -2442,6 +2442,12 @@
             // Show a toast notification that we're preparing the screenshot
             showToast("Preparing screenshot...");
             
+            // Create a new canvas with the same dimensions as the camera feed
+            const captureCanvas = document.createElement('canvas');
+            captureCanvas.width = elements.video.videoWidth;
+            captureCanvas.height = elements.video.videoHeight;
+            const ctx = captureCanvas.getContext('2d');
+            
             // Get the camera container
             const cameraContainer = document.querySelector('.camera-container');
             
@@ -2451,13 +2457,20 @@
                 useCORS: true, 
                 scale: 2 // Increase quality
             }).then(canvas => {
+                // Draw the captured canvas onto our new canvas
+                // This helps maintain the correct proportions and jewelry placement
+                ctx.save();
+                ctx.scale(-1, 1); // Mirror horizontally
+                ctx.drawImage(canvas, -captureCanvas.width, 0, captureCanvas.width, captureCanvas.height);
+                ctx.restore();
+                
                 // Create a download link
                 const link = document.createElement('a');
                 link.download = 'jewelry-tryon-screenshot-' + new Date().toISOString().slice(0, 10) + '.png';
                 
                 try {
                     // Create image URL
-                    link.href = canvas.toDataURL('image/png');
+                    link.href = captureCanvas.toDataURL('image/png');
                     link.click();
                     
                     // Show success toast
