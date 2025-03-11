@@ -2171,51 +2171,6 @@
             
             elements.ctx.restore();
         }
-
-        function createFaceMask() {
-            if (!appState.faceLandmarks) return null;
-            
-            // Create a temporary canvas for the mask
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = elements.canvas.width;
-            tempCanvas.height = elements.canvas.height;
-            const tempCtx = tempCanvas.getContext('2d');
-            
-            // Start with black background
-            tempCtx.fillStyle = 'black';
-            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-            
-            // Draw face shape as white (this will be the mask)
-            tempCtx.fillStyle = 'white';
-            tempCtx.beginPath();
-            
-            // Key points to create face outline 
-            // These are facial landmarks from MediaPipe Face Mesh
-            const landmarks = appState.faceLandmarks;
-            const faceOutline = [
-                10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288,
-                397, 365, 379, 378, 400, 377, 152, 148, 176, 149, 150, 136,
-                172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109
-            ];
-        
-            // Draw the face shape
-            tempCtx.moveTo(
-                landmarks[faceOutline[0]].x * tempCanvas.width,
-                landmarks[faceOutline[0]].y * tempCanvas.height
-            );
-            
-            for (let i = 1; i < faceOutline.length; i++) {
-                tempCtx.lineTo(
-                    landmarks[faceOutline[i]].x * tempCanvas.width,
-                    landmarks[faceOutline[i]].y * tempCanvas.height
-                );
-            }
-            
-            tempCtx.closePath();
-            tempCtx.fill();
-            
-            return tempCanvas;
-        }
         
         function drawEarrings(jewelry, id) {
             if (!jewelry.leftImage || !jewelry.rightImage) return;
@@ -2248,23 +2203,15 @@
             const gapAdjustment = (gap / 100) * faceWidth;
             
             const earHeight = Math.abs(landmarks[234].y - leftLobe.y) * elements.canvas.height;
-            const baseScale = (earHeight * 0.7) / jewelry.leftImage.height;
+            const baseScale = (earHeight * 0.8) / jewelry.leftImage.height;
             const scale = baseScale * jewelry.scale;
-            
-            // Create the face mask
-            const faceMask = createFaceMask();
-            if (!faceMask) return;
-            
-            // Save the current canvas state
-            elements.ctx.save();
-            
-            // First, draw the earrings normally
             
             // Set opacity if defined
             if (jewelry.opacity !== undefined) {
                 elements.ctx.globalAlpha = jewelry.opacity;
             }
             
+            elements.ctx.save();
             elements.ctx.shadowColor = 'rgba(0,0,0,0.3)';
             elements.ctx.shadowBlur = 5;
             elements.ctx.shadowOffsetX = 2;
@@ -2277,28 +2224,13 @@
                 
                 const leftWidth = jewelry.leftImage.width * scale;
                 const leftHeight = jewelry.leftImage.height * scale;
-                
-                // Create a separate canvas for the left earring
-                const leftCanvas = document.createElement('canvas');
-                leftCanvas.width = elements.canvas.width;
-                leftCanvas.height = elements.canvas.height;
-                const leftCtx = leftCanvas.getContext('2d');
-                
-                // Draw the earring
-                leftCtx.drawImage(
+                elements.ctx.drawImage(
                     jewelry.leftImage,
                     leftX - leftWidth/2,
                     leftY - leftHeight/2,
                     leftWidth,
                     leftHeight
                 );
-                
-                // Apply face mask using source-in composite operation
-                leftCtx.globalCompositeOperation = 'destination-out';
-                leftCtx.drawImage(faceMask, 0, 0);
-                
-                // Draw the masked earring to the main canvas
-                elements.ctx.drawImage(leftCanvas, 0, 0);
             }
             
             // Draw right earring if face is not turned too far left
@@ -2308,28 +2240,13 @@
                 
                 const rightWidth = jewelry.rightImage.width * scale;
                 const rightHeight = jewelry.rightImage.height * scale;
-                
-                // Create a separate canvas for the right earring
-                const rightCanvas = document.createElement('canvas');
-                rightCanvas.width = elements.canvas.width;
-                rightCanvas.height = elements.canvas.height;
-                const rightCtx = rightCanvas.getContext('2d');
-                
-                // Draw the earring
-                rightCtx.drawImage(
+                elements.ctx.drawImage(
                     jewelry.rightImage,
                     rightX - rightWidth/2,
                     rightY - rightHeight/2,
                     rightWidth,
                     rightHeight
                 );
-                
-                // Apply face mask using source-in composite operation
-                rightCtx.globalCompositeOperation = 'destination-out';
-                rightCtx.drawImage(faceMask, 0, 0);
-                
-                // Draw the masked earring to the main canvas
-                elements.ctx.drawImage(rightCanvas, 0, 0);
             }
             
             elements.ctx.restore();
