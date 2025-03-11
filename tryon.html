@@ -19,24 +19,24 @@
     <!-- Our custom CSS will be added here -->
     <style>
         :root {
-            --color-primary: #7B2CBF;
-            --color-secondary: #9D4EDD;
+            --color-primary: #832729;
+            --color-secondary: #832729;
             --color-accent: #C77DFF;
             --color-dark: #240046;
-            --color-light: #E0AAFF;
+            --color-light: rgba(131, 39, 41, 0.05);
             --color-background: #f8f9fa;
             --color-surface: #ffffff;
-            --color-border: rgba(36, 0, 70, 0.1);
+            --color-border: rgba(131, 39, 41, 0.2);
             --color-text: #2D3748;
             
             /* Mobile-specific dimensions */
-            --bottom-sheet-height: 30vh;
-            --bottom-sheet-height-expanded: 70vh;
-            --bottom-sheet-handle-height: 24px;
-            --tab-height: 60px;
+            --bottom-panel-height: 30vh;
+            --bottom-panel-height-expanded: 70vh;
+            --handle-height: 24px;
+            --tab-height: 50px;
             --nav-height: 56px;
             --controls-height: 40vh;
-            --sheet-border-radius: 16px;
+            --panel-border-radius: 16px;
             
             /* Transitions */
             --transition-speed: 0.3s;
@@ -117,7 +117,7 @@
         
         .infinity-path {
             fill: none;
-            stroke: rgba(123, 44, 191, 0.2);
+            stroke: rgba(131, 39, 41, 0.2);
             stroke-width: 4;
             stroke-linecap: round;
         }
@@ -138,44 +138,18 @@
             to { stroke-dashoffset: -200; }
         }
         
-        /* Loading Quote */
-        .loading-quote {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 90%;
-            max-width: 400px;
-            text-align: center;
-            color: var(--color-dark);
-            font-style: italic;
-            line-height: 1.4;
-        }
-        
-        .quote-text {
-            font-size: clamp(1.2rem, 5vw, 1.8rem);
-            margin-bottom: 0.5rem;
-            opacity: 0.9;
-            font-weight: 500;
-        }
-        
-        .quote-author {
-            font-size: clamp(0.9rem, 3vw, 1.2rem);
-            color: var(--color-secondary);
-            font-weight: 500;
-        }
-        
+        /* Loading Brand */
         .loading-brand {
             position: absolute;
             bottom: 2rem;
             left: 50%;
             transform: translateX(-50%);
             font-size: 1.2rem;
-            color: var(--color-primary);
             opacity: 0.9;
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            color: var(--color-primary);
         }
         
         .brand-text {
@@ -212,18 +186,6 @@
             gap: 1rem;
         }
         
-        .menu-toggle {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.2rem;
-            cursor: pointer;
-            padding: 0.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
         /* Category Tabs */
         .category-tabs {
             height: var(--tab-height);
@@ -233,6 +195,7 @@
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none; /* Firefox */
+            border-bottom: 1px solid var(--color-border);
         }
         
         .category-tabs::-webkit-scrollbar {
@@ -285,7 +248,20 @@
         .camera-container {
             flex: 1;
             position: relative;
-            background: var(--color-dark);
+            background: #000;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .camera-feed-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             overflow: hidden;
         }
         
@@ -295,7 +271,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
+            transform: scaleX(-1); /* Mirror the camera */
         }
         
         #jewelryCanvas {
@@ -304,7 +281,10 @@
             left: 0;
             width: 100%;
             height: 100%;
+            object-fit: contain;
+            transform: scaleX(-1); /* Mirror to match video */
             pointer-events: none;
+            z-index: 5;
         }
         
         /* Camera Error */
@@ -327,38 +307,31 @@
             display: none;
         }
         
-        /* Bottom Sheet */
-        .bottom-sheet {
+        /* Bottom Panel */
+        .bottom-panel {
             position: absolute;
             bottom: 0;
             left: 0;
             width: 100%;
-            height: var(--bottom-sheet-height);
+            height: var(--bottom-panel-height);
             background-color: var(--color-surface);
-            border-radius: var(--sheet-border-radius) var(--sheet-border-radius) 0 0;
+            border-radius: var(--panel-border-radius) var(--panel-border-radius) 0 0;
             box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
             transition: transform var(--transition-speed) var(--transition-timing);
             z-index: 20;
             overflow: hidden;
-            touch-action: none;
         }
         
-        .bottom-sheet.expanded {
-            height: var(--bottom-sheet-height-expanded);
-            transform: translateY(0) !important;
+        .bottom-panel.expanded {
+            height: var(--bottom-panel-height-expanded);
         }
         
-        .bottom-sheet.hidden {
-            transform: translateY(100%);
-        }
-        
-        .sheet-handle {
-            height: var(--bottom-sheet-handle-height);
+        .panel-handle {
+            height: var(--handle-height);
             display: flex;
             justify-content: center;
             align-items: center;
-            cursor: grab;
-            touch-action: none;
+            position: relative;
         }
         
         .handle-bar {
@@ -368,65 +341,88 @@
             border-radius: 3px;
         }
         
-        .sheet-content {
-            height: calc(100% - var(--bottom-sheet-handle-height));
+        .panel-header {
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid var(--color-border);
+        }
+        
+        .panel-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--color-primary);
+            margin: 0;
+        }
+        
+        .panel-badge {
+            background-color: var(--color-primary);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 1rem;
+            border-radius: 1.25rem 1.25rem 0 0;
+            display: inline-block;
+            margin-bottom: 0.5rem;
+        }
+        
+        .panel-content {
+            height: calc(100% - var(--handle-height) - 48px);
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            padding: 0 1rem 2rem;
+            padding: 0.5rem;
         }
         
-        .sheet-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin: 0 0 1rem;
-            color: var(--color-dark);
-        }
-        
-        /* Jewelry Grid */
-        .jewelry-grid {
+        /* Item Grid */
+        .item-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 1rem;
-            padding-bottom: 1rem;
+            padding: 0.5rem;
         }
         
         @media (min-width: 480px) {
-            .jewelry-grid {
+            .item-grid {
                 grid-template-columns: repeat(3, 1fr);
             }
         }
         
-        .jewelry-item {
+        @media (min-width: 768px) {
+            .item-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
+        .item-card {
             background: white;
             border-radius: 12px;
             border: 1px solid var(--color-border);
             overflow: hidden;
-            transition: transform 0.2s ease, border-color 0.2s ease;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.5rem;
         }
         
-        .jewelry-item:active {
-            transform: scale(0.97);
-        }
-        
-        .jewelry-item.active {
+        .item-card.active {
             border-color: var(--color-primary);
-            background: linear-gradient(to right, var(--color-light), var(--color-surface));
+            background: var(--color-light);
         }
         
-        .jewelry-img {
+        .item-image {
             width: 100%;
             aspect-ratio: 1;
             object-fit: contain;
             padding: 0.5rem;
         }
         
-        .jewelry-name {
+        .item-name {
             font-size: 0.8rem;
             text-align: center;
             padding: 0.5rem;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            width: 100%;
         }
         
         /* Controls Panel */
@@ -437,44 +433,23 @@
             width: 100%;
             height: var(--controls-height);
             background-color: var(--color-surface);
-            border-radius: var(--sheet-border-radius) var(--sheet-border-radius) 0 0;
+            border-radius: var(--panel-border-radius) var(--panel-border-radius) 0 0;
             box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
             transition: transform var(--transition-speed) var(--transition-timing);
             z-index: 25;
             overflow: hidden;
-        }
-        
-        .controls-panel.hidden {
             transform: translateY(100%);
         }
         
-        .panel-handle {
-            height: var(--bottom-sheet-handle-height);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
+        .controls-panel.visible {
+            transform: translateY(0);
         }
         
-        .close-btn {
-            position: absolute;
-            right: 1rem;
-            top: 0;
-            height: var(--bottom-sheet-handle-height);
-            background: none;
-            border: none;
-            color: var(--color-text);
-            font-size: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .panel-content {
-            height: calc(100% - var(--bottom-sheet-handle-height));
+        .controls-content {
+            height: calc(100% - var(--handle-height));
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            padding: 0 1rem 2rem;
+            padding: 1rem;
         }
         
         /* Control Styles */
@@ -486,11 +461,7 @@
             font-size: 0.9rem;
             font-weight: 500;
             margin-bottom: 0.5rem;
-            color: var(--color-dark);
-        }
-        
-        .size-control, .position-control, .gap-control {
-            padding: 0.5rem 0;
+            color: var(--color-primary);
         }
         
         /* Sliders */
@@ -507,8 +478,8 @@
         
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 22px;
-            height: 22px;
+            width: 20px;
+            height: 20px;
             background: var(--color-primary);
             border-radius: 50%;
             cursor: pointer;
@@ -517,8 +488,8 @@
         }
         
         input[type="range"]::-moz-range-thumb {
-            width: 22px;
-            height: 22px;
+            width: 20px;
+            height: 20px;
             background: var(--color-primary);
             border-radius: 50%;
             cursor: pointer;
@@ -556,8 +527,8 @@
         /* Capture Button */
         .capture-btn {
             position: absolute;
-            bottom: calc(var(--bottom-sheet-height) + 20px);
-            right: 20px;
+            bottom: 1.5rem;
+            right: 1.5rem;
             width: 60px;
             height: 60px;
             background: var(--color-primary);
@@ -624,14 +595,188 @@
             transform: translateX(24px);
         }
         
-        /* Responsive adjustments */
+        /* Product Card */
+        .product-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+            text-align: center;
+            border: 1px solid var(--color-primary);
+            margin-bottom: 1rem;
+        }
+        
+        .product-image {
+            width: 100%;
+            height: 130px;
+            object-fit: contain;
+            margin-bottom: 1rem;
+        }
+        
+        .product-name {
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            height: 36px;
+            overflow: hidden;
+        }
+        
+        .product-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .details-btn {
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .cart-btn {
+            padding: 0.5rem;
+            background: var(--color-primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        /* Tips Panel */
+        .tips-panel {
+            background: white;
+            border: 1px solid #d9d9d9;
+            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.75rem;
+            margin-top: 1rem;
+        }
+        
+        .tips-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        
+        .tips-list {
+            margin-left: 1.5rem;
+        }
+        
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .toast.visible {
+            opacity: 1;
+        }
+        
+        /* Active Item Controls */
+        .active-item-controls {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        .adjust-btn {
+            background: rgba(131, 39, 41, 0.1);
+            color: var(--color-primary);
+            border: none;
+            border-radius: 0.25rem 0 0 0.25rem;
+            padding: 0.25rem 0.75rem;
+        }
+        
+        .remove-btn {
+            background: rgba(220, 38, 38, 0.1);
+            color: #dc2626;
+            border: none;
+            border-radius: 0 0.25rem 0.25rem 0;
+            padding: 0.25rem 0.75rem;
+        }
+        
+        /* Utility Classes */
+        .hidden {
+            display: none !important;
+        }
+        
+        .flex {
+            display: flex;
+        }
+        
+        .flex-col {
+            flex-direction: column;
+        }
+        
+        .items-center {
+            align-items: center;
+        }
+        
+        .justify-between {
+            justify-content: space-between;
+        }
+        
+        .w-full {
+            width: 100%;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .rounded-lg {
+            border-radius: 0.5rem;
+        }
+        
+        .mt-2 {
+            margin-top: 0.5rem;
+        }
+        
+        .mb-4 {
+            margin-bottom: 1rem;
+        }
+        
+        .primary-button {
+            background: var(--color-primary);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .primary-button:active {
+            transform: scale(0.98);
+        }
+        
+        .secondary-button {
+            background: white;
+            color: var(--color-primary);
+            border: 1px solid var(--color-primary);
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
         @media (min-width: 768px) {
-            :root {
-                --bottom-sheet-height: 25vh;
-                --controls-height: 35vh;
-            }
-            
-            .jewelry-grid {
+            .item-grid {
                 grid-template-columns: repeat(4, 1fr);
             }
             
@@ -640,115 +785,25 @@
                 height: 70px;
                 font-size: 1.8rem;
             }
-        }
-        
-        @media (min-width: 1024px) {
-            .bottom-sheet {
+            
+            .bottom-panel, .controls-panel {
                 max-width: 600px;
                 left: 50%;
                 transform: translateX(-50%);
-                border-radius: var(--sheet-border-radius);
-                height: 40vh;
+                border-radius: var(--panel-border-radius);
             }
             
             .controls-panel {
-                max-width: 600px;
-                left: 50%;
-                transform: translateX(-50%);
-                border-radius: var(--sheet-border-radius);
-            }
-            
-            .bottom-sheet.hidden {
                 transform: translate(-50%, 100%);
             }
             
-            .controls-panel.hidden {
-                transform: translate(-50%, 100%);
-            }
-        }
-        
-        /* Utility Classes */
-        .hidden {
-            display: none;
-        }
-        
-        .button-primary {
-            background: var(--color-primary);
-            color: white;
-            border: none;
-            font-weight: 500;
-        }
-        
-        /* Touch highlight for iOS */
-        .touchable {
-            -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
-        }
-
-        /* Ensure video fits correctly in container */
-        #cameraFeed {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: contain; /* Changed from cover to contain */
-            transform: scaleX(-1); /* Mirror the camera */
-        }
-        
-        /* Ensure canvas matches video exactly */
-        #jewelryCanvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: contain; /* Match video element */
-            transform: scaleX(-1); /* Mirror to match video */
-            pointer-events: none;
-        }
-        
-        /* Camera container with fixed aspect ratio */
-        .camera-container {
-            flex: 1;
-            position: relative;
-            background: var(--color-dark);
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        /* Create a wrapper around video/canvas with controlled aspect ratio */
-        .camera-feed-wrapper {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-        }
-        
-        @media (orientation: portrait) {
-            .camera-feed-wrapper {
-                /* In portrait, constrain width to maintain aspect ratio */
-                width: 100%;
-                height: auto;
-                aspect-ratio: 3/4; /* Common front camera aspect ratio */
-            }
-        }
-        
-        @media (orientation: landscape) {
-            .camera-feed-wrapper {
-                /* In landscape, constrain height to maintain aspect ratio */
-                width: auto;
-                height: 100%;
-                aspect-ratio: 4/3; /* Common front camera aspect ratio */
+            .controls-panel.visible {
+                transform: translate(-50%, 0);
             }
         }
     </style>
 </head>
-<body class="bg-gray-100 font-sans overflow-hidden">
+<body>
     <!-- Loading Screen -->
     <div class="loading-screen" id="loadingScreen">
         <div class="loading-spinner">
@@ -764,32 +819,27 @@
         <p class="text-gray-600">Initializing Virtual Try-On Experience...</p>
         <p class="loading-error hidden"></p>
         
-        <div class="loading-quote">
-            <p class="quote-text">"Style is a way to say who you are without having to speak"</p>
-            <p class="quote-author">— Rachel Zoe</p>
-        </div>
-        
         <div class="loading-brand">
             <i class="fas fa-infinity"></i>
-            <span class="brand-text">Powered by InfiniteAI</span>
+            <span class="brand-text">Powered by Infinite AI</span>
         </div>
     </div>
 
     <!-- Main App Container -->
-    <div class="app-container">
+    <div class="app-container flex flex-col h-screen">
         <!-- Top Navigation Bar -->
         <nav class="top-nav">
             <div class="nav-brand">
                 <span>Virtual Try-On</span>
             </div>
             <div class="nav-controls">
-                <button id="menuToggleBtn" class="menu-toggle">
+                <button id="menuButton" class="bg-transparent border-0 text-white text-xl p-2">
                     <i class="fas fa-sliders-h"></i>
                 </button>
             </div>
         </nav>
 
-        <!-- Jewelry Category Tabs -->
+        <!-- Category Tabs -->
         <div class="category-tabs">
             <div class="tabs-container">
                 <button class="tab-btn active" data-category="face">
@@ -797,7 +847,7 @@
                     <span>Face</span>
                 </button>
                 <button class="tab-btn" data-category="ear">
-                    <i class="fas fa-ear"></i>
+                    <i class="fas fa-gem"></i>
                     <span>Ear</span>
                 </button>
                 <button class="tab-btn" data-category="neck">
@@ -805,7 +855,7 @@
                     <span>Neck</span>
                 </button>
                 <button class="tab-btn" data-category="hand">
-                    <i class="fas fa-hand-sparkles"></i>
+                    <i class="fas fa-ring"></i>
                     <span>Hand</span>
                 </button>
                 <button class="tab-btn" data-category="active">
@@ -815,7 +865,7 @@
             </div>
         </div>
 
-        <!-- Replace the existing camera container with this updated version -->
+        <!-- Camera Container -->
         <div class="camera-container">
             <div class="camera-feed-wrapper">
                 <video id="cameraFeed" autoplay playsinline></video>
@@ -827,35 +877,59 @@
                 <i class="fas fa-video-slash text-3xl text-red-500 mb-4"></i>
                 <h3 class="text-xl font-bold text-gray-800 mb-2">Camera Access Required</h3>
                 <p class="text-gray-600 mb-4">Please allow camera access to use the virtual try-on experience.</p>
-                <button onclick="requestCameraAccess()" class="button-primary px-6 py-2 rounded-lg text-white">
+                <button onclick="requestCameraAccess()" class="primary-button">
                     Enable Camera
                 </button>
             </div>
         </div>
 
-        <!-- Bottom Sheet for Jewelry Selection -->
-        <div class="bottom-sheet" id="jewelrySheet">
-            <div class="sheet-handle">
+        <!-- Bottom Panel -->
+        <div class="bottom-panel" id="bottomPanel">
+            <div class="panel-handle" id="panelHandle">
                 <div class="handle-bar"></div>
             </div>
-            <div class="sheet-content">
-                <h3 class="sheet-title" id="sheetTitle">Select Jewelry</h3>
+            <div class="panel-header">
+                <div class="panel-badge">Applied virtually</div>
+                <h3 class="panel-title" id="panelTitle">Select Jewelry</h3>
+            </div>
+            <div class="panel-content">
+                <div class="item-grid" id="itemGrid"></div>
                 
-                <!-- Container for jewelry items (populated by JS) -->
-                <div class="jewelry-grid" id="jewelryGrid"></div>
+                <!-- Product Card (hidden initially) -->
+                <div class="product-card hidden" id="productCard">
+                    <img src="" alt="Product" class="product-image" id="productImage">
+                    <p class="product-name" id="productName">Product Name</p>
+                    <div class="product-buttons">
+                        <button class="details-btn">
+                            Product details <i class="fas fa-external-link-alt text-xs ml-1"></i>
+                        </button>
+                        <button class="cart-btn">
+                            Add to cart
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Tips Panel -->
+                <div class="tips-panel">
+                    <p class="tips-title">Tips to get best view:</p>
+                    <ul class="tips-list">
+                        <li>Adequate Lighting</li>
+                        <li>Fast and Stable Internet</li>
+                    </ul>
+                </div>
             </div>
         </div>
 
-        <!-- Bottom Controls for Selected Jewelry -->
-        <div class="controls-panel hidden" id="controlsPanel">
+        <!-- Controls Panel -->
+        <div class="controls-panel" id="controlsPanel">
             <div class="panel-handle">
                 <div class="handle-bar"></div>
-                <button id="closeControlsBtn" class="close-btn">
+                <button id="closeControlsBtn" class="absolute right-4 top-0 h-6 text-gray-500 bg-transparent border-0">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <div class="panel-content" id="controlsContent">
-                <!-- Controls will be populated dynamically -->
+            <div class="controls-content" id="controlsContent">
+                <!-- Controls content will be populated dynamically -->
             </div>
         </div>
 
@@ -863,8 +937,11 @@
         <button class="capture-btn" id="captureBtn">
             <i class="fas fa-camera"></i>
         </button>
-    </div>
 
+        <!-- Toast Notification -->
+        <div class="toast" id="toast"></div>
+    </div>
+    
     <script>
         const JEWELRY = {
             // Face jewelry (tikka)
