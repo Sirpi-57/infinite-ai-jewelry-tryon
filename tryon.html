@@ -1111,12 +1111,10 @@
         // App State
         let appState = {
             activeJewelry: new Map(),
-            currentCategory: 'face',
+            currentCategory: 'earrings',
             selectedJewelryId: null,
             isControlsPanelOpen: false,
-            isBottomSheetExpanded: false,
-            sheetStartY: 0,
-            sheetCurrentY: 0,
+            isBottomPanelExpanded: false,
             isDragging: false,
             faceLandmarks: null,
             handLandmarks: null,
@@ -1125,32 +1123,29 @@
             isResourcesLoaded: false,
             isInitialized: false
         };
-
+        
         // DOM Elements
         let elements = {
             video: null,
             canvas: null,
             ctx: null,
             loadingScreen: null,
-            jewelrySheet: null,
+            bottomPanel: null,
             controlsPanel: null,
             captureBtn: null,
-            categoryBtns: null,
-            jewelryGrid: null,
-            controlsContent: null
+            tabButtons: null,
+            itemGrid: null,
+            controlsContent: null,
+            productCard: null,
+            toast: null
         };
-
+        
         // MediaPipe Models
         let faceMesh, hands, pose;
-
-        // Camera constants
-        const MAX_CAMERA_HEIGHT = 1280;
-        const MAX_CAMERA_WIDTH = 720;
-        const ASPECT_RATIO = MAX_CAMERA_WIDTH / MAX_CAMERA_HEIGHT;
-
+        
         // Initialization
         document.addEventListener('DOMContentLoaded', init);
-
+        
         async function init() {
             try {
                 console.log("Starting initialization...");
@@ -1159,7 +1154,7 @@
                 // Get DOM elements
                 initializeElements();
                 
-                // Setup gesture handlers
+                // Setup event listeners
                 setupEventListeners();
                 
                 // Initialize camera
@@ -1174,6 +1169,9 @@
                 // Initialize UI
                 initializeUI();
                 
+                // Initialize gesture support
+                setupGestureHandlers();
+                
                 // Start detection loop
                 appState.isInitialized = true;
                 requestAnimationFrame(detectAll);
@@ -1187,42 +1185,21 @@
                 showError(error.message || "Error initializing app. Please refresh the page.");
             }
         }
-
-        // Helper for loading status updates
-        function updateLoadingStatus(message) {
-            const loadingScreen = document.getElementById('loadingScreen');
-            const statusText = loadingScreen.querySelector('p:not(.loading-error)');
-            if (statusText) {
-                statusText.textContent = message;
-            }
-        }
-
-        function showError(message) {
-            const loadingScreen = document.getElementById('loadingScreen');
-            const errorElement = loadingScreen.querySelector('.loading-error');
-            if (errorElement) {
-                errorElement.textContent = message;
-                errorElement.classList.remove('hidden');
-            }
-        }
-
-        function hideLoadingScreen() {
-            document.getElementById('loadingScreen').classList.add('hidden');
-        }
-
-        // Initialize DOM elements
+        
         function initializeElements() {
             elements.video = document.getElementById('cameraFeed');
             elements.canvas = document.getElementById('jewelryCanvas');
             elements.ctx = elements.canvas.getContext('2d');
             elements.loadingScreen = document.getElementById('loadingScreen');
-            elements.jewelrySheet = document.getElementById('jewelrySheet');
+            elements.bottomPanel = document.getElementById('bottomPanel');
             elements.controlsPanel = document.getElementById('controlsPanel');
             elements.captureBtn = document.getElementById('captureBtn');
-            elements.categoryBtns = document.querySelectorAll('.tab-btn');
-            elements.jewelryGrid = document.getElementById('jewelryGrid');
+            elements.tabButtons = document.querySelectorAll('.tab-btn');
+            elements.itemGrid = document.getElementById('itemGrid');
             elements.controlsContent = document.getElementById('controlsContent');
-            elements.sheetTitle = document.getElementById('sheetTitle');
+            elements.productCard = document.getElementById('productCard');
+            elements.toast = document.getElementById('toast');
+            elements.panelTitle = document.getElementById('panelTitle');
             
             if (!elements.video || !elements.canvas || !elements.ctx) {
                 throw new Error("Required elements not found");
@@ -1231,8 +1208,8 @@
 
         // Setup event listeners for UI
         function setupEventListeners() {
-            // Category tab buttons
-            elements.categoryBtns.forEach(btn => {
+            // Tab buttons
+            elements.tabButtons.forEach(btn => {
                 btn.addEventListener('click', () => {
                     const category = btn.dataset.category;
                     switchCategory(category);
@@ -1242,67 +1219,45 @@
             // Capture button
             elements.captureBtn.addEventListener('click', captureImage);
             
-            // Bottom sheet handle
-            setupBottomSheetDrag();
+            // Panel handle for dragging
+            const panelHandle = document.getElementById('panelHandle');
+            if (panelHandle) {
+                panelHandle.addEventListener('touchstart', handlePanelDragStart);
+                panelHandle.addEventListener('touchmove', handlePanelDragMove);
+                panelHandle.addEventListener('touchend', handlePanelDragEnd);
+            }
             
-            // Controls panel close button
-            document.getElementById('closeControlsBtn').addEventListener('click', () => {
-                toggleControlsPanel(false);
-            });
+            // Close controls button
+            const closeControlsBtn = document.getElementById('closeControlsBtn');
+            if (closeControlsBtn) {
+                closeControlsBtn.addEventListener('click', () => {
+                    toggleControlsPanel(false);
+                });
+            }
+        
+            // Menu button
+            const menuButton = document.getElementById('menuButton');
+            if (menuButton) {
+                menuButton.addEventListener('click', () => {
+                    toggleControlsPanel(true, null);
+                });
+            }
         }
-
-        // Initialize camera
+        
         async function initializeCamera() {
             try {
                 updateLoadingStatus("Accessing camera...");
                 
-                // Check if this is a mobile device
-                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-                
-                // Default constraints - no zoom
                 const constraints = {
                     video: {
                         facingMode: 'user',
-                        width: { ideal: isMobile ? window.innerWidth : MAX_CAMERA_WIDTH },
-                        height: { ideal: isMobile ? window.innerHeight : MAX_CAMERA_HEIGHT },
-                        // Explicitly set zoom to 1 (no zoom)
-                        advanced: [
-                            { zoom: 1.0 }
-                        ]
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
                     }
                 };
                 
-                // For iOS devices, we need to be more specific with constraints
-                if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
-                    constraints.video.width = { min: 640, ideal: 1280, max: 1920 };
-                    constraints.video.height = { min: 480, ideal: 720, max: 1080 };
-                    // iOS specific constraint
-                    if ("frameRate" in MediaTrackConstraints.prototype) {
-                        constraints.video.frameRate = { max: 30 };
-                    }
-                }
-                
                 const stream = await navigator.mediaDevices.getUserMedia(constraints);
                 elements.video.srcObject = stream;
-                
-                // After getting the stream, try to set zoom to 1x if available on the track
-                const videoTrack = stream.getVideoTracks()[0];
-                if (videoTrack) {
-                    try {
-                        const capabilities = videoTrack.getCapabilities();
-                        // Only attempt to set zoom if the camera supports it
-                        if (capabilities && capabilities.zoom) {
-                            const settings = {
-                                zoom: 1.0  // 1.0 means no zoom
-                            };
-                            await videoTrack.applyConstraints({ advanced: [settings] });
-                            console.log("Applied 1x zoom constraint");
-                        }
-                    } catch (zoomError) {
-                        console.warn("Could not set zoom level:", zoomError);
-                        // Continue anyway - this is not critical
-                    }
-                }
                 
                 await new Promise((resolve) => {
                     elements.video.onloadedmetadata = () => {
@@ -1317,14 +1272,14 @@
                 await elements.video.play();
                 console.log("Camera initialized successfully");
                 
+                document.getElementById('cameraError').classList.add('hidden');
             } catch (error) {
                 console.error("Camera access error:", error);
                 document.getElementById('cameraError').classList.remove('hidden');
                 throw new Error("Camera access denied. Please enable camera permissions.");
             }
         }
-
-        // Initialize AI models
+        
         async function initializeAIModels() {
             try {
                 updateLoadingStatus("Loading AI models...");
@@ -1344,7 +1299,7 @@
                     locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${file}`
                 });
                 
-                // Configure models - use lighter settings for mobile
+                // Configure models
                 faceMesh.setOptions({
                     maxNumFaces: 1,
                     refineLandmarks: true,
@@ -1354,13 +1309,13 @@
                 
                 hands.setOptions({
                     maxNumHands: 2,
-                    modelComplexity: 0, // Use lighter model for mobile
+                    modelComplexity: 0,
                     minDetectionConfidence: 0.5,
                     minTrackingConfidence: 0.5
                 });
                 
                 pose.setOptions({
-                    modelComplexity: 0, // Use lighter model for mobile
+                    modelComplexity: 0,
                     smoothLandmarks: true,
                     minDetectionConfidence: 0.5,
                     minTrackingConfidence: 0.5
@@ -1388,8 +1343,7 @@
                 throw new Error("Failed to initialize AI models. Please try refreshing the page.");
             }
         }
-
-        // Preload jewelry images
+        
         async function preloadJewelryImages() {
             updateLoadingStatus("Loading jewelry assets...");
             const preloadPromises = [];
@@ -1432,7 +1386,7 @@
                         }));
                     }
                     
-                    // Also preload thumbnail
+                    // Preload thumbnail if available
                     if (jewelry.thumbnail) {
                         const thumbImg = new Image();
                         thumbImg.src = jewelry.thumbnail;
@@ -1451,179 +1405,91 @@
                 }
             }
             
-            // Wait for all preload promises with a timeout for mobile
+            // Wait for all preload promises
             try {
                 await Promise.all(preloadPromises);
                 console.log("All jewelry images preloaded successfully");
             } catch (error) {
                 console.warn("Some images failed to preload:", error);
-                // Continue anyway - we'll handle missing images gracefully
             }
             
             appState.isResourcesLoaded = true;
         }
-
-        // Initialize UI
+        
         function initializeUI() {
-            // Show the first category by default
-            switchCategory('face');
+            // Show first category
+            switchCategory('earrings');
             
-            // Set up bottom sheet initial state
-            const bottomSheetHeight = parseInt(getComputedStyle(document.documentElement)
-                .getPropertyValue('--bottom-sheet-height'));
-            elements.jewelrySheet.style.transform = `translateY(0)`;
-            
-            // Update capture button position based on bottom sheet
+            // Update capture button position
             updateCaptureButtonPosition();
         }
-
-        // Bottom sheet drag functionality
-        function setupBottomSheetDrag() {
-            const sheetHandle = elements.jewelrySheet.querySelector('.sheet-handle');
-            const controlsHandle = elements.controlsPanel.querySelector('.panel-handle');
-            
-            // For bottom sheet
-            sheetHandle.addEventListener('touchstart', handleDragStart);
-            sheetHandle.addEventListener('touchmove', handleDragMove);
-            sheetHandle.addEventListener('touchend', handleDragEnd);
-            
-            // For controls panel
-            controlsHandle.addEventListener('touchstart', handleControlsDragStart);
-            controlsHandle.addEventListener('touchmove', handleControlsDragMove);
-            controlsHandle.addEventListener('touchend', handleControlsDragEnd);
-        }
-
-        function handleDragStart(e) {
+        
+        /* Panel Drag Handling */
+        function handlePanelDragStart(e) {
             appState.isDragging = true;
-            appState.sheetStartY = e.touches[0].clientY;
-            appState.sheetCurrentY = 0;
-            elements.jewelrySheet.style.transition = 'none';
+            appState.dragStartY = e.touches[0].clientY;
+            appState.currentDragY = 0;
+            elements.bottomPanel.style.transition = 'none';
         }
-
-        function handleDragMove(e) {
+        
+        function handlePanelDragMove(e) {
             if (!appState.isDragging) return;
             
             const currentY = e.touches[0].clientY;
-            const deltaY = currentY - appState.sheetStartY;
+            const deltaY = currentY - appState.dragStartY;
             
             // Only allow dragging down from normal position or up from expanded position
-            if ((!appState.isBottomSheetExpanded && deltaY < 0) || 
-                (appState.isBottomSheetExpanded && deltaY > 0)) {
-                appState.sheetCurrentY = deltaY;
-                const newTransform = `translateY(${deltaY}px)`;
-                elements.jewelrySheet.style.transform = newTransform;
+            if ((!appState.isBottomPanelExpanded && deltaY < 0) || 
+                (appState.isBottomPanelExpanded && deltaY > 0)) {
+                appState.currentDragY = deltaY;
+                elements.bottomPanel.style.transform = `translateY(${deltaY}px)`;
             }
         }
-
-        function handleDragEnd() {
+        
+        function handlePanelDragEnd() {
             if (!appState.isDragging) return;
             appState.isDragging = false;
-            elements.jewelrySheet.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            elements.bottomPanel.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
             
             // Determine whether to expand or collapse
             const threshold = 50; // Pixels to trigger action
             
-            if (!appState.isBottomSheetExpanded && appState.sheetCurrentY < -threshold) {
-                // Expand sheet
-                expandBottomSheet(true);
-            } else if (appState.isBottomSheetExpanded && appState.sheetCurrentY > threshold) {
-                // Collapse sheet
-                expandBottomSheet(false);
+            if (!appState.isBottomPanelExpanded && appState.currentDragY < -threshold) {
+                // Expand panel
+                expandBottomPanel(true);
+            } else if (appState.isBottomPanelExpanded && appState.currentDragY > threshold) {
+                // Collapse panel
+                expandBottomPanel(false);
             } else {
                 // Return to original position
-                elements.jewelrySheet.style.transform = appState.isBottomSheetExpanded ? 
-                    'translateY(0)' : 'translateY(0)';
+                elements.bottomPanel.style.transform = 'translateY(0)';
             }
         }
-
-        // Controls panel drag handlers
-        function handleControlsDragStart(e) {
-            appState.isDragging = true;
-            appState.sheetStartY = e.touches[0].clientY;
-            appState.sheetCurrentY = 0;
-            elements.controlsPanel.style.transition = 'none';
-        }
-
-        function handleControlsDragMove(e) {
-            if (!appState.isDragging) return;
+        
+        function expandBottomPanel(expand) {
+            appState.isBottomPanelExpanded = expand;
             
-            const currentY = e.touches[0].clientY;
-            const deltaY = currentY - appState.sheetStartY;
-            
-            // Only allow dragging down (to dismiss)
-            if (deltaY > 0) {
-                appState.sheetCurrentY = deltaY;
-                const newTransform = `translateY(${deltaY}px)`;
-                elements.controlsPanel.style.transform = newTransform;
-            }
-        }
-
-        function handleControlsDragEnd() {
-            if (!appState.isDragging) return;
-            appState.isDragging = false;
-            elements.controlsPanel.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-            
-            // Determine whether to close
-            const threshold = 80; // Pixels to trigger close
-            
-            if (appState.sheetCurrentY > threshold) {
-                // Close controls panel
-                toggleControlsPanel(false);
-            } else {
-                // Return to original position
-                elements.controlsPanel.style.transform = 'translateY(0)';
-            }
-        }
-
-        // Expand/collapse bottom sheet
-        function expandBottomSheet(expand) {
-            appState.isBottomSheetExpanded = expand;
             if (expand) {
-                elements.jewelrySheet.classList.add('expanded');
-                elements.jewelrySheet.style.transform = 'translateY(0)';
+                elements.bottomPanel.classList.add('expanded');
+                elements.bottomPanel.style.transform = 'translateY(0)';
             } else {
-                elements.jewelrySheet.classList.remove('expanded');
-                elements.jewelrySheet.style.transform = 'translateY(0)';
+                elements.bottomPanel.classList.remove('expanded');
+                elements.bottomPanel.style.transform = 'translateY(0)';
             }
+            
             updateCaptureButtonPosition();
         }
-
-        // Update capture button position based on bottom sheet state
+        
         function updateCaptureButtonPosition() {
-            const sheet = elements.jewelrySheet;
-            const sheetHeight = parseInt(getComputedStyle(document.documentElement)
-                .getPropertyValue(appState.isBottomSheetExpanded ? 
-                    '--bottom-sheet-height-expanded' : '--bottom-sheet-height'));
-            
-            elements.captureBtn.style.bottom = `calc(${sheetHeight}px + 20px)`;
-        }
+            const bottomPanelHeight = appState.isBottomPanelExpanded ? 
+                'var(--bottom-panel-height-expanded)' : 'var(--bottom-panel-height)';
+            elements.captureBtn.style.bottom = `calc(${bottomPanelHeight} + 1.5rem)`;
+        } 
 
-        // Toggle controls panel
-        function toggleControlsPanel(show, jewelryId = null) {
-            if (show) {
-                appState.isControlsPanelOpen = true;
-                appState.selectedJewelryId = jewelryId;
-                elements.controlsPanel.style.transform = 'translateY(0)';
-                elements.controlsPanel.classList.remove('hidden');
-                renderControlsForJewelry(jewelryId);
-            } else {
-                appState.isControlsPanelOpen = false;
-                elements.controlsPanel.style.transform = 'translateY(100%)';
-                // Use a timeout to add the hidden class after the animation
-                setTimeout(() => {
-                    if (!appState.isControlsPanelOpen) {
-                        elements.controlsPanel.classList.add('hidden');
-                    }
-                }, 300);
-            }
-        }
-
-        // Switch category tab
+        /* Category Switching */
         function switchCategory(category) {
-            appState.currentCategory = category;
-            
-            // Update tab buttons
-            elements.categoryBtns.forEach(btn => {
+            // Update active tab
+            elements.tabButtons.forEach(btn => {
                 if (btn.dataset.category === category) {
                     btn.classList.add('active');
                 } else {
@@ -1631,129 +1497,498 @@
                 }
             });
             
-            // Update title and contents based on category
+            appState.currentCategory = category;
+            
+            // Hide product card when switching categories
+            elements.productCard.classList.add('hidden');
+            
+            // Update panel title
             if (category === 'active') {
-                renderActiveJewelry();
-                elements.sheetTitle.textContent = 'Active Jewelry';
+                elements.panelTitle.textContent = 'Active Jewelry';
+                renderActiveItems();
             } else {
-                renderJewelryByCategory(category);
-                elements.sheetTitle.textContent = `${category.charAt(0).toUpperCase() + category.slice(1)} Jewelry`;
+                const categoryName = JEWELRY[Object.keys(JEWELRY).find(key => JEWELRY[key].group === category)]?.category || 
+                    category.charAt(0).toUpperCase() + category.slice(1);
+                elements.panelTitle.textContent = categoryName;
+                renderCategoryItems(category);
             }
         }
-
-        // Render jewelry grid by category
-        function renderJewelryByCategory(category) {
-            const grid = elements.jewelryGrid;
+        
+        function renderCategoryItems(category) {
+            const grid = elements.itemGrid;
             grid.innerHTML = '';
             
-            // Filter jewelry by category
-            const categoryJewelry = Object.entries(JEWELRY)
+            // Filter items by category
+            const categoryItems = Object.entries(JEWELRY)
                 .filter(([_, item]) => item.group === category);
             
-            if (categoryJewelry.length === 0) {
+            if (categoryItems.length === 0) {
                 grid.innerHTML = '<p class="text-center py-4 text-gray-500">No items available in this category</p>';
                 return;
             }
             
-            // Create jewelry items
-            categoryJewelry.forEach(([id, jewelry]) => {
+            // Create item cards
+            categoryItems.forEach(([id, item]) => {
                 const isActive = appState.activeJewelry.has(id);
-                const item = document.createElement('div');
-                item.className = `jewelry-item ${isActive ? 'active' : ''}`;
                 
-                // Thumbnail image path
-                const thumbSrc = jewelry.thumbnail || 
-                    (jewelry.type === 'earrings' ? 
-                        jewelry.left.replace('.png', '-thumb.png') : 
-                        jewelry.image.replace('.png', '-thumb.png'));
+                const card = document.createElement('div');
+                card.className = `item-card ${isActive ? 'active' : ''}`;
                 
-                item.innerHTML = `
-                    <img src="${thumbSrc}" alt="${jewelry.name}" class="jewelry-img">
-                    <div class="jewelry-name">${jewelry.name}</div>
+                // Use thumbnail if available, otherwise use main image
+                const imageSrc = item.thumbnail || 
+                    (item.type === 'earrings' ? item.left : item.image);
+                
+                card.innerHTML = `
+                    <img src="${imageSrc}" alt="${item.name}" class="item-image">
+                    <div class="item-name">${item.name}</div>
                 `;
                 
-                item.addEventListener('click', () => handleJewelryItemClick(id));
-                grid.appendChild(item);
+                card.addEventListener('click', () => handleItemClick(id));
+                grid.appendChild(card);
             });
         }
-
-        // Render active jewelry items
-        function renderActiveJewelry() {
-            const grid = elements.jewelryGrid;
+        
+        function renderActiveItems() {
+            const grid = elements.itemGrid;
             grid.innerHTML = '';
             
             if (appState.activeJewelry.size === 0) {
-                grid.innerHTML = '<p class="text-center py-4 text-gray-500">No active jewelry items. Select items from the category tabs.</p>';
+                grid.innerHTML = '<p class="text-center py-4 text-gray-500">No active jewelry. Select items from categories.</p>';
                 return;
             }
             
-            // Create active jewelry items
-            appState.activeJewelry.forEach((jewelry, id) => {
-                const originalJewelry = JEWELRY[id];
-                const item = document.createElement('div');
-                item.className = 'jewelry-item active';
+            // Create active item cards
+            appState.activeJewelry.forEach((item, id) => {
+                const originalItem = JEWELRY[id];
+                if (!originalItem) return;
                 
-                // Use the correct thumbnail
-                const thumbSrc = originalJewelry.thumbnail || 
-                    (originalJewelry.type === 'earrings' ? 
-                        originalJewelry.left.replace('.png', '-thumb.png') : 
-                        originalJewelry.image.replace('.png', '-thumb.png'));
+                const card = document.createElement('div');
+                card.className = 'item-card active';
                 
-                item.innerHTML = `
-                    <img src="${thumbSrc}" alt="${originalJewelry.name}" class="jewelry-img">
-                    <div class="jewelry-name">${originalJewelry.name}</div>
-                    <div class="mx-auto mt-2 flex justify-center">
-                        <button class="adjust-btn bg-purple-100 text-purple-700 px-3 py-1 rounded-l-lg">
+                // Use thumbnail if available
+                const imageSrc = originalItem.thumbnail || 
+                    (originalItem.type === 'earrings' ? originalItem.left : originalItem.image);
+                
+                card.innerHTML = `
+                    <img src="${imageSrc}" alt="${originalItem.name}" class="item-image">
+                    <div class="item-name">${originalItem.name}</div>
+                    <div class="active-item-controls">
+                        <button class="adjust-btn">
                             <i class="fas fa-sliders-h"></i>
                         </button>
-                        <button class="remove-btn bg-red-100 text-red-700 px-3 py-1 rounded-r-lg">
+                        <button class="remove-btn">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
                 `;
                 
-                // Add event listeners
-                item.querySelector('.adjust-btn').addEventListener('click', (e) => {
+                // Add event listeners for controls
+                card.querySelector('.adjust-btn').addEventListener('click', (e) => {
                     e.stopPropagation();
                     toggleControlsPanel(true, id);
                 });
                 
-                item.querySelector('.remove-btn').addEventListener('click', (e) => {
+                card.querySelector('.remove-btn').addEventListener('click', (e) => {
                     e.stopPropagation();
                     removeJewelry(id);
-                    renderActiveJewelry(); // Refresh the active items list
+                    renderActiveItems();
                 });
                 
-                grid.appendChild(item);
+                grid.appendChild(card);
             });
         }
-
-        // Handle jewelry item click
-        function handleJewelryItemClick(id) {
-            const originalJewelry = JEWELRY[id];
+        
+        function handleItemClick(id) {
+            const item = JEWELRY[id];
             
-            // Check if this jewelry is already active
+            // If item is already active, open controls
             if (appState.activeJewelry.has(id)) {
-                // Open controls for this jewelry
                 toggleControlsPanel(true, id);
+                return;
+            }
+            
+            // Add new jewelry item
+            addJewelry(id);
+            
+            // Show product details
+            showProductDetails(id);
+            
+            // Mark item card as active
+            document.querySelectorAll('.item-card').forEach(card => {
+                if (card.querySelector('.item-name').textContent === item.name) {
+                    card.classList.add('active');
+                }
+            });
+        }
+        
+        function showProductDetails(id) {
+            const item = JEWELRY[id];
+            if (!item) return;
+            
+            // Hide grid and show product card
+            elements.itemGrid.classList.add('hidden');
+            elements.productCard.classList.remove('hidden');
+            
+            // Update product details
+            const productImage = document.getElementById('productImage');
+            const productName = document.getElementById('productName');
+            
+            if (productImage) productImage.src = item.thumbnail || 
+                (item.type === 'earrings' ? item.left : item.image);
+            if (productName) productName.textContent = item.name;
+            
+            // Add price to the card
+            const priceElement = document.querySelector('.product-card .price');
+            if (!priceElement && item.price) {
+                const priceDiv = document.createElement('div');
+                priceDiv.className = 'price text-lg font-semibold text-primary mb-4';
+                priceDiv.textContent = item.price;
+                productName.after(priceDiv);
+            } else if (priceElement && item.price) {
+                priceElement.textContent = item.price;
+            }
+            
+            // Set up event listeners for product card buttons
+            const detailsBtn = elements.productCard.querySelector('.details-btn');
+            const cartBtn = elements.productCard.querySelector('.cart-btn');
+            
+            if (detailsBtn) {
+                detailsBtn.onclick = () => {
+                    showToast('Product details would open in a real app');
+                };
+            }
+            
+            if (cartBtn) {
+                cartBtn.onclick = () => {
+                    addToCart(id);
+                    // Go back to grid after adding to cart
+                    elements.productCard.classList.add('hidden');
+                    elements.itemGrid.classList.remove('hidden');
+                };
+            }
+        }
+        
+        /* Controls Panel */
+        function toggleControlsPanel(show, jewelryId = null) {
+            if (show) {
+                appState.selectedJewelryId = jewelryId;
+                elements.controlsPanel.classList.add('visible');
+                
+                if (jewelryId) {
+                    renderControlsForJewelry(jewelryId);
+                } else {
+                    // Render global app settings
+                    renderGlobalSettings();
+                }
             } else {
-                // Add new jewelry
-                addJewelry(id);
-                
-                // Update the UI
-                const categoryItems = document.querySelectorAll('.jewelry-item');
-                categoryItems.forEach(item => {
-                    const itemName = item.querySelector('.jewelry-name').textContent;
-                    if (itemName === originalJewelry.name) {
-                        item.classList.add('active');
-                    }
-                });
-                
-                // Show controls panel for the newly added jewelry
-                toggleControlsPanel(true, id);
+                elements.controlsPanel.classList.remove('visible');
+            }
+        }
+        
+        function renderControlsForJewelry(id) {
+            if (!id || !appState.activeJewelry.has(id)) return;
+            
+            const jewelry = appState.activeJewelry.get(id);
+            const originalJewelry = JEWELRY[id];
+            const controlsContent = elements.controlsContent;
+            
+            // Clear previous controls
+            controlsContent.innerHTML = '';
+            
+            // Add jewelry details header
+            const thumbSrc = originalJewelry.thumbnail || 
+                (originalJewelry.type === 'earrings' ? originalJewelry.left : originalJewelry.image);
+            
+            const headerHTML = `
+                <div class="flex items-center mb-4">
+                    <img src="${thumbSrc}" alt="${originalJewelry.name}" class="w-12 h-12 object-contain mr-3">
+                    <div>
+                        <h3 class="text-lg font-semibold">${originalJewelry.name}</h3>
+                        <p class="text-sm text-gray-600">${originalJewelry.price || ''}</p>
+                    </div>
+                </div>
+            `;
+            
+            // Size control
+            const sizeHTML = `
+                <div class="control-group">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="control-label">Size</label>
+                        <span class="text-sm" id="sizeValue">${Math.round(jewelry.scale * 100)}%</span>
+                    </div>
+                    <input type="range" min="0.5" max="2.0" step="0.05" value="${jewelry.scale}" 
+                        oninput="updateJewelrySize('${id}', this.value)">
+                </div>
+            `;
+            
+            // Position adjustment
+            const positionHTML = `
+                <div class="control-group">
+                    <label class="control-label">Position Adjustment</label>
+                    <div class="position-control">
+                        <div class="position-grid">
+                            <button class="position-btn" onclick="moveJewelry('${id}', 'up-left')">↖</button>
+                            <button class="position-btn" onclick="moveJewelry('${id}', 'up')">↑</button>
+                            <button class="position-btn" onclick="moveJewelry('${id}', 'up-right')">↗</button>
+                            <button class="position-btn" onclick="moveJewelry('${id}', 'left')">←</button>
+                            <button class="position-btn" onclick="moveJewelry('${id}', 'center')">•</button>
+                            <button class="position-btn" onclick="moveJewelry('${id}', 'right')">→</button>
+                            <button class="position-btn" onclick="moveJewelry('${id}', 'down-left')">↙</button>
+                            <button class="position-btn" onclick="moveJewelry('${id}', 'down')">↓</button>
+                            <button class="position-btn" onclick="moveJewelry('${id}', 'down-right')">↘</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Opacity control
+            const opacityHTML = `
+                <div class="control-group">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="control-label">Opacity</label>
+                        <span class="text-sm" id="opacityValue">${Math.round((jewelry.opacity || 1.0) * 100)}%</span>
+                    </div>
+                    <input type="range" min="0.2" max="1.0" step="0.05" value="${jewelry.opacity || 1.0}" 
+                        oninput="updateJewelryOpacity('${id}', this.value)">
+                </div>
+            `;
+            
+            // Action buttons
+            const actionButtonsHTML = `
+                <div class="flex justify-between mt-6">
+                    <button class="secondary-button w-full mr-2" onclick="toggleControlsPanel(false)">
+                        Done
+                    </button>
+                    <button class="primary-button w-full ml-2" onclick="removeJewelry('${id}')">
+                        Remove
+                    </button>
+                </div>
+            `;
+            
+            // Combine all controls
+            controlsContent.innerHTML = headerHTML + sizeHTML + positionHTML + opacityHTML + actionButtonsHTML;
+        }
+        
+        function renderGlobalSettings() {
+            const controlsContent = elements.controlsContent;
+            
+            // Clear previous controls
+            controlsContent.innerHTML = '';
+            
+            // Header
+            const headerHTML = `
+                <div class="mb-4">
+                    <h3 class="text-lg font-semibold text-primary">App Settings</h3>
+                    <p class="text-sm text-gray-600">Adjust global application settings</p>
+                </div>
+            `;
+            
+            // Camera settings
+            const cameraHTML = `
+                <div class="control-group">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="control-label">Camera</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="cameraToggle" checked>
+                            <span class="toggle-slider"></span>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-600">Toggle front camera access</p>
+                </div>
+            `;
+            
+            // Performance settings
+            const performanceHTML = `
+                <div class="control-group">
+                    <label class="control-label">Performance Mode</label>
+                    <div class="flex mt-2">
+                        <button class="secondary-button w-full mr-1" id="performanceLow">Low</button>
+                        <button class="primary-button w-full mx-1" id="performanceMedium">Medium</button>
+                        <button class="secondary-button w-full ml-1" id="performanceHigh">High</button>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-1">Higher performance uses more battery</p>
+                </div>
+            `;
+            
+            // Action buttons
+            const actionButtonsHTML = `
+                <div class="flex justify-center mt-6">
+                    <button class="primary-button w-full" onclick="toggleControlsPanel(false)">
+                        Close Settings
+                    </button>
+                </div>
+            `;
+            
+            // Combine all settings
+            controlsContent.innerHTML = headerHTML + cameraHTML + performanceHTML + actionButtonsHTML;
+            
+            // Add event listeners
+            document.getElementById('cameraToggle').addEventListener('change', (e) => {
+                if (!e.target.checked) {
+                    showToast('Camera cannot be disabled in this demo');
+                    e.target.checked = true;
+                }
+            });
+            
+            document.getElementById('performanceLow').addEventListener('click', () => {
+                setPerformanceMode('low');
+            });
+            
+            document.getElementById('performanceMedium').addEventListener('click', () => {
+                setPerformanceMode('medium');
+            });
+            
+            document.getElementById('performanceHigh').addEventListener('click', () => {
+                setPerformanceMode('high');
+            });
+        }
+        
+        // Update jewelry size with visual feedback
+        function updateJewelrySize(id, value) {
+            if (!appState.activeJewelry.has(id)) return;
+            
+            const scale = parseFloat(value);
+            const jewelry = appState.activeJewelry.get(id);
+            jewelry.scale = scale;
+            
+            // Update size display
+            const sizeValue = document.getElementById('sizeValue');
+            if (sizeValue) {
+                sizeValue.textContent = `${Math.round(scale * 100)}%`;
+            }
+        }
+        
+        // Update jewelry opacity
+        function updateJewelryOpacity(id, value) {
+            if (!appState.activeJewelry.has(id)) return;
+            
+            const opacity = parseFloat(value);
+            const jewelry = appState.activeJewelry.get(id);
+            jewelry.opacity = opacity;
+            
+            // Update opacity display
+            const opacityValue = document.getElementById('opacityValue');
+            if (opacityValue) {
+                opacityValue.textContent = `${Math.round(opacity * 100)}%`;
+            }
+        }
+        
+        // Move jewelry with directional controls
+        function moveJewelry(id, direction) {
+            if (!appState.activeJewelry.has(id)) return;
+            
+            const jewelry = appState.activeJewelry.get(id);
+            const step = 5; // Movement step in pixels
+            
+            switch (direction) {
+                case 'up':
+                    jewelry.offset.y -= step;
+                    break;
+                case 'down':
+                    jewelry.offset.y += step;
+                    break;
+                case 'left':
+                    jewelry.offset.x -= step;
+                    break;
+                case 'right':
+                    jewelry.offset.x += step;
+                    break;
+                case 'up-left':
+                    jewelry.offset.x -= step;
+                    jewelry.offset.y -= step;
+                    break;
+                case 'up-right':
+                    jewelry.offset.x += step;
+                    jewelry.offset.y -= step;
+                    break;
+                case 'down-left':
+                    jewelry.offset.x -= step;
+                    jewelry.offset.y += step;
+                    break;
+                case 'down-right':
+                    jewelry.offset.x += step;
+                    jewelry.offset.y += step;
+                    break;
+                case 'center':
+                    jewelry.offset = { x: 0, y: 0 };
+                    break;
             }
         }
 
+        // Add or update jewelry
+        function addJewelry(id) {
+            const originalJewelry = JEWELRY[id];
+            if (!originalJewelry) return;
+            
+            // Create a deep copy of the jewelry item with loaded images
+            const jewelryCopy = JSON.parse(JSON.stringify(originalJewelry));
+            
+            // Add loaded images (which can't be JSON stringified)
+            if (originalJewelry.type === 'earrings') {
+                jewelryCopy.leftImage = originalJewelry.leftImage;
+                jewelryCopy.rightImage = originalJewelry.rightImage;
+            } else {
+                jewelryCopy.loadedImage = originalJewelry.loadedImage;
+            }
+            
+            // Initialize with default values
+            jewelryCopy.scale = originalJewelry.defaultScale;
+            jewelryCopy.offset = { x: 0, y: 0 };
+            jewelryCopy.visible = true;
+            jewelryCopy.opacity = 1.0;
+            
+            // For hand jewelry, set default hand and finger
+            if (originalJewelry.type === 'hand') {
+                jewelryCopy.handIndex = 0; // Default to first detected hand
+            }
+            
+            // Add to active jewelry
+            appState.activeJewelry.set(id, jewelryCopy);
+            
+            // Show toast
+            showToast(`${originalJewelry.name} added`);
+            
+            // Re-render active items if that's the current view
+            if (appState.currentCategory === 'active') {
+                renderActiveItems();
+            }
+        }
+        
+        function removeJewelry(id) {
+            const jewelry = JEWELRY[id];
+            if (!jewelry) return;
+            
+            // Remove from active jewelry
+            appState.activeJewelry.delete(id);
+            
+            // Close controls panel if it's open for this jewelry
+            if (appState.selectedJewelryId === id && elements.controlsPanel.classList.contains('visible')) {
+                toggleControlsPanel(false);
+            }
+            
+            // Show toast
+            showToast(`${jewelry.name} removed`);
+            
+            // Re-render category if needed
+            if (appState.currentCategory === 'active') {
+                renderActiveItems();
+            } else if (jewelry.group === appState.currentCategory) {
+                renderCategoryItems(appState.currentCategory);
+            }
+        }
+        
+        // Show toast notification
+        function showToast(message) {
+            const toast = elements.toast;
+            toast.textContent = message;
+            toast.classList.add('visible');
+            
+            // Hide toast after 2 seconds
+            setTimeout(() => {
+                toast.classList.remove('visible');
+            }, 2000);
+        }
+        
         // AI detection loop
         async function detectAll() {
             if (!appState.isInitialized || !appState.isCameraReady) {
@@ -1818,6 +2053,8 @@
             
             // Render each active jewelry item
             appState.activeJewelry.forEach((jewelry, id) => {
+                if (!jewelry.visible) return;
+                
                 if (jewelry.type === 'necklace') {
                     if (appState.poseLandmarks) {
                         drawNecklace(jewelry, id);
@@ -1842,244 +2079,9 @@
             });
         }
         
-        // Add/remove/update jewelry items
-        function addJewelry(id) {
-            const originalJewelry = JEWELRY[id];
-            if (!originalJewelry) return;
-            
-            // Create a deep copy of the jewelry item with loaded images
-            const jewelryCopy = JSON.parse(JSON.stringify(originalJewelry));
-            
-            // Add loaded images (which can't be JSON stringified)
-            if (originalJewelry.type === 'earrings') {
-                jewelryCopy.leftImage = originalJewelry.leftImage;
-                jewelryCopy.rightImage = originalJewelry.rightImage;
-            } else {
-                jewelryCopy.loadedImage = originalJewelry.loadedImage;
-            }
-            
-            // Initialize with default values
-            jewelryCopy.scale = originalJewelry.defaultScale;
-            jewelryCopy.offset = { x: 0, y: 0 };
-            jewelryCopy.visible = true;
-            
-            // For hand jewelry, set default hand and finger
-            if (originalJewelry.type === 'hand') {
-                jewelryCopy.handIndex = 0; // Default to first detected hand
-            }
-            
-            // Add to active jewelry
-            appState.activeJewelry.set(id, jewelryCopy);
-            
-            // Re-render category if it's the current one
-            if (originalJewelry.group === appState.currentCategory) {
-                renderJewelryByCategory(appState.currentCategory);
-            }
-        }
-        
-        function removeJewelry(id) {
-            // Remove from active jewelry
-            appState.activeJewelry.delete(id);
-            
-            // If controls panel is open for this jewelry, close it
-            if (appState.selectedJewelryId === id && appState.isControlsPanelOpen) {
-                toggleControlsPanel(false);
-            }
-            
-            // Re-render active category or current category
-            if (appState.currentCategory === 'active') {
-                renderActiveJewelry();
-            } else {
-                const jewelry = JEWELRY[id];
-                if (jewelry && jewelry.group === appState.currentCategory) {
-                    renderJewelryByCategory(appState.currentCategory);
-                }
-            }
-        }
-        
-        function updateJewelryProperty(id, property, value) {
-            if (!appState.activeJewelry.has(id)) return;
-            
-            const jewelry = appState.activeJewelry.get(id);
-            
-            // Handle nested properties like offset.x
-            if (property.includes('.')) {
-                const [parent, child] = property.split('.');
-                jewelry[parent][child] = value;
-            } else {
-                jewelry[property] = value;
-            }
-        }
-        
-        // Controls panel rendering
-        function renderControlsForJewelry(id) {
-            if (!id || !appState.activeJewelry.has(id)) return;
-            
-            const jewelry = appState.activeJewelry.get(id);
-            const originalJewelry = JEWELRY[id];
-            const controlsContent = elements.controlsContent;
-            
-            // Clear previous controls
-            controlsContent.innerHTML = '';
-            
-            // Add jewelry name and thumbnail
-            const thumbSrc = originalJewelry.thumbnail || 
-                (originalJewelry.type === 'earrings' ? originalJewelry.left.replace('.png', '-thumb.png') : 
-                    originalJewelry.image.replace('.png', '-thumb.png'));
-            
-            const headerHTML = `
-                <div class="flex items-center mb-4">
-                    <img src="${thumbSrc}" alt="${originalJewelry.name}" class="w-12 h-12 object-contain mr-3">
-                    <h3 class="text-lg font-semibold">${originalJewelry.name}</h3>
-                </div>
-            `;
-            
-            // Visibility toggle
-            const visibilityHTML = `
-                <div class="control-group">
-                    <div class="flex justify-between items-center">
-                        <label class="control-label">Visibility</label>
-                        <label class="toggle-switch">
-                            <input type="checkbox" ${jewelry.visible !== false ? 'checked' : ''} 
-                                onchange="updateJewelryProperty('${id}', 'visible', this.checked)">
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-                </div>
-            `;
-            
-            // Size control
-            const sizeHTML = `
-                <div class="control-group">
-                    <label class="control-label">Size</label>
-                    <div class="size-control">
-                        <input type="range" min="0.1" max="2.0" step="0.05" value="${jewelry.scale}" 
-                            oninput="updateJewelryProperty('${id}', 'scale', parseFloat(this.value))">
-                    </div>
-                </div>
-            `;
-            
-            // Position adjustment
-            const positionHTML = `
-                <div class="control-group">
-                    <label class="control-label">Position Adjustment</label>
-                    <div class="position-control">
-                        <div class="position-grid">
-                            <button class="position-btn" onclick="moveJewelry('${id}', 'up-left')">↖</button>
-                            <button class="position-btn" onclick="moveJewelry('${id}', 'up')">↑</button>
-                            <button class="position-btn" onclick="moveJewelry('${id}', 'up-right')">↗</button>
-                            <button class="position-btn" onclick="moveJewelry('${id}', 'left')">←</button>
-                            <button class="position-btn" onclick="moveJewelry('${id}', 'center')">•</button>
-                            <button class="position-btn" onclick="moveJewelry('${id}', 'right')">→</button>
-                            <button class="position-btn" onclick="moveJewelry('${id}', 'down-left')">↙</button>
-                            <button class="position-btn" onclick="moveJewelry('${id}', 'down')">↓</button>
-                            <button class="position-btn" onclick="moveJewelry('${id}', 'down-right')">↘</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            // Build specialized controls for different jewelry types
-            let specializedControls = '';
-            
-            if (jewelry.type === 'earrings') {
-                specializedControls = `
-                    <div class="control-group">
-                        <label class="control-label">Width Adjustment</label>
-                        <div class="gap-control">
-                            <input type="range" min="-50" max="50" step="1" value="${jewelry.gap || 0}" 
-                                oninput="updateJewelryProperty('${id}', 'gap', parseInt(this.value))">
-                        </div>
-                    </div>
-                `;
-            } else if (jewelry.type === 'hand' && id.startsWith('ring')) {
-                // Finger selection for rings
-                specializedControls = `
-                    <div class="control-group">
-                        <label class="control-label">Finger Selection</label>
-                        <select class="w-full p-2 border rounded-lg my-2" 
-                            onchange="updateJewelryProperty('${id}', 'fingerIndex', parseInt(this.value))">
-                            <option value="8" ${jewelry.fingerIndex === 8 ? 'selected' : ''}>Index Finger</option>
-                            <option value="12" ${jewelry.fingerIndex === 12 ? 'selected' : ''}>Middle Finger</option>
-                            <option value="16" ${jewelry.fingerIndex === 16 ? 'selected' : ''}>Ring Finger</option>
-                            <option value="20" ${jewelry.fingerIndex === 20 ? 'selected' : ''}>Pinky Finger</option>
-                            <option value="4" ${jewelry.fingerIndex === 4 ? 'selected' : ''}>Thumb</option>
-                        </select>
-                    </div>
-                `;
-            } else if (jewelry.type === 'hand') {
-                // Hand selection for other hand jewelry
-                specializedControls = `
-                    <div class="control-group">
-                        <label class="control-label">Hand Selection</label>
-                        <select class="w-full p-2 border rounded-lg my-2" 
-                            onchange="updateJewelryProperty('${id}', 'handIndex', parseInt(this.value))">
-                            <option value="0" ${jewelry.handIndex === 0 ? 'selected' : ''}>Right Hand</option>
-                            <option value="1" ${jewelry.handIndex === 1 ? 'selected' : ''}>Left Hand</option>
-                        </select>
-                    </div>
-                `;
-            }
-            
-            // Remove button
-            const removeHTML = `
-                <div class="mt-6">
-                    <button class="w-full bg-red-500 text-white py-3 rounded-lg flex justify-center items-center" 
-                        onclick="removeJewelry('${id}'); toggleControlsPanel(false);">
-                        <i class="fas fa-trash mr-2"></i> Remove Item
-                    </button>
-                </div>
-            `;
-            
-            // Combine all controls
-            controlsContent.innerHTML = headerHTML + visibilityHTML + sizeHTML + specializedControls + positionHTML + removeHTML;
-        }
-        
-        // Position adjustment
-        function moveJewelry(id, direction) {
-            if (!appState.activeJewelry.has(id)) return;
-            
-            const jewelry = appState.activeJewelry.get(id);
-            const step = 5; // Pixel adjustment step
-            
-            switch (direction) {
-                case 'up':
-                    jewelry.offset.y -= step;
-                    break;
-                case 'down':
-                    jewelry.offset.y += step;
-                    break;
-                case 'left':
-                    jewelry.offset.x -= step;
-                    break;
-                case 'right':
-                    jewelry.offset.x += step;
-                    break;
-                case 'up-left':
-                    jewelry.offset.x -= step;
-                    jewelry.offset.y -= step;
-                    break;
-                case 'up-right':
-                    jewelry.offset.x += step;
-                    jewelry.offset.y -= step;
-                    break;
-                case 'down-left':
-                    jewelry.offset.x -= step;
-                    jewelry.offset.y += step;
-                    break;
-                case 'down-right':
-                    jewelry.offset.x += step;
-                    jewelry.offset.y += step;
-                    break;
-                case 'center':
-                    jewelry.offset = { x: 0, y: 0 };
-                    break;
-            }
-        }
-        
         // Drawing functions for each jewelry type
         function drawNecklace(jewelry, id) {
-            if (!jewelry.loadedImage || !jewelry.visible) return;
+            if (!jewelry.loadedImage) return;
             
             const leftShoulder = appState.poseLandmarks[11];
             const rightShoulder = appState.poseLandmarks[12];
@@ -2094,7 +2096,6 @@
             const baseY = leftShoulder.y * elements.canvas.height;
         
             // Apply measurements with mobile-friendly adjustments
-            // Use constants optimized for the original PC version
             const VERTICAL_OFFSET = -115;
             const DROP_HEIGHT = 45;
             
@@ -2109,7 +2110,12 @@
             const drawX = centerX - necklaceWidth/2;
             const drawY = adjustedY - DROP_HEIGHT/2;
         
-            // For mobile, use simplified drawing approach without sub-image calculations
+            // Set opacity if defined
+            if (jewelry.opacity !== undefined) {
+                elements.ctx.globalAlpha = jewelry.opacity;
+            }
+        
+            // Draw the necklace
             elements.ctx.save();
             elements.ctx.shadowColor = 'rgba(0,0,0,0.3)';
             elements.ctx.shadowBlur = 8;
@@ -2125,7 +2131,7 @@
         }
         
         function drawEarrings(jewelry, id) {
-            if (!jewelry.leftImage || !jewelry.rightImage || !jewelry.visible) return;
+            if (!jewelry.leftImage || !jewelry.rightImage) return;
             
             const landmarks = appState.faceLandmarks;
             if (!landmarks) return;
@@ -2157,6 +2163,11 @@
             const earHeight = Math.abs(landmarks[234].y - leftLobe.y) * elements.canvas.height;
             const baseScale = (earHeight * 0.8) / jewelry.leftImage.height;
             const scale = baseScale * jewelry.scale; // Combine base scale with user adjustable scale
+            
+            // Set opacity if defined
+            if (jewelry.opacity !== undefined) {
+                elements.ctx.globalAlpha = jewelry.opacity;
+            }
             
             elements.ctx.save();
             elements.ctx.shadowColor = 'rgba(0,0,0,0.3)';
@@ -2200,7 +2211,7 @@
         }
         
         function drawSinglePiece(jewelry, id) {
-            if (!jewelry.loadedImage || !jewelry.visible) return;
+            if (!jewelry.loadedImage) return;
             
             const landmarks = appState.faceLandmarks;
             if (!landmarks) return;
@@ -2233,6 +2244,11 @@
                 scale = jewelry.scale;
             }
             
+            // Set opacity if defined
+            if (jewelry.opacity !== undefined) {
+                elements.ctx.globalAlpha = jewelry.opacity;
+            }
+            
             // Draw the jewelry
             elements.ctx.save();
             elements.ctx.shadowColor = 'rgba(0,0,0,0.3)';
@@ -2253,9 +2269,9 @@
             
             elements.ctx.restore();
         }
-        
+
         function drawRing(jewelry, id) {
-            if (!jewelry.loadedImage || !jewelry.visible) return;
+            if (!jewelry.loadedImage) return;
             
             // Check if we have hand landmarks and the right hand index
             const handIndex = jewelry.handIndex || 0;
@@ -2278,6 +2294,11 @@
                 fingerTip.x - fingerBase.x
             );
             
+            // Set opacity if defined
+            if (jewelry.opacity !== undefined) {
+                elements.ctx.globalAlpha = jewelry.opacity;
+            }
+            
             // Draw rotated ring
             elements.ctx.save();
             elements.ctx.translate(x, y);
@@ -2298,7 +2319,7 @@
         }
         
         function drawBangle(jewelry, id) {
-            if (!jewelry.loadedImage || !jewelry.visible) return;
+            if (!jewelry.loadedImage) return;
             
             // Check if we have hand landmarks and the right hand index
             const handIndex = jewelry.handIndex || 0;
@@ -2331,6 +2352,11 @@
             
             const wristWidth = Math.abs(wristRight.x - wristLeft.x) * elements.canvas.width;
             const baseScale = 3.2;
+            
+            // Set opacity if defined
+            if (jewelry.opacity !== undefined) {
+                elements.ctx.globalAlpha = jewelry.opacity;
+            }
             
             // Draw rotated bangle
             elements.ctx.save();
@@ -2379,7 +2405,11 @@
             const ctx = captureCanvas.getContext('2d');
             
             // Draw video frame
-            ctx.drawImage(elements.video, 0, 0, captureCanvas.width, captureCanvas.height);
+            ctx.save();
+            // Mirror the video horizontally to match what user sees
+            ctx.scale(-1, 1);
+            ctx.drawImage(elements.video, -captureCanvas.width, 0, captureCanvas.width, captureCanvas.height);
+            ctx.restore();
             
             // Draw jewelry canvas on top
             ctx.drawImage(elements.canvas, 0, 0, captureCanvas.width, captureCanvas.height);
@@ -2406,372 +2436,363 @@
             }
         }
         
-        // Show toast message
-        function showToast(message) {
-            // Check if a toast already exists
-            let toast = document.querySelector('.toast-message');
-            if (!toast) {
-                toast = document.createElement('div');
-                toast.className = 'toast-message';
-                toast.style.cssText = `
-                    position: fixed;
-                    bottom: 100px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    background-color: rgba(0, 0, 0, 0.7);
-                    color: white;
-                    padding: 10px 20px;
-                    border-radius: 20px;
-                    z-index: 1000;
-                    font-size: 14px;
-                `;
-                document.body.appendChild(toast);
-            }
-            
-            toast.textContent = message;
-            toast.style.opacity = '1';
-            
-            // Hide after 2 seconds
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.parentNode.removeChild(toast);
-                    }
-                }, 300);
-            }, 2000);
-        }
-        
-        // Gesture support for direct manipulation
+        // Setup touch gesture handlers for mobile
         function setupGestureHandlers() {
+            initializeDragGesture();
+            initializePinchGesture();
+            initializeTapGesture();
+        }
+        
+        // Initialize drag gesture for moving jewelry
+        function initializeDragGesture() {
             const canvas = elements.canvas;
-            let startTouches = [];
-            let startDistance = 0;
-            let startScale = 1;
-            let startOffset = { x: 0, y: 0 };
             let isDragging = false;
-            let activeItemId = null;
-            let activePinchId = null;
+            let dragJewelryId = null;
+            let dragStartPosition = { x: 0, y: 0 };
+            let jewelryStartOffset = { x: 0, y: 0 };
             
-            // Touch start
             canvas.addEventListener('touchstart', (e) => {
-                // Only activate if we have jewelry and landmarks
-                if (appState.activeJewelry.size === 0 || appState.isControlsPanelOpen) return;
+                if (e.touches.length !== 1 || appState.activeJewelry.size === 0) return;
                 
-                if (e.touches.length === 1) {
-                    // Single touch - check if we're touching jewelry for drag
-                    const touch = e.touches[0];
-                    activeItemId = findJewelryAtPoint(touch.clientX, touch.clientY);
+                const touch = e.touches[0];
+                const position = { x: touch.clientX, y: touch.clientY };
+                
+                // Find jewelry at touch point
+                const jewelryId = findJewelryAtPoint(position.x, position.y);
+                if (jewelryId) {
+                    isDragging = true;
+                    dragJewelryId = jewelryId;
+                    dragStartPosition = position;
                     
-                    if (activeItemId) {
-                        isDragging = true;
-                        const jewelry = appState.activeJewelry.get(activeItemId);
-                        startOffset = { ...jewelry.offset };
-                        startTouches = [{ x: touch.clientX, y: touch.clientY }];
-                        e.preventDefault(); // Prevent scrolling
-                    }
-                } else if (e.touches.length === 2) {
-                    // Two touches - check for pinch to resize
-                    const touch1 = e.touches[0];
-                    const touch2 = e.touches[1];
+                    // Store starting offset
+                    const jewelry = appState.activeJewelry.get(jewelryId);
+                    jewelryStartOffset = { ...jewelry.offset };
                     
-                    // Find midpoint between touches
-                    const midX = (touch1.clientX + touch2.clientX) / 2;
-                    const midY = (touch1.clientY + touch2.clientY) / 2;
-                    
-                    // Check if midpoint is on jewelry
-                    activePinchId = findJewelryAtPoint(midX, midY);
-                    
-                    if (activePinchId) {
-                        const jewelry = appState.activeJewelry.get(activePinchId);
-                        startScale = jewelry.scale;
-                        startDistance = Math.hypot(
-                            touch1.clientX - touch2.clientX,
-                            touch1.clientY - touch2.clientY
-                        );
-                        e.preventDefault(); // Prevent zooming the page
-                    }
+                    // Prevent scrolling
+                    e.preventDefault();
                 }
             });
             
-            // Touch move
             canvas.addEventListener('touchmove', (e) => {
-                if (isDragging && activeItemId && e.touches.length === 1) {
-                    // Handle drag
-                    const touch = e.touches[0];
-                    const deltaX = touch.clientX - startTouches[0].x;
-                    const deltaY = touch.clientY - startTouches[0].y;
-                    
-                    // Get the pixel ratio for accurate movement
-                    const pixelRatio = window.devicePixelRatio || 1;
-                    
-                    // Update jewelry position
-                    const jewelry = appState.activeJewelry.get(activeItemId);
-                    jewelry.offset.x = startOffset.x + (deltaX / pixelRatio);
-                    jewelry.offset.y = startOffset.y + (deltaY / pixelRatio);
-                    
-                    e.preventDefault(); // Prevent scrolling
-                } else if (activePinchId && e.touches.length === 2) {
-                    // Handle pinch to resize
-                    const touch1 = e.touches[0];
-                    const touch2 = e.touches[1];
-                    
-                    // Calculate new distance
-                    const newDistance = Math.hypot(
-                        touch1.clientX - touch2.clientX,
-                        touch1.clientY - touch2.clientY
-                    );
-                    
-                    // Calculate scale factor
-                    const scaleFactor = newDistance / startDistance;
-                    
-                    // Apply new scale with limits
-                    const jewelry = appState.activeJewelry.get(activePinchId);
-                    jewelry.scale = Math.max(0.1, Math.min(2.0, startScale * scaleFactor));
-                    
-                    e.preventDefault(); // Prevent zooming the page
-                }
-            });
-            
-            // Touch end
-            canvas.addEventListener('touchend', (e) => {
-                // Reset touch interactions
-                if (isDragging && activeItemId) {
-                    // If it was a short tap with minimal movement, open controls for the item
-                    const jewelry = appState.activeJewelry.get(activeItemId);
-                    const deltaX = Math.abs(jewelry.offset.x - startOffset.x);
-                    const deltaY = Math.abs(jewelry.offset.y - startOffset.y);
-                    
-                    if (deltaX < 5 && deltaY < 5) {
-                        // This was essentially a tap - open controls
-                        toggleControlsPanel(true, activeItemId);
-                    }
-                    
-                    isDragging = false;
+                if (!isDragging || !dragJewelryId) return;
+                
+                const touch = e.touches[0];
+                const position = { x: touch.clientX, y: touch.clientY };
+                
+                // Calculate movement delta
+                const deltaX = position.x - dragStartPosition.x;
+                const deltaY = position.y - dragStartPosition.y;
+                
+                // Update jewelry position
+                const jewelry = appState.activeJewelry.get(dragJewelryId);
+                if (jewelry) {
+                    jewelry.offset.x = jewelryStartOffset.x + deltaX;
+                    jewelry.offset.y = jewelryStartOffset.y + deltaY;
                 }
                 
-                activeItemId = null;
-                activePinchId = null;
+                // Prevent scrolling
+                e.preventDefault();
             });
             
-            // Touch cancel - reset all interactions
-            canvas.addEventListener('touchcancel', () => {
+            canvas.addEventListener('touchend', (e) => {
                 isDragging = false;
-                activeItemId = null;
-                activePinchId = null;
+                dragJewelryId = null;
+            });
+            
+            canvas.addEventListener('touchcancel', (e) => {
+                isDragging = false;
+                dragJewelryId = null;
             });
         }
         
-        // Helper to find jewelry at touch point
-        function findJewelryAtPoint(clientX, clientY) {
-            if (appState.activeJewelry.size === 0) return null;
+        // Initialize pinch gesture for scaling jewelry
+        function initializePinchGesture() {
+            const canvas = elements.canvas;
+            let initialDistance = 0;
+            let selectedJewelryId = null;
             
+            canvas.addEventListener('touchstart', (e) => {
+                if (e.touches.length !== 2 || appState.activeJewelry.size === 0) return;
+                
+                // Calculate initial distance between touch points
+                const touch1 = e.touches[0];
+                const touch2 = e.touches[1];
+                initialDistance = Math.hypot(
+                    touch2.clientX - touch1.clientX,
+                    touch2.clientY - touch1.clientY
+                );
+                
+                // Find jewelry at midpoint of touch
+                const midX = (touch1.clientX + touch2.clientX) / 2;
+                const midY = (touch1.clientY + touch2.clientY) / 2;
+                selectedJewelryId = findJewelryAtPoint(midX, midY);
+                
+                if (selectedJewelryId) {
+                    e.preventDefault(); // Prevent default zoom behavior
+                }
+            });
+            
+            canvas.addEventListener('touchmove', (e) => {
+                if (e.touches.length !== 2 || !selectedJewelryId) return;
+                
+                // Calculate new distance between touch points
+                const touch1 = e.touches[0];
+                const touch2 = e.touches[1];
+                const currentDistance = Math.hypot(
+                    touch2.clientX - touch1.clientX,
+                    touch2.clientY - touch1.clientY
+                );
+                
+                // Calculate scale factor
+                const scaleFactor = currentDistance / initialDistance;
+                
+                // Get jewelry and update scale
+                const jewelry = appState.activeJewelry.get(selectedJewelryId);
+                if (jewelry) {
+                    // Apply a dampening factor to make the scale change smoother
+                    const dampening = 0.03;
+                    const newScale = jewelry.scale * (1 + (scaleFactor - 1) * dampening);
+                    
+                    // Limit scale to reasonable bounds
+                    jewelry.scale = Math.max(0.2, Math.min(3.0, newScale));
+                }
+                
+                e.preventDefault(); // Prevent default zoom behavior
+            });
+            
+            canvas.addEventListener('touchend', (e) => {
+                if (e.touches.length === 0) {
+                    selectedJewelryId = null;
+                }
+            });
+        }
+        
+        // Initialize tap gesture for item selection and controls toggle
+        function initializeTapGesture() {
+            const canvas = elements.canvas;
+            let lastTapTime = 0;
+            let lastTapPosition = { x: 0, y: 0 };
+            
+            canvas.addEventListener('touchend', (e) => {
+                if (e.touches.length > 0 || appState.activeJewelry.size === 0) return;
+                
+                const touch = e.changedTouches[0];
+                const currentTime = new Date().getTime();
+                const tapPosition = { x: touch.clientX, y: touch.clientY };
+                
+                // Detect if this is a tap (not the end of a drag/pan)
+                const moveDistance = Math.sqrt(
+                    Math.pow(tapPosition.x - lastTapPosition.x, 2) + 
+                    Math.pow(tapPosition.y - lastTapPosition.y, 2)
+                );
+                
+                // If it's a tap (not much movement)
+                if (moveDistance < 10) {
+                    // Find jewelry at tap position
+                    const jewelryId = findJewelryAtPoint(tapPosition.x, tapPosition.y);
+                    if (jewelryId) {
+                        // If double tap (within 300ms), toggle controls
+                        if (currentTime - lastTapTime < 300) {
+                            toggleControlsPanel(true, jewelryId);
+                        }
+                        
+                        lastTapTime = currentTime;
+                    }
+                }
+                
+                lastTapPosition = tapPosition;
+            });
+        }
+        
+        // Find jewelry at touch point
+        function findJewelryAtPoint(clientX, clientY) {
             // Convert client coordinates to canvas coordinates
             const rect = elements.canvas.getBoundingClientRect();
-            const x = (clientX - rect.left) * (elements.canvas.width / rect.width);
-            const y = (clientY - rect.top) * (elements.canvas.height / rect.height);
+            const canvasX = (clientX - rect.left) * (elements.canvas.width / rect.width);
+            const canvasY = (clientY - rect.top) * (elements.canvas.height / rect.height);
             
-            // Simple hit testing for jewelry items
+            // Check each active jewelry
             for (const [id, jewelry] of appState.activeJewelry.entries()) {
                 if (!jewelry.visible) continue;
                 
-                // Get position and size based on jewelry type
-                let hitX, hitY, hitWidth, hitHeight;
+                // Simplified hit testing based on jewelry type
+                let hit = false;
                 
-                if (jewelry.type === 'necklace' && appState.poseLandmarks) {
-                    // Approximate necklace position
-                    const leftShoulder = appState.poseLandmarks[11];
-                    const rightShoulder = appState.poseLandmarks[12];
-                    
-                    if (!leftShoulder || !rightShoulder) continue;
-                    
-                    const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x) * elements.canvas.width;
-                    const centerX = (leftShoulder.x + rightShoulder.x) / 2 * elements.canvas.width + jewelry.offset.x;
-                    const centerY = leftShoulder.y * elements.canvas.height - 100 + jewelry.offset.y;
-                    
-                    hitX = centerX - (shoulderWidth * jewelry.scale) / 2;
-                    hitY = centerY - (shoulderWidth * jewelry.scale) / 4;
-                    hitWidth = shoulderWidth * jewelry.scale;
-                    hitHeight = shoulderWidth * jewelry.scale / 2;
-                } else if (jewelry.type === 'single' && appState.faceLandmarks) {
-                    // Approximate tikka position
-                    const centerPoint = appState.faceLandmarks[151];
-                    if (!centerPoint) continue;
-                    
-                    hitX = centerPoint.x * elements.canvas.width - 50 * jewelry.scale + jewelry.offset.x;
-                    hitY = centerPoint.y * elements.canvas.height - 50 * jewelry.scale + jewelry.offset.y;
-                    hitWidth = 100 * jewelry.scale;
-                    hitHeight = 100 * jewelry.scale;
-                } else if (jewelry.type === 'earrings' && appState.faceLandmarks) {
-                    // Check both earrings
+                if (jewelry.type === 'earrings' && appState.faceLandmarks) {
+                    // Test both earrings
                     const leftLobe = appState.faceLandmarks[177];
                     const rightLobe = appState.faceLandmarks[401];
                     
-                    if (!leftLobe || !rightLobe) continue;
-                    
-                    // Check left earring hit
-                    let leftX = leftLobe.x * elements.canvas.width + jewelry.offset.x;
-                    let leftY = leftLobe.y * elements.canvas.height + jewelry.offset.y;
-                    let hitSize = 50 * jewelry.scale;
-                    
-                    if (x >= leftX - hitSize && x <= leftX + hitSize && 
-                        y >= leftY - hitSize && y <= leftY + hitSize) {
-                        return id;
+                    if (leftLobe && rightLobe) {
+                        const leftX = leftLobe.x * elements.canvas.width + jewelry.offset.x;
+                        const leftY = leftLobe.y * elements.canvas.height + jewelry.offset.y;
+                        const rightX = rightLobe.x * elements.canvas.width + jewelry.offset.x;
+                        const rightY = rightLobe.y * elements.canvas.height + jewelry.offset.y;
+                        
+                        // Hit radius based on scale
+                        const radius = 50 * jewelry.scale;
+                        
+                        // Check if touch is inside either earring's hit area
+                        const leftDist = Math.sqrt(Math.pow(canvasX - leftX, 2) + Math.pow(canvasY - leftY, 2));
+                        const rightDist = Math.sqrt(Math.pow(canvasX - rightX, 2) + Math.pow(canvasY - rightY, 2));
+                        
+                        if (leftDist < radius || rightDist < radius) {
+                            hit = true;
+                        }
                     }
+                } else if (jewelry.type === 'necklace' && appState.poseLandmarks) {
+                    const leftShoulder = appState.poseLandmarks[11];
+                    const rightShoulder = appState.poseLandmarks[12];
                     
-                    // Check right earring hit
-                    let rightX = rightLobe.x * elements.canvas.width + jewelry.offset.x;
-                    let rightY = rightLobe.y * elements.canvas.height + jewelry.offset.y;
-                    
-                    if (x >= rightX - hitSize && x <= rightX + hitSize && 
-                        y >= rightY - hitSize && y <= rightY + hitSize) {
-                        return id;
+                    if (leftShoulder && rightShoulder) {
+                        const centerX = (leftShoulder.x + rightShoulder.x) / 2 * elements.canvas.width + jewelry.offset.x;
+                        const centerY = leftShoulder.y * elements.canvas.height - 100 + jewelry.offset.y;
+                        
+                        // Hit area based on necklace size
+                        const hitRadius = 100 * jewelry.scale;
+                        
+                        const dist = Math.sqrt(Math.pow(canvasX - centerX, 2) + Math.pow(canvasY - centerY, 2));
+                        if (dist < hitRadius) {
+                            hit = true;
+                        }
                     }
+                } else if (jewelry.type === 'single' && appState.faceLandmarks) {
+                    const centerPoint = appState.faceLandmarks[151];
                     
-                    // Not a hit on either earring
-                    continue;
-                } else {
-                    // Skip other jewelry types or those without landmarks
-                    continue;
+                    if (centerPoint) {
+                        const x = centerPoint.x * elements.canvas.width + jewelry.offset.x;
+                        const y = centerPoint.y * elements.canvas.height - 20 + jewelry.offset.y;
+                        
+                        // Hit radius based on scale
+                        const radius = 50 * jewelry.scale;
+                        
+                        const dist = Math.sqrt(Math.pow(canvasX - x, 2) + Math.pow(canvasY - y, 2));
+                        if (dist < radius) {
+                            hit = true;
+                        }
+                    }
+                } else if (jewelry.type === 'hand' && appState.handLandmarks && appState.handLandmarks.length > 0) {
+                    const handIndex = jewelry.handIndex || 0;
+                    
+                    if (appState.handLandmarks[handIndex]) {
+                        // For ring
+                        if (id.startsWith('ring')) {
+                            const handLandmarks = appState.handLandmarks[handIndex];
+                            const fingerTip = handLandmarks[jewelry.fingerIndex];
+                            const fingerBase = handLandmarks[jewelry.fingerIndex - 3];
+                            
+                            if (fingerTip && fingerBase) {
+                                // Position ring between tip and base
+                                const positionRatio = 0.3;
+                                const x = (fingerBase.x + (fingerTip.x - fingerBase.x) * positionRatio) * elements.canvas.width + jewelry.offset.x;
+                                const y = (fingerBase.y + (fingerTip.y - fingerBase.y) * positionRatio) * elements.canvas.height + jewelry.offset.y;
+                                
+                                // Hit radius based on ring size
+                                const radius = 30 * jewelry.scale;
+                                
+                                const dist = Math.sqrt(Math.pow(canvasX - x, 2) + Math.pow(canvasY - y, 2));
+                                if (dist < radius) {
+                                    hit = true;
+                                }
+                            }
+                        }
+                        // Add similar hit testing for other hand jewelry types as needed
+                    }
                 }
                 
-                // Check if point is inside the jewelry's bounding box
-                if (x >= hitX && x <= hitX + hitWidth && y >= hitY && y <= hitY + hitHeight) {
+                if (hit) {
                     return id;
                 }
             }
             
-            // No jewelry found at this point
-            return null;
+            return null; // No jewelry found at touch point
         }
         
-        // Double tap to toggle controls
-        function setupDoubleTapHandler() {
-            const canvas = elements.canvas;
-            let lastTap = 0;
-            let lastTapX = 0;
-            let lastTapY = 0;
+        // Add to cart functionality
+        function addToCart(id) {
+            const item = JEWELRY[id];
+            if (!item) return;
             
-            canvas.addEventListener('touchend', (e) => {
-                // Ignore multi-touch
-                if (e.changedTouches.length !== 1) return;
-                
-                const currentTime = new Date().getTime();
-                const tapLength = currentTime - lastTap;
-                const touch = e.changedTouches[0];
-                
-                // Check if it's close to the last tap position
-                const lastX = lastTapX;
-                const lastY = lastTapY;
-                const currentX = touch.clientX;
-                const currentY = touch.clientY;
-                const distanceSquared = Math.pow(currentX - lastX, 2) + Math.pow(currentY - lastY, 2);
-                
-                if (tapLength < 500 && distanceSquared < 900) {
-                    // Double tap detected - find jewelry at this position
-                    const jewelryId = findJewelryAtPoint(currentX, currentY);
-                    if (jewelryId) {
-                        toggleControlsPanel(true, jewelryId);
-                        e.preventDefault();
-                    }
-                }
-                
-                // Store data for next tap comparison
-                lastTap = currentTime;
-                lastTapX = currentX;
-                lastTapY = currentY;
-            });
+            // In a real app, this would add to cart storage
+            // For demo, just show a confirmation
+            showToast(`${item.name} added to cart`);
+            
+            // Show the product grid again
+            elements.productCard.classList.add('hidden');
+            elements.itemGrid.classList.remove('hidden');
         }
         
-        // Set up all the gesture handlers
-        function initializeGestureSupport() {
-            setupGestureHandlers();
-            setupDoubleTapHandler();
+        // Helper function for loading status updates
+        function updateLoadingStatus(message) {
+            const loadingScreen = document.getElementById('loadingScreen');
+            const statusText = loadingScreen.querySelector('p:not(.loading-error)');
+            if (statusText) {
+                statusText.textContent = message;
+            }
         }
         
-        // Add this to init() function before hideLoadingScreen():
-        // initializeGestureSupport();
-        
-        // Browser compatibility check
-        function checkBrowserCompatibility() {
-            // Check for WebGL support
-            const canvas = document.createElement('canvas');
-            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-            if (!gl) {
-                return {
-                    compatible: false,
-                    reason: 'WebGL is not supported. Try a different browser.'
-                };
+        function showError(message) {
+            const loadingScreen = document.getElementById('loadingScreen');
+            const errorElement = loadingScreen.querySelector('.loading-error');
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.classList.remove('hidden');
             }
-            
-            // Check for MediaDevices API
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                return {
-                    compatible: false,
-                    reason: 'Camera access is not supported. Try a different browser.'
-                };
-            }
-            
-            // Check for touch support for mobile devices
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            if (isMobile && !('ontouchstart' in window)) {
-                return {
-                    compatible: false,
-                    reason: 'Touch events are not supported on your device.'
-                };
-            }
-            
-            return { compatible: true };
         }
         
-        // Update the init() function to check compatibility first
-        async function init() {
-            try {
-                console.log("Starting initialization...");
-                updateLoadingStatus("Checking compatibility...");
-                
-                // Check browser compatibility
-                const compatibility = checkBrowserCompatibility();
-                if (!compatibility.compatible) {
-                    throw new Error(compatibility.reason);
-                }
-                
-                updateLoadingStatus("Initializing...");
-                
-                // Get DOM elements
-                initializeElements();
-                
-                // Setup gesture handlers
-                setupEventListeners();
-                
-                // Initialize camera
-                await initializeCamera();
-                
-                // Initialize MediaPipe models
-                await initializeAIModels();
-                
-                // Preload jewelry images
-                await preloadJewelryImages();
-                
-                // Initialize UI
-                initializeUI();
-                
-                // Initialize gesture support
-                initializeGestureSupport();
-                
-                // Start detection loop
-                appState.isInitialized = true;
-                requestAnimationFrame(detectAll);
-                
-                // Hide loading screen
-                hideLoadingScreen();
-                
-                console.log("Initialization complete!");
-            } catch (error) {
-                console.error("Initialization error:", error);
-                showError(error.message || "Error initializing app. Please refresh the page.");
+        function hideLoadingScreen() {
+            document.getElementById('loadingScreen').classList.add('hidden');
+        }
+        
+        // Set performance mode (affecting AI model complexity)
+        function setPerformanceMode(mode) {
+            // Update performance mode buttons
+            document.getElementById('performanceLow').classList.toggle('primary-button', mode === 'low');
+            document.getElementById('performanceLow').classList.toggle('secondary-button', mode !== 'low');
+            
+            document.getElementById('performanceMedium').classList.toggle('primary-button', mode === 'medium');
+            document.getElementById('performanceMedium').classList.toggle('secondary-button', mode !== 'medium');
+            
+            document.getElementById('performanceHigh').classList.toggle('primary-button', mode === 'high');
+            document.getElementById('performanceHigh').classList.toggle('secondary-button', mode !== 'high');
+            
+            // Apply performance settings to models
+            switch(mode) {
+                case 'low':
+                    if (faceMesh) faceMesh.setOptions({ refineLandmarks: false, minDetectionConfidence: 0.7 });
+                    if (hands) hands.setOptions({ modelComplexity: 0, maxNumHands: 1 });
+                    if (pose) pose.setOptions({ modelComplexity: 0 });
+                    showToast('Low performance mode active');
+                    break;
+                case 'medium':
+                    if (faceMesh) faceMesh.setOptions({ refineLandmarks: true, minDetectionConfidence: 0.5 });
+                    if (hands) hands.setOptions({ modelComplexity: 0, maxNumHands: 2 });
+                    if (pose) pose.setOptions({ modelComplexity: 0 });
+                    showToast('Medium performance mode active');
+                    break;
+                case 'high':
+                    if (faceMesh) faceMesh.setOptions({ refineLandmarks: true, minDetectionConfidence: 0.5 });
+                    if (hands) hands.setOptions({ modelComplexity: 1, maxNumHands: 2 });
+                    if (pose) pose.setOptions({ modelComplexity: 1 });
+                    showToast('High performance mode active');
+                    break;
             }
-        }            
+        }
+        
+        // Window resize handler
+        window.addEventListener('resize', () => {
+            // Update canvas dimensions to match video
+            if (elements.video && elements.canvas) {
+                elements.canvas.width = elements.video.videoWidth;
+                elements.canvas.height = elements.video.videoHeight;
+            }
+            
+            // Update panel dimensions based on viewport
+            updateCaptureButtonPosition();
+        });
+        
+        // Initialize the app when the document is loaded
+        document.addEventListener('DOMContentLoaded', init);     
     </script>
 </body>
 </html>
