@@ -2442,47 +2442,36 @@
             // Show a toast notification that we're preparing the screenshot
             showToast("Preparing screenshot...");
             
-            // Create a new canvas with the same dimensions as the camera feed
+            // Create a new canvas with the same dimensions as the video
             const captureCanvas = document.createElement('canvas');
             captureCanvas.width = elements.video.videoWidth;
             captureCanvas.height = elements.video.videoHeight;
             const ctx = captureCanvas.getContext('2d');
             
-            // Get the camera container
-            const cameraContainer = document.querySelector('.camera-container');
+            // Draw the video frame
+            ctx.save();
+            ctx.scale(-1, 1); // Mirror horizontally
+            ctx.drawImage(elements.video, -captureCanvas.width, 0, captureCanvas.width, captureCanvas.height);
+            ctx.restore();
             
-            // Use html2canvas to capture the camera container
-            html2canvas(cameraContainer, { 
-                backgroundColor: null, 
-                useCORS: true, 
-                scale: 2 // Increase quality
-            }).then(canvas => {
-                // Draw the captured canvas onto our new canvas
-                // This helps maintain the correct proportions and jewelry placement
-                ctx.save();
-                ctx.scale(-1, 1); // Mirror horizontally
-                ctx.drawImage(canvas, -captureCanvas.width, 0, captureCanvas.width, captureCanvas.height);
-                ctx.restore();
+            // Draw the jewelry canvas on top
+            ctx.drawImage(elements.canvas, 0, 0, captureCanvas.width, captureCanvas.height);
+            
+            // Create a download link
+            const link = document.createElement('a');
+            link.download = 'jewelry-tryon-screenshot-' + new Date().toISOString().slice(0, 10) + '.png';
+            
+            try {
+                // Create image URL
+                link.href = captureCanvas.toDataURL('image/png');
+                link.click();
                 
-                // Create a download link
-                const link = document.createElement('a');
-                link.download = 'jewelry-tryon-screenshot-' + new Date().toISOString().slice(0, 10) + '.png';
-                
-                try {
-                    // Create image URL
-                    link.href = captureCanvas.toDataURL('image/png');
-                    link.click();
-                    
-                    // Show success toast
-                    showToast('Screenshot saved successfully!');
-                } catch (e) {
-                    console.error('Error capturing screenshot:', e);
-                    showToast('Error saving screenshot. Check permissions.');
-                }
-            }).catch(error => {
-                console.error('Screenshot error:', error);
-                showToast('Failed to take screenshot');
-            });
+                // Show success toast
+                showToast('Screenshot saved successfully!');
+            } catch (e) {
+                console.error('Error capturing screenshot:', e);
+                showToast('Error saving screenshot. Check permissions.');
+            }
         }
         
         // 15. Setup Gesture Handlers
