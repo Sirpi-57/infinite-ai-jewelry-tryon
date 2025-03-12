@@ -829,6 +829,115 @@
             opacity: 1;
             visibility: visible;
         }
+        
+        .ultra-transparent-controls {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border-radius: 10px;
+            padding: 10px;
+            color: white;
+        }
+        
+        .transparent-size-control,
+        .transparent-opacity-control,
+        .transparent-position-control {
+            margin-bottom: 10px;
+        }
+        
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .transparent-label {
+            color: white;
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+        
+        .transparent-value {
+            color: white;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 0.8rem;
+        }
+        
+        .transparent-slider {
+            width: 100%;
+            background: transparent;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 5px;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        
+        .transparent-slider:hover {
+            opacity: 1;
+        }
+        
+        .transparent-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            background: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        
+        .transparent-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+        }
+        
+        .transparent-grid button {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .transparent-grid button:active {
+            background: rgba(255, 255, 255, 0.4);
+        }
+        
+        .transparent-action-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        
+        .transparent-close-btn,
+        .transparent-remove-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .transparent-close-btn:active,
+        .transparent-remove-btn:active {
+            background: rgba(255, 255, 255, 0.4);
+        }
+        
+        .transparent-close-btn i,
+        .transparent-remove-btn i {
+            font-size: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -1707,13 +1816,13 @@
             // Clear previous controls
             elements.controlContent.innerHTML = '';
             
-            // Create a more mobile-friendly, translucent control layout
+            // Create a transparent, minimalist control layout
             const controlsHTML = `
-                <div class="mobile-controls-container">
-                    <div class="mobile-size-control">
+                <div class="ultra-transparent-controls">
+                    <div class="transparent-size-control">
                         <div class="control-label">
-                            <span>Size</span>
-                            <span class="control-value" id="sizeValue">${Math.round(jewelry.scale * 100)}%</span>
+                            <span class="transparent-label">Size</span>
+                            <span class="transparent-value" id="sizeValue">${Math.round(jewelry.scale * 100)}%</span>
                         </div>
                         <input type="range" 
                                min="0.5" 
@@ -1721,12 +1830,12 @@
                                step="0.05" 
                                value="${jewelry.scale}" 
                                oninput="updateJewelrySize('${id}', this.value)"
-                               class="mobile-slider">
+                               class="transparent-slider">
                     </div>
                     
-                    <div class="mobile-position-control">
-                        <div class="control-label">Position</div>
-                        <div class="position-grid">
+                    <div class="transparent-position-control">
+                        <div class="control-label transparent-label">Position</div>
+                        <div class="transparent-grid">
                             <button onclick="moveJewelry('${id}', 'up-left')">↖</button>
                             <button onclick="moveJewelry('${id}', 'up')">↑</button>
                             <button onclick="moveJewelry('${id}', 'up-right')">↗</button>
@@ -1739,10 +1848,10 @@
                         </div>
                     </div>
                     
-                    <div class="mobile-opacity-control">
+                    <div class="transparent-opacity-control">
                         <div class="control-label">
-                            <span>Opacity</span>
-                            <span class="control-value" id="opacityValue">${Math.round((jewelry.opacity || 1.0) * 100)}%</span>
+                            <span class="transparent-label">Opacity</span>
+                            <span class="transparent-value" id="opacityValue">${Math.round((jewelry.opacity || 1.0) * 100)}%</span>
                         </div>
                         <input type="range" 
                                min="0.2" 
@@ -1750,15 +1859,15 @@
                                step="0.05" 
                                value="${jewelry.opacity || 1.0}" 
                                oninput="updateJewelryOpacity('${id}', this.value)"
-                               class="mobile-slider">
+                               class="transparent-slider">
                     </div>
                     
-                    <div class="mobile-action-buttons">
-                        <button class="secondary-button" onclick="hideFloatingControls()">
-                            <i class="fas fa-times"></i> Close
+                    <div class="transparent-action-buttons">
+                        <button class="transparent-close-btn" onclick="hideFloatingControls()">
+                            <i class="fas fa-times"></i>
                         </button>
-                        <button class="remove-btn" onclick="removeJewelry('${id}')">
-                            <i class="fas fa-trash"></i> Remove
+                        <button class="transparent-remove-btn" onclick="removeJewelry('${id}')">
+                            <i class="fas fa-trash"></i>
                         </button>
                     </div>
                 </div>
