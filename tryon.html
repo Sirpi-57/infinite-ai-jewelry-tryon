@@ -20,7 +20,7 @@
     <!-- Our custom CSS -->
     <style>
         :root {
-           --color-primary: #7B2CBF;      /* Main purple - represents luxury and creativity */
+            --color-primary: #7B2CBF;      /* Main purple - represents luxury and creativity */
             --color-secondary: #9D4EDD;    /* Lighter purple - adds depth and versatility */
             --color-accent: #C77DFF;       /* Lavender - adds brightness and engagement */
             --color-dark: #240046;         /* Deep purple - professional and bold */
@@ -369,7 +369,7 @@
             padding: 5px;
         }
         
-        /* Floating controls */
+        /* Floating controls - UPDATED FOR TRANSPARENCY */
         .floating-controls {
             position: absolute;
             z-index: 25;
@@ -383,14 +383,15 @@
         }
         
         .controls-wrapper {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.15); /* Very transparent background */
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
             border-radius: 16px;
             padding: 15px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
             max-width: var(--controls-width);
             width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
         
         .control-header {
@@ -398,24 +399,30 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 10px;
         }
         
         .control-title {
             font-size: 1rem;
             font-weight: 600;
-            color: var(--color-dark);
+            color: white; /* Changed from dark to white for better visibility */
             margin: 0;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
         
         .close-control-btn {
-            background: none;
+            background: rgba(0, 0, 0, 0.1);
             border: none;
-            color: var(--color-dark);
+            color: white;
             font-size: 1rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            opacity: 0.7;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            opacity: 0.9;
         }
         
         .control-group {
@@ -428,21 +435,25 @@
             align-items: center;
             font-size: 0.9rem;
             margin-bottom: 8px;
+            color: white;
         }
         
         .control-value {
             font-size: 0.8rem;
             font-weight: 600;
-            color: var(--color-primary);
+            color: white;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
         }
         
-        /* Enhanced sliders */
+        /* Enhanced sliders - UPDATED FOR TRANSPARENCY */
         input[type="range"] {
             -webkit-appearance: none;
             appearance: none;
             width: 100%;
             height: 4px;
-            background: rgba(131, 39, 41, 0.2);
+            background: rgba(255, 255, 255, 0.3);
             border-radius: 2px;
             outline: none;
             margin: 10px 0;
@@ -452,33 +463,33 @@
             -webkit-appearance: none;
             width: 18px;
             height: 18px;
-            background: var(--color-primary);
-            border: 2px solid white;
+            background: white;
+            border: 2px solid rgba(0, 0, 0, 0.1);
             border-radius: 50%;
             cursor: pointer;
             transition: transform 0.1s ease, box-shadow 0.1s ease;
-            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
         }
         
         input[type="range"]:active::-webkit-slider-thumb {
             transform: scale(1.2);
-            box-shadow: 0 1px 10px rgba(131, 39, 41, 0.3);
+            box-shadow: 0 1px 10px rgba(0, 0, 0, 0.3);
         }
         
         input[type="range"]::-moz-range-thumb {
             width: 18px;
             height: 18px;
-            background: var(--color-primary);
-            border: 2px solid white;
+            background: white;
+            border: 2px solid rgba(0, 0, 0, 0.1);
             border-radius: 50%;
             cursor: pointer;
             transition: transform 0.1s ease, box-shadow 0.1s ease;
-            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
         }
         
         input[type="range"]:active::-moz-range-thumb {
             transform: scale(1.2);
-            box-shadow: 0 1px 10px rgba(131, 39, 41, 0.3);
+            box-shadow: 0 1px 10px rgba(0, 0, 0, 0.3);
         }
         
         /* Control buttons */
@@ -564,6 +575,10 @@
             font-weight: 500;
             width: 100%;
             transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
         }
         
         .remove-btn:active {
@@ -582,20 +597,26 @@
         
         /* Auto-hide animation */
         @keyframes fadeOut {
-            from { opacity: 1; transform: translateY(0); }
-            to { opacity: 0; transform: translateY(10px); pointer-events: none; }
+            from { 
+                opacity: 1; 
+                visibility: visible; 
+            }
+            to { 
+                opacity: 0; 
+                visibility: hidden; 
+            }
         }
         
         .auto-hide {
-            animation: fadeOut 0.5s forwards;
-            animation-delay: 3s;
+            animation: fadeOut 3s forwards;
+            animation-delay: 5s;
         }
         
         .auto-hide:hover,
         .auto-hide:active {
             animation: none;
             opacity: 1;
-            transform: translateY(0);
+            visibility: visible;
         }
         
         /* Utility Classes */
@@ -619,6 +640,144 @@
         
         .primary-button:active {
             transform: scale(0.98);
+        }
+        
+        /* Ultra-transparent controls - ADDED FOR JEWELRY CONTROLS */
+        .ultra-transparent-controls {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border-radius: 10px;
+            padding: 10px;
+            color: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Control container spacing */
+        .transparent-size-control,
+        .transparent-opacity-control,
+        .transparent-position-control {
+            margin-bottom: 15px;
+        }
+        
+        /* Transparent control labels */
+        .transparent-label {
+            color: white;
+            opacity: 0.9;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .transparent-value {
+            color: white;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        /* Transparent sliders */
+        .transparent-slider {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            -webkit-appearance: none;
+            appearance: none;
+            height: 5px;
+            border-radius: 2.5px;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+            margin: 8px 0;
+        }
+        
+        .transparent-slider:hover {
+            opacity: 1;
+        }
+        
+        .transparent-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: rgba(255, 255, 255, 0.9);
+            cursor: pointer;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .transparent-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: rgba(255, 255, 255, 0.9);
+            cursor: pointer;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Grid buttons for positioning */
+        .transparent-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+        }
+        
+        .transparent-grid button {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 8px;
+            border-radius: 5px;
+            transition: background 0.2s, transform 0.1s;
+            font-size: 1.1rem;
+        }
+        
+        .transparent-grid button:active {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(0.95);
+        }
+        
+        /* Action buttons */
+        .transparent-action-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+        
+        .transparent-close-btn,
+        .transparent-remove-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .transparent-remove-btn {
+            background: rgba(220, 38, 38, 0.15);
+        }
+        
+        .transparent-close-btn:active,
+        .transparent-remove-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .transparent-close-btn:active {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .transparent-remove-btn:active {
+            background: rgba(220, 38, 38, 0.3);
+        }
+        
+        .transparent-close-btn i,
+        .transparent-remove-btn i {
+            font-size: 1rem;
         }
         
         /* Responsive adjustments */
@@ -714,7 +873,7 @@
                 aspect-ratio: 4/3; /* Common front camera aspect ratio */
             }
         }
-
+    
         .action-buttons {
             margin-top: 20px;
         }
@@ -738,14 +897,7 @@
             background: rgba(255, 255, 255, 0.6);
             transform: scale(0.98);
         }
-        
-        .remove-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-        }
-
+    
         .mobile-controls-container, 
         .mobile-translucent-controls {
             background: rgba(255, 255, 255, 0.7);
@@ -805,155 +957,6 @@
                 max-width: 90vw;
                 width: 300px;
             }
-        }
-        
-        .auto-hide {
-            animation: fadeOut 3s forwards;
-            animation-delay: 5s;
-        }
-        
-        @keyframes fadeOut {
-            from { 
-                opacity: 1; 
-                visibility: visible; 
-            }
-            to { 
-                opacity: 0; 
-                visibility: hidden; 
-            }
-        }
-        
-        .auto-hide:hover,
-        .auto-hide:active {
-            animation: none;
-            opacity: 1;
-            visibility: visible;
-        }
-        
-        /* Update the ultra-transparent-controls class */
-        .ultra-transparent-controls {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-            border-radius: 10px;
-            padding: 10px;
-            color: white;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        /* Improve the sliders for more visibility on dark backgrounds */
-        .transparent-slider {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.2);
-            -webkit-appearance: none;
-            appearance: none;
-            height: 5px;
-            border-radius: 2.5px;
-            outline: none;
-            opacity: 0.7;
-            transition: opacity 0.2s;
-            margin: 8px 0;
-        }
-        
-        .transparent-slider:hover {
-            opacity: 1;
-        }
-        
-        .transparent-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 18px;
-            height: 18px;
-            background: rgba(255, 255, 255, 0.9);
-            cursor: pointer;
-            border-radius: 50%;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-        }
-        
-        .transparent-slider::-moz-range-thumb {
-            width: 18px;
-            height: 18px;
-            background: rgba(255, 255, 255, 0.9);
-            cursor: pointer;
-            border-radius: 50%;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-        }
-        
-        /* Improve the grid buttons */
-        .transparent-grid button {
-            background: rgba(255, 255, 255, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: white;
-            padding: 8px;
-            border-radius: 5px;
-            transition: background 0.2s, transform 0.1s;
-            font-size: 1.1rem;
-        }
-        
-        .transparent-grid button:active {
-            background: rgba(255, 255, 255, 0.3);
-            transform: scale(0.95);
-        }
-        
-        .transparent-action-buttons {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 15px;
-        }
-        
-        .transparent-close-btn,
-        .transparent-remove-btn {
-            background: rgba(255, 255, 255, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: white;
-            padding: 8px 15px;
-            border-radius: 5px;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .transparent-remove-btn {
-            background: rgba(220, 38, 38, 0.15);
-        }
-        
-        .transparent-close-btn:active,
-        .transparent-remove-btn:active {
-            transform: scale(0.95);
-        }
-        
-        .transparent-close-btn:active {
-            background: rgba(255, 255, 255, 0.3);
-        }
-        
-        .transparent-remove-btn:active {
-            background: rgba(220, 38, 38, 0.3);
-        }
-        
-        /* Control container spacing */
-        .transparent-size-control,
-        .transparent-opacity-control,
-        .transparent-position-control {
-            margin-bottom: 15px;
-        }
-        
-        /* Improve label and value styling */
-        .transparent-label {
-            color: white;
-            opacity: 0.9;
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-        
-        .transparent-value {
-            color: white;
-            background: rgba(0, 0, 0, 0.2);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: 600;
         }
     </style>
 </head>
