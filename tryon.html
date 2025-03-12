@@ -830,50 +830,30 @@
             visibility: visible;
         }
         
+        /* Update the ultra-transparent-controls class */
         .ultra-transparent-controls {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
             border-radius: 10px;
             padding: 10px;
             color: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
         
-        .transparent-size-control,
-        .transparent-opacity-control,
-        .transparent-position-control {
-            margin-bottom: 10px;
-        }
-        
-        .control-label {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 5px;
-        }
-        
-        .transparent-label {
-            color: white;
-            opacity: 0.8;
-            font-size: 0.9rem;
-        }
-        
-        .transparent-value {
-            color: white;
-            background: rgba(0, 0, 0, 0.3);
-            padding: 2px 5px;
-            border-radius: 3px;
-            font-size: 0.8rem;
-        }
-        
+        /* Improve the sliders for more visibility on dark backgrounds */
         .transparent-slider {
             width: 100%;
-            background: transparent;
+            background: rgba(255, 255, 255, 0.2);
             -webkit-appearance: none;
             appearance: none;
             height: 5px;
+            border-radius: 2.5px;
             outline: none;
             opacity: 0.7;
             transition: opacity 0.2s;
+            margin: 8px 0;
         }
         
         .transparent-slider:hover {
@@ -883,60 +863,97 @@
         .transparent-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
-            width: 15px;
-            height: 15px;
-            background: rgba(255, 255, 255, 0.8);
+            width: 18px;
+            height: 18px;
+            background: rgba(255, 255, 255, 0.9);
             cursor: pointer;
             border-radius: 50%;
+            border: 1px solid rgba(0, 0, 0, 0.1);
         }
         
-        .transparent-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 5px;
+        .transparent-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: rgba(255, 255, 255, 0.9);
+            cursor: pointer;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 0, 0, 0.1);
         }
         
+        /* Improve the grid buttons */
         .transparent-grid button {
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             color: white;
             padding: 8px;
             border-radius: 5px;
-            cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.2s, transform 0.1s;
+            font-size: 1.1rem;
         }
         
         .transparent-grid button:active {
-            background: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(0.95);
         }
         
         .transparent-action-buttons {
             display: flex;
             justify-content: space-between;
-            margin-top: 10px;
+            margin-top: 15px;
         }
         
         .transparent-close-btn,
         .transparent-remove-btn {
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             color: white;
-            padding: 8px 12px;
+            padding: 8px 15px;
             border-radius: 5px;
-            cursor: pointer;
+            transition: all 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
         }
         
-        .transparent-close-btn:active,
-        .transparent-remove-btn:active {
-            background: rgba(255, 255, 255, 0.4);
+        .transparent-remove-btn {
+            background: rgba(220, 38, 38, 0.15);
         }
         
-        .transparent-close-btn i,
-        .transparent-remove-btn i {
-            font-size: 1rem;
+        .transparent-close-btn:active,
+        .transparent-remove-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .transparent-close-btn:active {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .transparent-remove-btn:active {
+            background: rgba(220, 38, 38, 0.3);
+        }
+        
+        /* Control container spacing */
+        .transparent-size-control,
+        .transparent-opacity-control,
+        .transparent-position-control {
+            margin-bottom: 15px;
+        }
+        
+        /* Improve label and value styling */
+        .transparent-label {
+            color: white;
+            opacity: 0.9;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .transparent-value {
+            color: white;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
         }
     </style>
 </head>
@@ -1816,7 +1833,7 @@
             // Clear previous controls
             elements.controlContent.innerHTML = '';
             
-            // Create a transparent, minimalist control layout
+            // Create a more transparent, minimalist control layout
             const controlsHTML = `
                 <div class="ultra-transparent-controls">
                     <div class="transparent-size-control">
@@ -1830,6 +1847,20 @@
                                step="0.05" 
                                value="${jewelry.scale}" 
                                oninput="updateJewelrySize('${id}', this.value)"
+                               class="transparent-slider">
+                    </div>
+                    
+                    <div class="transparent-opacity-control">
+                        <div class="control-label">
+                            <span class="transparent-label">Opacity</span>
+                            <span class="transparent-value" id="opacityValue">${Math.round((jewelry.opacity || 1.0) * 100)}%</span>
+                        </div>
+                        <input type="range" 
+                               min="0.2" 
+                               max="1.0" 
+                               step="0.05" 
+                               value="${jewelry.opacity || 1.0}" 
+                               oninput="updateJewelryOpacity('${id}', this.value)"
                                class="transparent-slider">
                     </div>
                     
@@ -1848,34 +1879,30 @@
                         </div>
                     </div>
                     
-                    <div class="transparent-opacity-control">
-                        <div class="control-label">
-                            <span class="transparent-label">Opacity</span>
-                            <span class="transparent-value" id="opacityValue">${Math.round((jewelry.opacity || 1.0) * 100)}%</span>
-                        </div>
-                        <input type="range" 
-                               min="0.2" 
-                               max="1.0" 
-                               step="0.05" 
-                               value="${jewelry.opacity || 1.0}" 
-                               oninput="updateJewelryOpacity('${id}', this.value)"
-                               class="transparent-slider">
-                    </div>
-                    
                     <div class="transparent-action-buttons">
                         <button class="transparent-close-btn" onclick="hideFloatingControls()">
-                            <i class="fas fa-times"></i>
+                            <i class="fas fa-times"></i> Close
                         </button>
                         <button class="transparent-remove-btn" onclick="removeJewelry('${id}')">
-                            <i class="fas fa-trash"></i>
+                            <i class="fas fa-trash"></i> Remove
                         </button>
                     </div>
                 </div>
             `;
             
             elements.controlContent.innerHTML = controlsHTML;
+            
+            // Add auto-hide class to make the controls disappear after inactivity
+            elements.floatingControls.classList.add('auto-hide');
+            
+            // Remove auto-hide when user interacts with controls
+            elements.floatingControls.addEventListener('touchstart', function() {
+                this.classList.remove('auto-hide');
+            });
+            
+            // Show the controls
+            elements.floatingControls.classList.remove('hidden');
         }
-
 
         function showFloatingControls(id) {
             const position = getJewelryPosition(id);
