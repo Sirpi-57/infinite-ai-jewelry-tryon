@@ -375,6 +375,7 @@
             position: absolute;
             z-index: 25;
             transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: auto;
         }
         
         .floating-controls.hidden {
@@ -384,15 +385,15 @@
         }
         
         .controls-wrapper {
-            background: rgba(255, 255, 255, 0.00005); /* Very transparent background */
-            backdrop-filter: blur(3px);
-            -webkit-backdrop-filter: blur(6px);
+            background: transparent;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
             border-radius: 16px;
             padding: 15px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            box-shadow: none;
             max-width: var(--controls-width);
             width: 100%;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: none;
         }
         
         .control-header {
@@ -645,14 +646,14 @@
         
         /* Ultra-transparent controls - ADDED FOR JEWELRY CONTROLS */
         .ultra-transparent-controls {
-            background: rgba(255, 255, 255, 0.0005);
-            backdrop-filter: blur(2px);
-            -webkit-backdrop-filter: blur(2px);
+            background: transparent;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
             border-radius: 10px;
             padding: 10px;
             color: white;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: none;
+            border: none;
         }
         
         /* Control container spacing */
@@ -668,15 +669,17 @@
             opacity: 0.9;
             font-size: 0.9rem;
             font-weight: 500;
+            text-shadow: 0 0 3px rgba(0,0,0,0.7);
         }
         
         .transparent-value {
             color: white;
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(0, 0, 0, 0.3);
             padding: 2px 6px;
             border-radius: 4px;
             font-size: 0.8rem;
             font-weight: 600;
+            text-shadow: 0 0 2px rgba(0,0,0,0.8);
         }
         
         /* Transparent sliders */
@@ -725,8 +728,8 @@
         }
         
         .transparent-grid button {
-            background: rgba(255, 255, 255, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             color: white;
             padding: 8px;
             border-radius: 5px;
@@ -748,8 +751,8 @@
         
         .transparent-close-btn,
         .transparent-remove-btn {
-            background: rgba(255, 255, 255, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             color: white;
             padding: 8px 15px;
             border-radius: 5px;
@@ -780,6 +783,47 @@
         .transparent-remove-btn i {
             font-size: 1rem;
         }
+    
+        /* Ghost style class for complete transparency */
+        .ghost-style {
+            background: transparent !important;
+            box-shadow: none !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            border: none !important;
+            pointer-events: auto;
+        }
+    
+        /* Ensure all containers with ghost-style class are transparent */
+        .controls-wrapper.ghost-style,
+        .ultra-transparent-controls.ghost-style,
+        .floating-controls.ghost-style,
+        .mobile-translucent-controls.ghost-style {
+            background-color: rgba(255, 255, 255, 0) !important;
+            background: rgba(255, 255, 255, 0) !important;
+            opacity: 1; /* Keep opacity at 1 for the container so children are visible */
+        }
+    
+        /* Override any pseudo-elements */
+        .controls-wrapper::before,
+        .controls-wrapper::after,
+        .ultra-transparent-controls::before,
+        .ultra-transparent-controls::after,
+        .floating-controls::before,
+        .floating-controls::after {
+            content: none !important;
+            background: transparent !important;
+            opacity: 0 !important;
+            display: none !important;
+        }
+    
+        /* Override mobile-translucent-controls class */
+        .mobile-translucent-controls {
+            background: transparent !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            box-shadow: none !important;
+        }
         
         /* Responsive adjustments */
         @media (min-width: 768px) {
@@ -799,8 +843,8 @@
                 right: 30px;
             }
             
-            .controls-wrapper {
-                box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
+            .controls-wrapper.ghost-style {
+                box-shadow: none !important;
             }
         }
         
@@ -874,7 +918,7 @@
                 aspect-ratio: 4/3; /* Common front camera aspect ratio */
             }
         }
-    
+        
         .action-buttons {
             margin-top: 20px;
         }
@@ -897,67 +941,6 @@
         .secondary-button:active {
             background: rgba(255, 255, 255, 0.6);
             transform: scale(0.98);
-        }
-    
-        .mobile-controls-container, 
-        .mobile-translucent-controls {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-        }
-        
-        .mobile-controls-container .control-label {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 5px;
-        }
-        
-        .mobile-slider {
-            width: 100%;
-            margin-bottom: 10px;
-        }
-        
-        .position-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 5px;
-        }
-        
-        .position-grid button {
-            background: rgba(0,0,0,0.1);
-            border: none;
-            padding: 10px;
-            border-radius: 6px;
-            transition: background 0.2s;
-        }
-        
-        .position-grid button:active {
-            background: rgba(0,0,0,0.2);
-        }
-        
-        .mobile-action-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        
-        .mobile-action-buttons button {
-            flex: 1;
-            padding: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-        }
-        
-        @media (max-width: 768px) {
-            .mobile-controls-container {
-                max-width: 90vw;
-                width: 300px;
-            }
         }
     </style>
 </head>
@@ -1839,7 +1822,7 @@
             
             // Create a more transparent, minimalist control layout
             const controlsHTML = `
-                <div class="ultra-transparent-controls">
+                <div class="ghost-style ultra-transparent-controls">
                     <div class="transparent-size-control">
                         <div class="control-label">
                             <span class="transparent-label">Size</span>
@@ -1896,8 +1879,17 @@
             
             elements.controlContent.innerHTML = controlsHTML;
             
-            // Add auto-hide class to make the controls disappear after inactivity
-            elements.floatingControls.classList.add('auto-hide');
+            // Add ghost-style class to the main floating controls element
+            elements.floatingControls.classList.add('ghost-style', 'auto-hide');
+            
+            // Remove any classes that might add backgrounds
+            elements.floatingControls.classList.remove('mobile-translucent-controls');
+            
+            // Force transparency with inline styles
+            elements.floatingControls.style.background = 'transparent';
+            elements.floatingControls.style.boxShadow = 'none';
+            elements.floatingControls.style.backdropFilter = 'none';
+            elements.floatingControls.style.webkitBackdropFilter = 'none';
             
             // Remove auto-hide when user interacts with controls
             elements.floatingControls.addEventListener('touchstart', function() {
@@ -1914,12 +1906,22 @@
             elements.floatingControls.style.top = `${position.y}px`;
             elements.floatingControls.style.left = `${position.x}px`;
             
+            // Add ghost styling and remove any background-creating classes
+            elements.floatingControls.classList.add('ghost-style');
+            elements.floatingControls.classList.remove('mobile-translucent-controls');
+            
+            // Force transparency with inline styles
+            elements.floatingControls.style.background = 'transparent';
+            elements.floatingControls.style.boxShadow = 'none';
+            elements.floatingControls.style.backdropFilter = 'none';
+            elements.floatingControls.style.webkitBackdropFilter = 'none';
+            elements.floatingControls.style.border = 'none';
+            
             // More explicit visibility management
             elements.floatingControls.style.opacity = '1';
             elements.floatingControls.style.visibility = 'visible';
-            
             elements.floatingControls.classList.remove('hidden');
-            elements.floatingControls.classList.add('mobile-translucent-controls', 'auto-hide');
+            elements.floatingControls.classList.add('auto-hide');
             
             appState.selectedJewelryId = id;
             
@@ -1937,11 +1939,18 @@
         function hideFloatingControls() {
             // More robust hiding mechanism
             elements.floatingControls.classList.add('hidden');
-            elements.floatingControls.classList.remove('mobile-translucent-controls', 'auto-hide');
+            elements.floatingControls.classList.remove('mobile-translucent-controls', 'auto-hide', 'ghost-style');
             
             // Reset styles explicitly
             elements.floatingControls.style.opacity = '0';
             elements.floatingControls.style.visibility = 'hidden';
+            
+            // Clear inline styles for transparency
+            elements.floatingControls.style.background = '';
+            elements.floatingControls.style.boxShadow = '';
+            elements.floatingControls.style.backdropFilter = '';
+            elements.floatingControls.style.webkitBackdropFilter = '';
+            elements.floatingControls.style.border = '';
             
             appState.selectedJewelryId = null;
             clearTimeout(controlsActivityTimer);
