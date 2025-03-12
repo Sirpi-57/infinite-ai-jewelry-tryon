@@ -745,6 +745,90 @@
             justify-content: center;
             gap: 5px;
         }
+
+        .mobile-controls-container, 
+        .mobile-translucent-controls {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .mobile-controls-container .control-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .mobile-slider {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        .position-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+        }
+        
+        .position-grid button {
+            background: rgba(0,0,0,0.1);
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        
+        .position-grid button:active {
+            background: rgba(0,0,0,0.2);
+        }
+        
+        .mobile-action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .mobile-action-buttons button {
+            flex: 1;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-controls-container {
+                max-width: 90vw;
+                width: 300px;
+            }
+        }
+        
+        .auto-hide {
+            animation: fadeOut 3s forwards;
+            animation-delay: 5s;
+        }
+        
+        @keyframes fadeOut {
+            from { 
+                opacity: 1; 
+                visibility: visible; 
+            }
+            to { 
+                opacity: 0; 
+                visibility: hidden; 
+            }
+        }
+        
+        .auto-hide:hover,
+        .auto-hide:active {
+            animation: none;
+            opacity: 1;
+            visibility: visible;
+        }
     </style>
 </head>
 <body>
@@ -1602,7 +1686,8 @@
         
         // 2. Controls Panel Toggle - Replaced with Floating Controls
         function toggleControlsPanel(show, jewelryId = null) {
-            if (show && jewelryId) {
+            // Added a null check to prevent unnecessary processing
+            if (show && jewelryId && appState.activeJewelry.has(jewelryId)) {
                 renderFloatingControls(jewelryId);
                 showFloatingControls(jewelryId);
             } else {
@@ -1622,94 +1707,103 @@
             // Clear previous controls
             elements.controlContent.innerHTML = '';
             
-            // Size control
-            const sizeHTML = `
-                <div class="control-group">
-                    <div class="control-label">
-                        <span>Size</span>
-                        <span class="control-value" id="sizeValue">${Math.round(jewelry.scale * 100)}%</span>
+            // Create a more mobile-friendly, translucent control layout
+            const controlsHTML = `
+                <div class="mobile-controls-container">
+                    <div class="mobile-size-control">
+                        <div class="control-label">
+                            <span>Size</span>
+                            <span class="control-value" id="sizeValue">${Math.round(jewelry.scale * 100)}%</span>
+                        </div>
+                        <input type="range" 
+                               min="0.5" 
+                               max="2.0" 
+                               step="0.05" 
+                               value="${jewelry.scale}" 
+                               oninput="updateJewelrySize('${id}', this.value)"
+                               class="mobile-slider">
                     </div>
-                    <input type="range" min="0.5" max="2.0" step="0.05" value="${jewelry.scale}" 
-                        oninput="updateJewelrySize('${id}', this.value)">
-                </div>
-            `;
-            
-            // Position control buttons
-            const positionHTML = `
-                <div class="control-group">
-                    <div class="control-label">
-                        <span>Position</span>
+                    
+                    <div class="mobile-position-control">
+                        <div class="control-label">Position</div>
+                        <div class="position-grid">
+                            <button onclick="moveJewelry('${id}', 'up-left')">↖</button>
+                            <button onclick="moveJewelry('${id}', 'up')">↑</button>
+                            <button onclick="moveJewelry('${id}', 'up-right')">↗</button>
+                            <button onclick="moveJewelry('${id}', 'left')">←</button>
+                            <button onclick="moveJewelry('${id}', 'center')">•</button>
+                            <button onclick="moveJewelry('${id}', 'right')">→</button>
+                            <button onclick="moveJewelry('${id}', 'down-left')">↙</button>
+                            <button onclick="moveJewelry('${id}', 'down')">↓</button>
+                            <button onclick="moveJewelry('${id}', 'down-right')">↘</button>
+                        </div>
                     </div>
-                    <div class="control-buttons">
-                        <button class="control-btn" onclick="moveJewelry('${id}', 'up-left')">↖</button>
-                        <button class="control-btn" onclick="moveJewelry('${id}', 'up')">↑</button>
-                        <button class="control-btn" onclick="moveJewelry('${id}', 'up-right')">↗</button>
-                        <button class="control-btn" onclick="moveJewelry('${id}', 'left')">←</button>
-                        <button class="control-btn" onclick="moveJewelry('${id}', 'center')">•</button>
-                        <button class="control-btn" onclick="moveJewelry('${id}', 'right')">→</button>
-                        <button class="control-btn" onclick="moveJewelry('${id}', 'down-left')">↙</button>
-                        <button class="control-btn" onclick="moveJewelry('${id}', 'down')">↓</button>
-                        <button class="control-btn" onclick="moveJewelry('${id}', 'down-right')">↘</button>
+                    
+                    <div class="mobile-opacity-control">
+                        <div class="control-label">
+                            <span>Opacity</span>
+                            <span class="control-value" id="opacityValue">${Math.round((jewelry.opacity || 1.0) * 100)}%</span>
+                        </div>
+                        <input type="range" 
+                               min="0.2" 
+                               max="1.0" 
+                               step="0.05" 
+                               value="${jewelry.opacity || 1.0}" 
+                               oninput="updateJewelryOpacity('${id}', this.value)"
+                               class="mobile-slider">
                     </div>
-                </div>
-            `;
-            
-            // Opacity control
-            const opacityHTML = `
-                <div class="control-group">
-                    <div class="control-label">
-                        <span>Opacity</span>
-                        <span class="control-value" id="opacityValue">${Math.round((jewelry.opacity || 1.0) * 100)}%</span>
-                    </div>
-                    <input type="range" min="0.2" max="1.0" step="0.05" value="${jewelry.opacity || 1.0}" 
-                        oninput="updateJewelryOpacity('${id}', this.value)">
-                </div>
-            `;
-            
-            // Action buttons - combined Close and Remove into one row
-            const actionButtonsHTML = `
-                <div class="control-group">
-                    <div class="flex gap-2">
-                        <button class="secondary-button w-full" onclick="hideFloatingControls()">
+                    
+                    <div class="mobile-action-buttons">
+                        <button class="secondary-button" onclick="hideFloatingControls()">
                             <i class="fas fa-times"></i> Close
                         </button>
-                        <button class="remove-btn w-full" onclick="removeJewelry('${id}')">
+                        <button class="remove-btn" onclick="removeJewelry('${id}')">
                             <i class="fas fa-trash"></i> Remove
                         </button>
                     </div>
                 </div>
             `;
             
-            // Combine all controls
-            elements.controlContent.innerHTML = sizeHTML + positionHTML + opacityHTML + actionButtonsHTML;
+            elements.controlContent.innerHTML = controlsHTML;
         }
 
+
         function showFloatingControls(id) {
-            // Calculate position near the jewelry
             const position = getJewelryPosition(id);
             
-            // Position controls at calculated position, ensuring they stay in viewport
             elements.floatingControls.style.top = `${position.y}px`;
             elements.floatingControls.style.left = `${position.x}px`;
             
-            // Make controls visible
+            // More explicit visibility management
+            elements.floatingControls.style.opacity = '1';
+            elements.floatingControls.style.visibility = 'visible';
+            
             elements.floatingControls.classList.remove('hidden');
+            elements.floatingControls.classList.add('mobile-translucent-controls', 'auto-hide');
             
-            // Add auto-hide functionality
-            elements.floatingControls.classList.add('auto-hide');
+            appState.selectedJewelryId = id;
             
-            // Reset auto-hide on interaction
-            elements.floatingControls.addEventListener('click', function clearAutoHide() {
+            // Simplified interaction handler
+            const clearAutoHideHandler = () => {
                 elements.floatingControls.classList.remove('auto-hide');
-                elements.floatingControls.removeEventListener('click', clearAutoHide);
-            }, { once: true });
+                elements.floatingControls.removeEventListener('click', clearAutoHideHandler);
+            };
             
-            // Start activity monitoring
+            elements.floatingControls.addEventListener('click', clearAutoHideHandler, { once: true });
+            
             resetControlsTimer();
         }
         
         function hideFloatingControls() {
+            // More robust hiding mechanism
             elements.floatingControls.classList.add('hidden');
+            elements.floatingControls.classList.remove('mobile-translucent-controls', 'auto-hide');
+            
+            // Reset styles explicitly
+            elements.floatingControls.style.opacity = '0';
+            elements.floatingControls.style.visibility = 'hidden';
+            
+            appState.selectedJewelryId = null;
             clearTimeout(controlsActivityTimer);
         }
         
@@ -1728,55 +1822,17 @@
         
         // Calculate position for floating controls near jewelry
         function getJewelryPosition(jewelryId) {
-            const jewelry = appState.activeJewelry.get(jewelryId);
-            if (!jewelry) return { x: 20, y: 100 };
+            // Get capture button dimensions and position
+            const captureBtn = document.getElementById('captureBtn');
+            const captureBtnRect = captureBtn.getBoundingClientRect();
             
-            let x = 20, y = 100; // Default fallback position
+            // Set controls width and height (adjust as needed)
+            const controlsWidth = 300;
+            const controlsHeight = 350;
             
-            if (jewelry.type === 'earrings' && appState.faceLandmarks) {
-                const leftEar = appState.faceLandmarks[234];
-                const rightEar = appState.faceLandmarks[454];
-                
-                if (leftEar && rightEar) {
-                    // Position near the ears but to the side
-                    x = ((leftEar.x + rightEar.x) / 2) * elements.canvas.width - 150;
-                    y = ((leftEar.y + rightEar.y) / 2) * elements.canvas.height - 50;
-                }
-            } else if (jewelry.type === 'necklace' && appState.poseLandmarks) {
-                const leftShoulder = appState.poseLandmarks[11];
-                const rightShoulder = appState.poseLandmarks[12];
-                
-                if (leftShoulder && rightShoulder) {
-                    // Position to the side of the neck
-                    x = ((leftShoulder.x + rightShoulder.x) / 2) * elements.canvas.width + 100;
-                    y = ((leftShoulder.y + rightShoulder.y) / 2) * elements.canvas.height - 120;
-                }
-            } else if (jewelry.type === 'single' && appState.faceLandmarks) {
-                const forehead = appState.faceLandmarks[151];
-                
-                if (forehead) {
-                    // Position near the forehead but to the side
-                    x = forehead.x * elements.canvas.width + 120;
-                    y = forehead.y * elements.canvas.height - 100;
-                }
-            } else if (jewelry.type === 'hand' && appState.handLandmarks && appState.handLandmarks.length > 0) {
-                const handIndex = jewelry.handIndex || 0;
-                const handLandmarks = appState.handLandmarks[handIndex];
-                
-                if (handLandmarks) {
-                    // Position near the wrist
-                    const wrist = handLandmarks[0];
-                    x = wrist.x * elements.canvas.width - 150;
-                    y = wrist.y * elements.canvas.height - 80;
-                }
-            }
-            
-            // Ensure controls stay within viewport bounds
-            const controlsWidth = 300; // Approximate width of controls
-            const controlsHeight = 350; // Approximate height of controls
-            
-            x = Math.max(10, Math.min(x, window.innerWidth - controlsWidth - 10));
-            y = Math.max(80, Math.min(y, window.innerHeight - controlsHeight - 10));
+            // Position in the right corner, just above the capture button
+            const x = window.innerWidth - controlsWidth - 20; // 20px from right edge
+            const y = captureBtnRect.top - controlsHeight - 20; // 20px above capture button
             
             return { x, y };
         }
@@ -2270,7 +2326,7 @@
                 
                 // Calculate position on the forehead
                 x = ((centerPoint.x + refPoint.x) / 2) * elements.canvas.width + jewelry.offset.x;
-                y = ((centerPoint.y + topPoint.y) / 2) * elements.canvas.height - 20 + jewelry.offset.y;
+                y = ((centerPoint.y + topPoint.y) / 2) * elements.canvas.height - 20 + jewelry.offset.y - 5;
                 
                 // Scale based on forehead width
                 const foreheadWidth = Math.abs(landmarks[71].x - landmarks[301].x) * elements.canvas.width;
