@@ -2720,6 +2720,12 @@
             saveButton.textContent = 'Save';
             saveButton.style.margin = '0 10px';
             saveButton.style.padding = '10px 20px';
+            saveButton.style.backgroundColor = 'white';
+            saveButton.style.color = '#7B2CBF';
+            saveButton.style.fontWeight = 'bold';
+            saveButton.style.border = 'none';
+            saveButton.style.borderRadius = '5px';
+            saveButton.style.cursor = 'pointer';
             saveButton.onclick = () => {
                 const link = document.createElement('a');
                 link.download = 'jewelry-tryon-' + new Date().toISOString().slice(0, 10) + '.png';
@@ -2733,6 +2739,12 @@
             cancelButton.textContent = 'Cancel';
             cancelButton.style.margin = '0 10px';
             cancelButton.style.padding = '10px 20px';
+            cancelButton.style.backgroundColor = 'white';
+            cancelButton.style.color = '#7B2CBF';
+            cancelButton.style.fontWeight = 'bold';
+            cancelButton.style.border = 'none';
+            cancelButton.style.borderRadius = '5px';
+            cancelButton.style.cursor = 'pointer';
             cancelButton.onclick = () => {
                 document.body.removeChild(modal);
                 elements.video.play();
@@ -2745,7 +2757,6 @@
             modal.appendChild(buttonContainer);
             
             document.body.appendChild(modal);
-        }
         
         // 15. Setup Gesture Handlers
         function setupGestureHandlers() {
