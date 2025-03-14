@@ -1534,50 +1534,50 @@ Trust Indicators Section
 </div>
 
 <!-- Chat Widget -->
-    <div id="rasa-chat-widget">
-        <!-- Chat Toggle Button -->
-        <button id="chat-toggle" class="relative">
-            <span class="absolute w-full h-full rounded-full bg-purple-400 opacity-50 animate-ping"></span>
-            <i class="fas fa-comment-dots text-2xl relative z-10"></i>
-        </button>
-        
-        <!-- Chat Container (Hidden by Default) -->
-        <div id="chat-container" class="hidden">
-            <!-- Chat Header -->
-            <div class="chat-header">
-                <div class="flex items-center">
-                    <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center mr-2">
-                        <i class="fas fa-gem text-purple-600 text-lg"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-lg">Diya AI</h3>
-                        <p class="text-xs text-purple-200">Jewelry Shopping Assistant</p>
-                    </div>
+<div id="rasa-chat-widget">
+    <!-- Chat Toggle Button -->
+    <button id="chat-toggle" class="relative">
+        <span class="absolute w-full h-full rounded-full bg-purple-400 opacity-50 animate-ping"></span>
+        <i class="fas fa-comment-dots text-2xl relative z-10"></i>
+    </button>
+    
+    <!-- Chat Container (Add the 'hidden' class here) -->
+    <div id="chat-container" class="hidden">
+        <!-- Chat Header -->
+        <div class="chat-header">
+            <div class="flex items-center">
+                <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center mr-2">
+                    <i class="fas fa-gem text-purple-600 text-lg"></i>
                 </div>
-                <div class="flex space-x-2">
-                    <button id="minimize-chat" class="hover:bg-purple-500 rounded-full w-8 h-8 flex items-center justify-center">
-                        <i class="fas fa-minus"></i>
-                    </button>
-                    <button id="close-chat" class="hover:bg-purple-500 rounded-full w-8 h-8 flex items-center justify-center">
-                        <i class="fas fa-times"></i>
-                    </button>
+                <div>
+                    <h3 class="font-bold text-lg">Diya AI</h3>
+                    <p class="text-xs text-purple-200">Jewelry Shopping Assistant</p>
                 </div>
             </div>
-            
-            <!-- Chat Messages Area -->
-            <div id="chat-messages">
-                <!-- Messages will be added here -->
-            </div>
-            
-            <!-- Chat Input Area -->
-            <div class="chat-input-area">
-                <input id="user-message" type="text" placeholder="Type a message...">
-                <button id="send-button">
-                    <i class="fas fa-paper-plane"></i>
+            <div class="flex space-x-2">
+                <button id="minimize-chat" class="hover:bg-purple-500 rounded-full w-8 h-8 flex items-center justify-center">
+                    <i class="fas fa-minus"></i>
+                </button>
+                <button id="close-chat" class="hover:bg-purple-500 rounded-full w-8 h-8 flex items-center justify-center">
+                    <i class="fas fa-times"></i>
                 </button>
             </div>
         </div>
+        
+        <!-- Chat Messages Area -->
+        <div id="chat-messages">
+            <!-- Messages will be added here -->
+        </div>
+        
+        <!-- Chat Input Area -->
+        <div class="chat-input-area">
+            <input id="user-message" type="text" placeholder="Type a message...">
+            <button id="send-button">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
     </div>
+</div>
         
 
 <!-- Additional CSS for Animations and Effects -->
