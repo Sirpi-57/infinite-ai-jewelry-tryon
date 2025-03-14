@@ -1652,6 +1652,29 @@ Trust Indicators Section
         background-color: #9d4edd;
         border-radius: 20px;
     }
+
+    /* Add these button styles which are missing from your new CSS */
+    .chat-button {
+        background-color: #f5f0ff;
+        color: #7b2cbf;
+        border: 1px solid #e0aaff;
+        border-radius: 20px;
+        padding: 8px 16px;
+        font-size: 14px;
+        margin: 4px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 200px;
+    }
+    
+    .chat-button:hover {
+        background-color: #e0aaff;
+        transform: translateY(-2px);
+        box-shadow: 0 2px 4px rgba(123, 44, 191, 0.2);
+    }
     
     /* Chat Bubbles */
     .user-bubble {
