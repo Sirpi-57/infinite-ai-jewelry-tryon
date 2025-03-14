@@ -1567,6 +1567,17 @@ Trust Indicators Section
         <!-- Chat Messages Area with Custom Scrollbar -->
         <div id="chat-messages" class="p-6 overflow-y-auto bg-gray-50" style="height: 460px; scrollbar-width: thin; scrollbar-color: #9d4edd #f3f4f6;">
             <!-- Messages will be added here -->
+            
+            <!-- Typing Indicator (initially hidden) -->
+            <div id="typing-indicator" class="hidden ml-10 mb-4">
+                <div class="bot-bubble inline-flex items-center py-2 px-4">
+                    <div class="typing-animation">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <!-- Input Area with Modern Look -->
@@ -1578,19 +1589,6 @@ Trust Indicators Section
             </button>
         </div>
         
-        <!-- Typing Indicator (initially hidden) -->
-        <div id="typing-indicator" class="hidden px-4 py-2 bg-gray-50 border-t border-gray-200">
-            <div class="flex items-center text-sm text-gray-500">
-                <div class="typing-animation mr-2">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
-                Diya is typing...
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- Additional CSS for Animations and Effects -->
 <style>
@@ -1615,9 +1613,8 @@ Trust Indicators Section
     .typing-animation {
         display: inline-flex;
         align-items: center;
-        position: relative; /* Added to help with positioning */
-        margin-top: 5px; 
     }
+    
     .typing-animation span {
         height: 8px;
         width: 8px;
@@ -1627,15 +1624,19 @@ Trust Indicators Section
         display: inline-block;
         opacity: 0.4;
     }
+    
     .typing-animation span:nth-child(1) {
         animation: pulse 1s infinite ease-in-out;
     }
+    
     .typing-animation span:nth-child(2) {
         animation: pulse 1s infinite ease-in-out 0.2s;
     }
+    
     .typing-animation span:nth-child(3) {
         animation: pulse 1s infinite ease-in-out 0.4s;
     }
+    
     @keyframes pulse {
         0%, 100% { opacity: 0.4; }
         50% { opacity: 1; }
