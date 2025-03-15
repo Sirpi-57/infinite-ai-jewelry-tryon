@@ -2973,10 +2973,8 @@
         }
 
         function showReviewModal(imageUrl) {
-            // Ensure video is paused when showing review modal
-            if (elements.video && !elements.video.paused) {
-                elements.video.pause();
-            }
+            // Pause the video stream - this prevents new frames from being processed
+            elements.video.pause();
             
             // Set the screenshot in reviewData and preview
             reviewData.screenshot = imageUrl;
@@ -3857,15 +3855,14 @@
             }
             
             // Initialize close button
+            // Initialize close button
             const finishReview = document.getElementById('finishReview');
             if (finishReview) {
                 finishReview.addEventListener('click', () => {
                     document.getElementById('reviewModal').classList.add('hidden');
+                    // Resume the video stream
+                    elements.video.play();
                     resetReviewForm();
-                    // Resume video playback when review modal is closed
-                    if (elements.video) {
-                        elements.video.play();
-                    }
                 });
             }
         }); // Add this closing brace
