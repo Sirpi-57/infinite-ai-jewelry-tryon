@@ -2503,27 +2503,26 @@
         }
         
         // Main rendering function
-        // Main rendering function
         function renderJewelry() {
             if (!elements.canvas || !elements.ctx) return;
-
+            
             // Make sure canvas dimensions match video
             if (elements.canvas.width !== elements.video.videoWidth || 
                 elements.canvas.height !== elements.video.videoHeight) {
                 elements.canvas.width = elements.video.videoWidth;
                 elements.canvas.height = elements.video.videoHeight;
             }
-
+            
             // Clear canvas
             elements.ctx.clearRect(0, 0, elements.canvas.width, elements.canvas.height);
-
+            
             // Nothing to render if no jewelry or no landmarks
             if (appState.activeJewelry.size === 0) return;
-
+            
             // Render each active jewelry item
             appState.activeJewelry.forEach((jewelry, id) => {
                 if (!jewelry.visible) return;
-
+                
                 if (jewelry.type === 'necklace') {
                     if (appState.poseLandmarks) {
                         drawNecklace(jewelry, id);
@@ -3001,9 +3000,6 @@
             const reviewModal = document.getElementById('reviewModal');
             if (reviewModal) {
                 reviewModal.classList.remove('hidden');
-                
-                // Add this line to temporarily lower the z-index of jewelry canvas
-                document.getElementById('jewelryCanvas').style.zIndex = "1";
             }
             
             // Reset to first step
@@ -3873,14 +3869,13 @@
             
             // Initialize close button
             const finishReview = document.getElementById('finishReview');
-            if (finishReview) {  // Add this null check that was in your original code
+            if (finishReview) {
                 finishReview.addEventListener('click', () => {
                     document.getElementById('reviewModal').classList.add('hidden');
-                    // Restore jewelry canvas z-index
-                    document.getElementById('jewelryCanvas').style.zIndex = "5";
                     resetReviewForm();
                 });
             }
+        });
         
         // Confetti Animation Function
         function showConfetti() {
