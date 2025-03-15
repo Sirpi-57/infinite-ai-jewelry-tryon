@@ -2980,12 +2980,6 @@
                 shareImage.src = imageUrl;
             }
             
-            // Hide the jewelry canvas when showing the review modal
-            const jewelryCanvas = document.getElementById('jewelryCanvas');
-            if (jewelryCanvas) {
-                jewelryCanvas.style.visibility = 'hidden';
-            }
-            
             // Show the review modal
             const reviewModal = document.getElementById('reviewModal');
             if (reviewModal) {
@@ -3864,12 +3858,6 @@
                 finishReview.addEventListener('click', () => {
                     document.getElementById('reviewModal').classList.add('hidden');
                     resetReviewForm();
-                    
-                    // CHANGE HERE: Show the jewelry canvas again
-                    const jewelryCanvas = document.getElementById('jewelryCanvas');
-                    if (jewelryCanvas) {
-                        jewelryCanvas.style.visibility = 'visible';
-                    }
                 });
             }
         
