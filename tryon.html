@@ -1116,7 +1116,7 @@
         <div class="toast" id="toast"></div>
 
         <!-- Review System Modal (initially hidden) -->
-        <div id="reviewModal" class="fixed inset-0 bg-black bg-opacity-50 z-[10000] flex items-center justify-center hidden">
+        <div id="reviewModal" class="fixed inset-0 bg-black bg-opacity-50 z-[3000] flex items-center justify-center hidden">
             <div class="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full mx-4">
                 <!-- Step 1: Star Rating -->
                 <div id="reviewStep1" class="review-step">
@@ -1258,7 +1258,7 @@
                 </div>
                 
                 <!-- Confetti Canvas for Celebration Animation -->
-                <canvas id="confettiCanvas" class="fixed inset-0 pointer-events-none z-[10001] hidden"></canvas>
+                <canvas id="confettiCanvas" class="fixed inset-0 pointer-events-none z-[3001] hidden"></canvas>
             </div>
         </div>
     </div>
@@ -2986,14 +2986,6 @@
                 reviewModal.classList.remove('hidden');
             }
             
-            // Force the jewelry canvas to be below the modal
-            const jewelryCanvas = document.getElementById('jewelryCanvas');
-            if (jewelryCanvas) {
-                // Store the original z-index to restore later
-                jewelryCanvas.dataset.originalZIndex = jewelryCanvas.style.zIndex || "5";
-                jewelryCanvas.style.zIndex = "1"; // Set to a very low z-index
-            }
-            
             // Reset to first step
             resetReviewForm();
         }
@@ -3860,21 +3852,14 @@
             }
             
             // Initialize close button
-            // Then in the finishReview event listener
             const finishReview = document.getElementById('finishReview');
             if (finishReview) {
                 finishReview.addEventListener('click', () => {
                     document.getElementById('reviewModal').classList.add('hidden');
-                    
-                    // Restore original z-index
-                    const jewelryCanvas = document.getElementById('jewelryCanvas');
-                    if (jewelryCanvas && jewelryCanvas.dataset.originalZIndex) {
-                        jewelryCanvas.style.zIndex = jewelryCanvas.dataset.originalZIndex;
-                    }
-                    
                     resetReviewForm();
                 });
             }
+        });
         
         // Confetti Animation Function
         function showConfetti() {
