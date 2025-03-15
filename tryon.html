@@ -2973,6 +2973,9 @@
         }
 
         function showReviewModal(imageUrl) {
+            // Pause the video stream - this prevents new frames from being processed
+            elements.video.pause();
+            
             // Set the screenshot in reviewData and preview
             reviewData.screenshot = imageUrl;
             const shareImage = document.getElementById('shareImage');
@@ -3852,14 +3855,16 @@
             }
             
             // Initialize close button
+            // Initialize close button
             const finishReview = document.getElementById('finishReview');
             if (finishReview) {
                 finishReview.addEventListener('click', () => {
                     document.getElementById('reviewModal').classList.add('hidden');
+                    // Resume the video stream
+                    elements.video.play();
                     resetReviewForm();
                 });
             }
-        });
         
         // Confetti Animation Function
         function showConfetti() {
