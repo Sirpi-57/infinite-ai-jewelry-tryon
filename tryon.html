@@ -942,6 +942,64 @@
             background: rgba(255, 255, 255, 0.6);
             transform: scale(0.98);
         }
+
+        /* Star Rating Animations */
+        .star.active {
+            color: #7B2CBF;
+            transform: scale(1.3);
+        }
+        
+        .star.pulse {
+            animation: starPulse 0.5s ease-in-out;
+        }
+        
+        @keyframes starPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.5); }
+            100% { transform: scale(1.3); }
+        }
+        
+        /* Feature Button Selected State */
+        .feature-btn.selected {
+            background-color: rgba(123, 44, 191, 0.1);
+            border-color: #7B2CBF;
+            color: #7B2CBF;
+        }
+        
+        /* Thumbs-Up Animation */
+        .thumbs-up-animation {
+            animation: thumbsUp 1s ease-in-out;
+        }
+        
+        @keyframes thumbsUp {
+            0% { transform: scale(0) rotate(-20deg); opacity: 0; }
+            50% { transform: scale(1.5) rotate(10deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        
+        /* Shake Animation for Low Ratings */
+        .shake-animation {
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+        
+        /* Celebration Animation for High Ratings */
+        .celebrate-animation {
+            animation: celebrate 0.7s ease-in-out;
+        }
+        
+        @keyframes celebrate {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
@@ -1056,6 +1114,153 @@
 
         <!-- Toast Notification -->
         <div class="toast" id="toast"></div>
+
+        <!-- Review System Modal (initially hidden) -->
+        <div id="reviewModal" class="fixed inset-0 bg-black bg-opacity-50 z-[1000] flex items-center justify-center hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full mx-4">
+                <!-- Step 1: Star Rating -->
+                <div id="reviewStep1" class="review-step">
+                    <div class="text-center mb-4">
+                        <h3 class="text-2xl font-bold text-gray-800">How was your experience?</h3>
+                        <p class="text-gray-600 mt-2">We'd love to hear your thoughts!</p>
+                    </div>
+                    
+                    <!-- Star Rating with Animation -->
+                    <div class="star-rating flex justify-center space-x-3 text-4xl my-6">
+                        <button class="star transition-transform" data-rating="1">☆</button>
+                        <button class="star transition-transform" data-rating="2">☆</button>
+                        <button class="star transition-transform" data-rating="3">☆</button>
+                        <button class="star transition-transform" data-rating="4">☆</button>
+                        <button class="star transition-transform" data-rating="5">☆</button>
+                    </div>
+                    
+                    <!-- Rating Feedback Message (appears after rating) -->
+                    <div id="ratingFeedback" class="text-center mb-6 opacity-0 transition-opacity duration-300">
+                        <!-- Content will be dynamically updated based on rating -->
+                    </div>
+                    
+                    <!-- Progress & Next Button -->
+                    <div class="flex justify-between items-center">
+                        <div class="text-gray-400 text-sm">Step 1 of 3</div>
+                        <button id="nextToStep2" class="px-6 py-2 bg-purple-600 text-white rounded-lg opacity-50 cursor-not-allowed transition-opacity">
+                            Next <i class="fas fa-arrow-right ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Step 2: Quick Categories -->
+                <div id="reviewStep2" class="review-step hidden">
+                    <div class="text-center mb-4">
+                        <h3 class="text-2xl font-bold text-gray-800">What did you like most?</h3>
+                        <p class="text-gray-600 mt-2">Select all that apply</p>
+                    </div>
+                    
+                    <!-- Feature Categories -->
+                    <div class="grid grid-cols-2 gap-3 my-6">
+                        <button class="feature-btn p-3 border border-gray-300 rounded-xl text-gray-700 hover:border-purple-500 hover:bg-purple-50 transition-colors">
+                            <i class="fas fa-magic mr-2"></i> Innovative Idea
+                        </button>
+                        <button class="feature-btn p-3 border border-gray-300 rounded-xl text-gray-700 hover:border-purple-500 hover:bg-purple-50 transition-colors">
+                            <i class="fas fa-check-circle mr-2"></i> Very Useful
+                        </button>
+                        <button class="feature-btn p-3 border border-gray-300 rounded-xl text-gray-700 hover:border-purple-500 hover:bg-purple-50 transition-colors">
+                            <i class="fas fa-shopping-cart mr-2"></i> Helps Decision Making
+                        </button>
+                        <button class="feature-btn p-3 border border-gray-300 rounded-xl text-gray-700 hover:border-purple-500 hover:bg-purple-50 transition-colors">
+                            <i class="fas fa-user-friends mr-2"></i> Fun to Use
+                        </button>
+                        <button class="feature-btn p-3 border border-gray-300 rounded-xl text-gray-700 hover:border-purple-500 hover:bg-purple-50 transition-colors">
+                            <i class="fas fa-thumbs-up mr-2"></i> Accurate Results
+                        </button>
+                        <button class="feature-btn p-3 border border-gray-300 rounded-xl text-gray-700 hover:border-purple-500 hover:bg-purple-50 transition-colors">
+                            <i class="fas fa-bolt mr-2"></i> Fast & Responsive
+                        </button>
+                    </div>
+                    
+                    <!-- Progress & Navigation -->
+                    <div class="flex justify-between items-center">
+                        <button id="backToStep1" class="px-4 py-2 text-gray-600 hover:text-gray-800">
+                            <i class="fas fa-arrow-left mr-1"></i> Back
+                        </button>
+                        <div class="text-gray-400 text-sm">Step 2 of 3</div>
+                        <button id="nextToStep3" class="px-6 py-2 bg-purple-600 text-white rounded-lg">
+                            Next <i class="fas fa-arrow-right ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Step 3: Written Feedback & Sharing -->
+                <div id="reviewStep3" class="review-step hidden">
+                    <div class="text-center mb-4">
+                        <h3 class="text-2xl font-bold text-gray-800">Any other thoughts?</h3>
+                        <p class="text-gray-600 mt-2">Leave a quick review (optional)</p>
+                    </div>
+                    
+                    <!-- Written Feedback -->
+                    <textarea id="reviewText" class="w-full p-3 border rounded-lg h-20 mb-4" 
+                              placeholder="Your feedback helps us improve!"></textarea>
+                    
+                    <!-- Name Input (Optional) -->
+                    <input type="text" id="reviewName" class="w-full p-3 border rounded-lg mb-4" 
+                           placeholder="Your name (optional)">
+                    
+                    <!-- Progress & Navigation -->
+                    <div class="flex justify-between items-center">
+                        <button id="backToStep2" class="px-4 py-2 text-gray-600 hover:text-gray-800">
+                            <i class="fas fa-arrow-left mr-1"></i> Back
+                        </button>
+                        <div class="text-gray-400 text-sm">Step 3 of 3</div>
+                        <button id="submitReview" class="px-6 py-2 bg-purple-600 text-white rounded-lg">
+                            Submit <i class="fas fa-check ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Social Sharing Step (appears after submission) -->
+                <div id="socialSharingStep" class="review-step hidden">
+                    <div class="text-center mb-2">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+                            <i class="fas fa-check text-3xl text-green-500"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800">Thanks for your feedback!</h3>
+                        <p class="text-gray-600 mt-2 mb-6">Share your experience with friends</p>
+                    </div>
+                    
+                    <!-- Preview Image (thumbnail of screenshot) -->
+                    <div id="sharePreviewImage" class="w-full h-40 bg-gray-100 rounded-lg mb-6 flex items-center justify-center overflow-hidden">
+                        <img id="shareImage" class="max-w-full max-h-full object-contain" src="" alt="Your try-on image">
+                    </div>
+                    
+                    <!-- Social Sharing Buttons -->
+                    <div class="grid grid-cols-4 gap-3 mb-6">
+                        <a href="#" id="shareInstagram" class="social-btn flex flex-col items-center justify-center p-3 border rounded-xl hover:bg-purple-50 transition-colors">
+                            <i class="fab fa-instagram text-2xl text-pink-600 mb-1"></i>
+                            <span class="text-xs">Instagram</span>
+                        </a>
+                        <a href="#" id="shareTwitter" class="social-btn flex flex-col items-center justify-center p-3 border rounded-xl hover:bg-purple-50 transition-colors">
+                            <i class="fab fa-twitter text-2xl text-blue-400 mb-1"></i>
+                            <span class="text-xs">Twitter</span>
+                        </a>
+                        <a href="#" id="shareFacebook" class="social-btn flex flex-col items-center justify-center p-3 border rounded-xl hover:bg-purple-50 transition-colors">
+                            <i class="fab fa-facebook text-2xl text-blue-600 mb-1"></i>
+                            <span class="text-xs">Facebook</span>
+                        </a>
+                        <a href="#" id="shareWhatsapp" class="social-btn flex flex-col items-center justify-center p-3 border rounded-xl hover:bg-purple-50 transition-colors">
+                            <i class="fab fa-whatsapp text-2xl text-green-500 mb-1"></i>
+                            <span class="text-xs">WhatsApp</span>
+                        </a>
+                    </div>
+                    
+                    <!-- Done Button -->
+                    <button id="finishReview" class="w-full px-6 py-3 bg-gray-800 text-white rounded-lg">
+                        Done
+                    </button>
+                </div>
+                
+                <!-- Confetti Canvas for Celebration Animation -->
+                <canvas id="confettiCanvas" class="fixed inset-0 pointer-events-none z-[1001] hidden"></canvas>
+            </div>
+        </div>
     </div>
     
     <script>
@@ -2729,10 +2934,14 @@
             saveButton.onclick = () => {
                 const link = document.createElement('a');
                 link.download = 'jewelry-tryon-' + new Date().toISOString().slice(0, 10) + '.png';
-                link.href = captureCanvas.toDataURL('image/png');
+                const imageUrl = captureCanvas.toDataURL('image/png');
+                link.href = imageUrl;
                 link.click();
                 document.body.removeChild(modal);
                 elements.video.play();
+                
+                // Show review modal with the screenshot
+                showReviewModal(imageUrl);
             };
             
             const cancelButton = document.createElement('button');
@@ -2746,8 +2955,12 @@
             cancelButton.style.borderRadius = '5px';
             cancelButton.style.cursor = 'pointer';
             cancelButton.onclick = () => {
+                const imageUrl = captureCanvas.toDataURL('image/png');
                 document.body.removeChild(modal);
                 elements.video.play();
+                
+                // Show review modal even if they cancel
+                showReviewModal(imageUrl);
             };
             
             buttonContainer.appendChild(saveButton);
@@ -2757,6 +2970,77 @@
             modal.appendChild(buttonContainer);
             
             document.body.appendChild(modal);
+        }
+
+        function showReviewModal(imageUrl) {
+            // Set the screenshot in reviewData and preview
+            reviewData.screenshot = imageUrl;
+            const shareImage = document.getElementById('shareImage');
+            if (shareImage) {
+                shareImage.src = imageUrl;
+            }
+            
+            // Show the review modal
+            const reviewModal = document.getElementById('reviewModal');
+            if (reviewModal) {
+                reviewModal.classList.remove('hidden');
+            }
+            
+            // Reset to first step
+            resetReviewForm();
+        }
+        
+        function resetReviewForm() {
+            // Reset reviewData
+            reviewData = {
+                rating: 0,
+                features: [],
+                feedback: '',
+                name: '',
+                screenshot: reviewData.screenshot
+            };
+            
+            // Reset UI elements
+            const stars = document.querySelectorAll('.star');
+            stars.forEach(star => {
+                star.textContent = "☆";
+                star.classList.remove('active', 'pulse');
+            });
+            
+            const featureButtons = document.querySelectorAll('.feature-btn');
+            featureButtons.forEach(button => {
+                button.classList.remove('selected');
+            });
+            
+            const reviewText = document.getElementById('reviewText');
+            const reviewName = document.getElementById('reviewName');
+            if (reviewText) reviewText.value = '';
+            if (reviewName) reviewName.value = '';
+            
+            // Reset to first step
+            const steps = [
+                document.getElementById('reviewStep1'),
+                document.getElementById('reviewStep2'),
+                document.getElementById('reviewStep3'),
+                document.getElementById('socialSharingStep')
+            ];
+            
+            if (steps[0]) steps[0].classList.remove('hidden');
+            if (steps[1]) steps[1].classList.add('hidden');
+            if (steps[2]) steps[2].classList.add('hidden');
+            if (steps[3]) steps[3].classList.add('hidden');
+            
+            // Reset next button state
+            const nextToStep2 = document.getElementById('nextToStep2');
+            if (nextToStep2) {
+                nextToStep2.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+            
+            // Hide rating feedback
+            const ratingFeedback = document.getElementById('ratingFeedback');
+            if (ratingFeedback) {
+                ratingFeedback.classList.add('opacity-0');
+            }
         }
         
         // 15. Setup Gesture Handlers
@@ -3343,7 +3627,327 @@
         });
         
         // Initialize the app when the document is loaded
-        document.addEventListener('DOMContentLoaded', init);     
+        document.addEventListener('DOMContentLoaded', init);
+        let reviewData = {
+            rating: 0,
+            features: [],
+            feedback: '',
+            name: '',
+            screenshot: null
+        };
+        
+        // DOM Elements
+        const reviewModal = document.getElementById('reviewModal');
+        const reviewStep1 = document.getElementById('reviewStep1');
+        const reviewStep2 = document.getElementById('reviewStep2');
+        const reviewStep3 = document.getElementById('reviewStep3');
+        const socialSharingStep = document.getElementById('socialSharingStep');
+        const ratingFeedback = document.getElementById('ratingFeedback');
+        const nextToStep2 = document.getElementById('nextToStep2');
+        const backToStep1 = document.getElementById('backToStep1');
+        const nextToStep3 = document.getElementById('nextToStep3');
+        const backToStep2 = document.getElementById('backToStep2');
+        const submitReview = document.getElementById('submitReview');
+        const finishReview = document.getElementById('finishReview');
+        const stars = document.querySelectorAll('.star');
+        const featureButtons = document.querySelectorAll('.feature-btn');
+        const confettiCanvas = document.getElementById('confettiCanvas');
+        
+        // Initialize confetti context
+        const confettiCtx = confettiCanvas ? confettiCanvas.getContext('2d') : null;
+        // Initialize event listeners for review system after DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize star rating
+            const stars = document.querySelectorAll('.star');
+            stars.forEach(star => {
+                star.addEventListener('click', () => {
+                    const rating = parseInt(star.dataset.rating);
+                    reviewData.rating = rating;
+                    
+                    // Update visual appearance of stars
+                    stars.forEach((s, index) => {
+                        const starRating = parseInt(s.dataset.rating);
+                        // Remove all classes first
+                        s.classList.remove('active', 'pulse');
+                        
+                        // Add appropriate classes
+                        if (starRating <= rating) {
+                            s.textContent = "★";
+                            s.classList.add('active');
+                            // Add pulse animation to the clicked star
+                            if (starRating === rating) {
+                                s.classList.add('pulse');
+                            }
+                        } else {
+                            s.textContent = "☆";
+                        }
+                    });
+                    
+                    // Show appropriate feedback based on rating
+                    const ratingFeedback = document.getElementById('ratingFeedback');
+                    ratingFeedback.classList.remove('opacity-0');
+                    
+                    if (rating <= 2) {
+                        // Low rating feedback with shake animation
+                        ratingFeedback.innerHTML = `
+                            <div class="shake-animation flex flex-col items-center text-orange-500">
+                                <i class="fas fa-wrench text-3xl mb-2"></i>
+                                <p>We'll work hard to make it better!</p>
+                            </div>
+                        `;
+                    } else if (rating === 3) {
+                        // Medium rating feedback
+                        ratingFeedback.innerHTML = `
+                            <div class="flex flex-col items-center text-blue-500">
+                                <i class="fas fa-thumbs-up text-3xl mb-2"></i>
+                                <p>Thanks for your feedback!</p>
+                            </div>
+                        `;
+                    } else {
+                        // High rating feedback (4-5) with celebration animation
+                        ratingFeedback.innerHTML = `
+                            <div class="celebrate-animation flex flex-col items-center text-green-500">
+                                <i class="fas fa-star text-3xl mb-2"></i>
+                                <p>We're thrilled you enjoyed it!</p>
+                            </div>
+                        `;
+                        
+                        // Show confetti for high ratings
+                        showConfetti();
+                    }
+                    
+                    // Enable the next button
+                    const nextToStep2 = document.getElementById('nextToStep2');
+                    nextToStep2.classList.remove('opacity-50', 'cursor-not-allowed');
+                    
+                    // Remove animation classes after they play
+                    setTimeout(() => {
+                        ratingFeedback.classList.remove('shake-animation', 'celebrate-animation');
+                    }, 1000);
+                });
+            });
+            
+            // Initialize feature buttons
+            const featureButtons = document.querySelectorAll('.feature-btn');
+            featureButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    button.classList.toggle('selected');
+                    
+                    // Update the features array in reviewData
+                    const featureText = button.textContent.trim();
+                    if (button.classList.contains('selected')) {
+                        // Add to features if not already included
+                        if (!reviewData.features.includes(featureText)) {
+                            reviewData.features.push(featureText);
+                        }
+                    } else {
+                        // Remove from features
+                        reviewData.features = reviewData.features.filter(feature => feature !== featureText);
+                    }
+                });
+            });
+            
+            // Initialize navigation buttons
+            const nextToStep2 = document.getElementById('nextToStep2');
+            if (nextToStep2) {
+                nextToStep2.addEventListener('click', () => {
+                    if (reviewData.rating > 0) {
+                        document.getElementById('reviewStep1').classList.add('hidden');
+                        document.getElementById('reviewStep2').classList.remove('hidden');
+                    }
+                });
+            }
+            
+            const backToStep1 = document.getElementById('backToStep1');
+            if (backToStep1) {
+                backToStep1.addEventListener('click', () => {
+                    document.getElementById('reviewStep2').classList.add('hidden');
+                    document.getElementById('reviewStep1').classList.remove('hidden');
+                });
+            }
+            
+            const nextToStep3 = document.getElementById('nextToStep3');
+            if (nextToStep3) {
+                nextToStep3.addEventListener('click', () => {
+                    document.getElementById('reviewStep2').classList.add('hidden');
+                    document.getElementById('reviewStep3').classList.remove('hidden');
+                });
+            }
+            
+            const backToStep2 = document.getElementById('backToStep2');
+            if (backToStep2) {
+                backToStep2.addEventListener('click', () => {
+                    document.getElementById('reviewStep3').classList.add('hidden');
+                    document.getElementById('reviewStep2').classList.remove('hidden');
+                });
+            }
+            
+            // Initialize submit review
+            const submitReview = document.getElementById('submitReview');
+            if (submitReview) {
+                submitReview.addEventListener('click', () => {
+                    // Collect final data
+                    const reviewText = document.getElementById('reviewText');
+                    const reviewName = document.getElementById('reviewName');
+                    reviewData.feedback = reviewText ? reviewText.value : '';
+                    reviewData.name = reviewName && reviewName.value ? reviewName.value : 'Anonymous';
+                    
+                    // Here you would typically send this data to your server
+                    console.log('Review submitted:', reviewData);
+                    
+                    // Show thumbs up animation before moving to social step
+                    const thumbsUp = document.createElement('div');
+                    thumbsUp.innerHTML = `
+                        <div class="fixed inset-0 flex items-center justify-center z-[1002]">
+                            <i class="fas fa-thumbs-up text-green-500 text-7xl thumbs-up-animation"></i>
+                        </div>
+                    `;
+                    document.body.appendChild(thumbsUp);
+                    
+                    // Show social sharing step after a brief delay
+                    setTimeout(() => {
+                        document.body.removeChild(thumbsUp);
+                        document.getElementById('reviewStep3').classList.add('hidden');
+                        document.getElementById('socialSharingStep').classList.remove('hidden');
+                    }, 1500);
+                });
+            }
+            
+            // Initialize social sharing
+            const shareInstagram = document.getElementById('shareInstagram');
+            if (shareInstagram) {
+                shareInstagram.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    window.open('https://www.instagram.com', '_blank');
+                });
+            }
+            
+            const shareTwitter = document.getElementById('shareTwitter');
+            if (shareTwitter) {
+                shareTwitter.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const text = `Just tried this amazing virtual jewelry try-on experience! #InfiniteAITryOn`;
+                    const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+                    window.open(shareUrl, '_blank');
+                });
+            }
+            
+            const shareFacebook = document.getElementById('shareFacebook');
+            if (shareFacebook) {
+                shareFacebook.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}&quote=${encodeURIComponent('Check out this amazing virtual jewelry try-on experience! #InfiniteAITryOn')}`;
+                    window.open(shareUrl, '_blank');
+                });
+            }
+            
+            const shareWhatsapp = document.getElementById('shareWhatsapp');
+            if (shareWhatsapp) {
+                shareWhatsapp.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const text = `Check out my virtual jewelry try-on! #InfiniteAITryOn ${window.location.href}`;
+                    const shareUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+                    window.open(shareUrl, '_blank');
+                });
+            }
+            
+            // Initialize close button
+            const finishReview = document.getElementById('finishReview');
+            if (finishReview) {
+                finishReview.addEventListener('click', () => {
+                    document.getElementById('reviewModal').classList.add('hidden');
+                    resetReviewForm();
+                });
+            }
+        });
+        
+        // Confetti Animation Function
+        function showConfetti() {
+            const confettiCanvas = document.getElementById('confettiCanvas');
+            if (!confettiCanvas) return;
+            
+            const confettiCtx = confettiCanvas.getContext('2d');
+            confettiCanvas.classList.remove('hidden');
+            
+            // Set canvas dimensions
+            confettiCanvas.width = window.innerWidth;
+            confettiCanvas.height = window.innerHeight;
+            
+            const particles = [];
+            const particleCount = 150;
+            const gravity = 0.5;
+            const colors = ['#7B2CBF', '#9D4EDD', '#C77DFF', '#FFFF00', '#FFD700'];
+            const shapes = ['circle', 'square', 'triangle'];
+            
+            // Create particles
+            for (let i = 0; i < particleCount; i++) {
+                particles.push({
+                    x: Math.random() * confettiCanvas.width,
+                    y: Math.random() * confettiCanvas.height - confettiCanvas.height,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    size: Math.random() * 10 + 5,
+                    shape: shapes[Math.floor(Math.random() * shapes.length)],
+                    velocity: {
+                        x: Math.random() * 6 - 3,
+                        y: Math.random() * 3 + 2
+                    },
+                    rotation: Math.random() * 360,
+                    rotationSpeed: Math.random() * 10 - 5
+                });
+            }
+            
+            // Animation loop
+            function animate() {
+                if (confettiCanvas.classList.contains('hidden')) return;
+                
+                confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+                
+                let stillAnimating = false;
+                
+                particles.forEach(p => {
+                    p.y += p.velocity.y;
+                    p.x += p.velocity.x;
+                    p.velocity.y += gravity / 10;
+                    p.rotation += p.rotationSpeed;
+                    
+                    // Check if any particles are still visible
+                    if (p.y < confettiCanvas.height) {
+                        stillAnimating = true;
+                    }
+                    
+                    confettiCtx.save();
+                    confettiCtx.translate(p.x, p.y);
+                    confettiCtx.rotate(p.rotation * Math.PI / 180);
+                    
+                    confettiCtx.fillStyle = p.color;
+                    
+                    if (p.shape === 'circle') {
+                        confettiCtx.beginPath();
+                        confettiCtx.arc(0, 0, p.size, 0, Math.PI * 2);
+                        confettiCtx.fill();
+                    } else if (p.shape === 'square') {
+                        confettiCtx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+                    } else if (p.shape === 'triangle') {
+                        confettiCtx.beginPath();
+                        confettiCtx.moveTo(0, -p.size);
+                        confettiCtx.lineTo(p.size, p.size);
+                        confettiCtx.lineTo(-p.size, p.size);
+                        confettiCtx.closePath();
+                        confettiCtx.fill();
+                    }
+                    
+                    confettiCtx.restore();
+                });
+                
+                if (stillAnimating) {
+                    requestAnimationFrame(animate);
+                } else {
+                    confettiCanvas.classList.add('hidden');
+                }
+            }
+            
+            animate();
+        }
     </script>
 </body>
 </html>
