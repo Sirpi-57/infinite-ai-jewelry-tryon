@@ -1000,6 +1000,22 @@
             50% { transform: translateY(-10px); }
             100% { transform: translateY(0); }
         }
+
+        #reviewModal {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 3000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Add this rule to ensure the modal content is also above the canvas */
+        #reviewModal > div {
+            position: relative;
+            z-index: 3001;
+        }
     </style>
 </head>
 <body>
@@ -2490,6 +2506,10 @@
         function renderJewelry() {
             if (!elements.canvas || !elements.ctx) return;
             
+            // Add this line to prevent rendering when review modal is visible
+            const reviewModal = document.getElementById('reviewModal');
+            if (reviewModal && !reviewModal.classList.contains('hidden')) return;
+            
             // Make sure canvas dimensions match video
             if (elements.canvas.width !== elements.video.videoWidth || 
                 elements.canvas.height !== elements.video.videoHeight) {
@@ -2984,6 +3004,9 @@
             const reviewModal = document.getElementById('reviewModal');
             if (reviewModal) {
                 reviewModal.classList.remove('hidden');
+                
+                // Add this line to temporarily lower the z-index of jewelry canvas
+                document.getElementById('jewelryCanvas').style.zIndex = "1";
             }
             
             // Reset to first step
@@ -3853,13 +3876,14 @@
             
             // Initialize close button
             const finishReview = document.getElementById('finishReview');
-            if (finishReview) {
+            if (finishReview) {  // Add this null check that was in your original code
                 finishReview.addEventListener('click', () => {
                     document.getElementById('reviewModal').classList.add('hidden');
+                    // Restore jewelry canvas z-index
+                    document.getElementById('jewelryCanvas').style.zIndex = "5";
                     resetReviewForm();
                 });
             }
-        });
         
         // Confetti Animation Function
         function showConfetti() {
