@@ -1039,6 +1039,242 @@
             background-color: transparent;
             pointer-events: auto; /* Capture all interactions when displayed */
         }
+
+        /* Tour container that covers the entire screen */
+        .tour-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 9000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        
+        .tour-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        /* The highlighted element will have this outline */
+        .tour-highlight {
+            position: absolute;
+            border-radius: 4px;
+            box-shadow: 0 0 0 2000px rgba(0, 0, 0, 0.7);
+            transition: all 0.3s ease;
+            z-index: 9001;
+            pointer-events: none;
+        }
+        
+        /* Pulsing animation for the highlight */
+        .tour-highlight::after {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            border: 2px solid var(--color-primary);
+            border-radius: 6px;
+            animation: pulse 1.5s infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        /* Tooltip styling */
+        .tour-tooltip {
+            position: absolute;
+            background-color: white;
+            color: #333;
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            max-width: 300px;
+            z-index: 9002;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .tour-tooltip.active {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        /* Arrow for the tooltip */
+        .tour-tooltip::before {
+            content: '';
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background: white;
+            transform: rotate(45deg);
+            z-index: -1;
+        }
+        
+        .tour-tooltip.top::before {
+            bottom: -7px;
+            left: 50%;
+            margin-left: -7px;
+        }
+        
+        .tour-tooltip.bottom::before {
+            top: -7px;
+            left: 50%;
+            margin-left: -7px;
+        }
+        
+        .tour-tooltip.left::before {
+            right: -7px;
+            top: 50%;
+            margin-top: -7px;
+        }
+        
+        .tour-tooltip.right::before {
+            left: -7px;
+            top: 50%;
+            margin-top: -7px;
+        }
+        
+        /* Tooltip content */
+        .tour-tooltip-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            color: var(--color-primary);
+        }
+        
+        .tour-tooltip-content {
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+        
+        /* Tooltip navigation buttons */
+        .tour-tooltip-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        .tour-tooltip-progress {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .tour-button {
+            background-color: var(--color-primary);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.2s ease;
+        }
+        
+        .tour-button:hover {
+            background-color: var(--color-secondary);
+        }
+        
+        .tour-button.skip {
+            background-color: transparent;
+            color: #666;
+        }
+        
+        .tour-button.skip:hover {
+            color: #333;
+        }
+        
+        /* Welcome modal for initial introduction */
+        .tour-welcome-modal {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9005;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .tour-welcome-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .tour-welcome-content {
+            background-color: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 90%;
+            width: 400px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+        
+        .tour-welcome-modal.active .tour-welcome-content {
+            transform: scale(1);
+        }
+        
+        .tour-welcome-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: var(--color-primary);
+        }
+        
+        .tour-welcome-icon {
+            font-size: 3rem;
+            color: var(--color-primary);
+            margin-bottom: 20px;
+        }
+        
+        .tour-welcome-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .tour-tooltip {
+                max-width: 250px;
+                padding: 12px 15px;
+            }
+            
+            .tour-tooltip-title {
+                font-size: 1rem;
+            }
+            
+            .tour-tooltip-content {
+                font-size: 0.9rem;
+            }
+            
+            .tour-button {
+                padding: 7px 12px;
+                font-size: 0.85rem;
+            }
+            
+            .tour-welcome-content {
+                padding: 20px;
+                width: 300px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -4010,7 +4246,411 @@
             
             animate();
         }
+
+        // Guided Tour Implementation
+        class GuidedTour {
+            constructor() {
+                // Tour elements
+                this.overlay = document.getElementById('tourOverlay');
+                this.highlight = document.getElementById('tourHighlight');
+                this.tooltip = document.getElementById('tourTooltip');
+                this.tooltipTitle = document.getElementById('tourTooltipTitle');
+                this.tooltipContent = document.getElementById('tourTooltipContent');
+                this.progressText = document.getElementById('tourProgress');
+                this.nextButton = document.getElementById('tourNext');
+                this.skipButton = document.getElementById('tourSkip');
+                this.welcomeModal = document.getElementById('tourWelcomeModal');
+                this.startButton = document.getElementById('tourStart');
+                this.dismissButton = document.getElementById('tourDismiss');
+                this.restartButton = document.getElementById('restartTour');
+                
+                // Tour state
+                this.currentStep = 0;
+                this.tourActive = false;
+                this.hasSeenTour = localStorage.getItem('hasSeenTour') === 'true';
+                
+                // Tour steps configuration
+                this.tourSteps = [
+                    {
+                        element: '.category-pills', // The CSS selector for category pills
+                        title: 'Jewelry Categories',
+                        content: 'These pills let you switch between different jewelry categories like Face, Ear, Neck, and Hand',
+                        position: 'bottom', // Tooltip position relative to the element
+                        spotlight: 'rect', // Type of spotlight (rect or circle)
+                        padding: 10, // Extra padding around the element
+                    },
+                    {
+                        element: '[data-category="active"]', // The active category pill
+                        title: 'Active Items',
+                        content: 'Click here to see all the jewelry items you are currently wearing',
+                        position: 'bottom',
+                        spotlight: 'rect',
+                        padding: 5,
+                    },
+                    {
+                        element: '#jewelryCarousel', // The bottom carousel
+                        title: 'Jewelry Selection',
+                        content: 'Browse and select jewelry items from this carousel. Tap an item to try it on!',
+                        position: 'top',
+                        spotlight: 'rect',
+                        padding: 10,
+                    },
+                    {
+                        element: '#floatingControls', // Controls panel (may be hidden initially)
+                        title: 'Adjustment Controls',
+                        content: 'Tap on any jewelry item to access these controls. Adjust size, position, and more!',
+                        position: 'left',
+                        spotlight: 'rect',
+                        padding: 10,
+                        setupFunction: () => {
+                            // Show controls if hidden
+                            const controls = document.getElementById('floatingControls');
+                            if (controls.classList.contains('hidden')) {
+                                // Find first active jewelry if any
+                                if (appState.activeJewelry.size > 0) {
+                                    const firstId = Array.from(appState.activeJewelry.keys())[0];
+                                    renderFloatingControls(firstId);
+                                    showFloatingControls(firstId);
+                                } else {
+                                    // If no jewelry active, add some for demo
+                                    const demoJewelryId = Object.keys(JEWELRY)[0];
+                                    if (demoJewelryId) {
+                                        addJewelry(demoJewelryId);
+                                        renderFloatingControls(demoJewelryId);
+                                        showFloatingControls(demoJewelryId);
+                                    }
+                                }
+                            }
+                        },
+                        cleanupFunction: () => {
+                            // Optionally hide controls after this step
+                            // hideFloatingControls();
+                        }
+                    },
+                    {
+                        element: '#captureBtn', // Capture button
+                        title: 'Capture Button',
+                        content: 'Tap here to take a screenshot of your look. You can save or share it!',
+                        position: 'left',
+                        spotlight: 'circle',
+                        padding: 10,
+                    },
+                    {
+                        // This is a center modal with no specific element highlight
+                        element: 'body',
+                        title: 'Perfect Positioning',
+                        content: 'For best results, keep your face at eye level and about an arm\'s length from the camera.',
+                        position: 'center',
+                        spotlight: 'none',
+                        padding: 0,
+                        isModal: true
+                    },
+                    {
+                        // Final step
+                        element: 'body',
+                        title: 'You\'re Ready!',
+                        content: 'Now you\'re ready to try on different jewelry styles. Have fun exploring!',
+                        position: 'center',
+                        spotlight: 'none',
+                        padding: 0,
+                        isModal: true,
+                        isLast: true
+                    }
+                ];
+                
+                // Initialize event listeners
+                this.initEventListeners();
+            }
+            
+            initEventListeners() {
+                // Welcome modal buttons
+                this.startButton.addEventListener('click', () => {
+                    this.hideWelcomeModal();
+                    this.startTour();
+                });
+                
+                this.dismissButton.addEventListener('click', () => {
+                    this.hideWelcomeModal();
+                    localStorage.setItem('hasSeenTour', 'true');
+                    this.showRestartButton();
+                });
+                
+                // Tour navigation buttons
+                this.nextButton.addEventListener('click', () => {
+                    this.nextStep();
+                });
+                
+                this.skipButton.addEventListener('click', () => {
+                    this.endTour();
+                });
+                
+                // Restart tour button
+                this.restartButton.addEventListener('click', () => {
+                    this.startTour();
+                });
+                
+                // Listen for window resize to reposition elements
+                window.addEventListener('resize', () => {
+                    if (this.tourActive) {
+                        this.positionElements();
+                    }
+                });
+                
+                // Check if it's first visit to show welcome modal
+                document.addEventListener('DOMContentLoaded', () => {
+                    // Short delay to allow the app to initialize first
+                    setTimeout(() => {
+                        if (!this.hasSeenTour) {
+                            this.showWelcomeModal();
+                        } else {
+                            this.showRestartButton();
+                        }
+                    }, 1500);
+                });
+            }
+            
+            showWelcomeModal() {
+                this.welcomeModal.classList.add('active');
+            }
+            
+            hideWelcomeModal() {
+                this.welcomeModal.classList.remove('active');
+            }
+            
+            showRestartButton() {
+                this.restartButton.style.display = 'flex';
+            }
+            
+            hideRestartButton() {
+                this.restartButton.style.display = 'none';
+            }
+            
+            startTour() {
+                this.currentStep = 0;
+                this.tourActive = true;
+                this.hideRestartButton();
+                this.goToStep(0);
+                localStorage.setItem('hasSeenTour', 'true');
+            }
+            
+            endTour() {
+                this.tourActive = false;
+                this.overlay.classList.remove('active');
+                this.tooltip.classList.remove('active');
+                
+                // Clean up any temporary changes
+                const currentStep = this.tourSteps[this.currentStep];
+                if (currentStep && currentStep.cleanupFunction) {
+                    currentStep.cleanupFunction();
+                }
+                
+                this.showRestartButton();
+            }
+            
+            nextStep() {
+                // Clean up any temporary changes
+                const currentStep = this.tourSteps[this.currentStep];
+                if (currentStep && currentStep.cleanupFunction) {
+                    currentStep.cleanupFunction();
+                }
+                
+                if (this.currentStep < this.tourSteps.length - 1) {
+                    this.goToStep(this.currentStep + 1);
+                } else {
+                    this.endTour();
+                }
+            }
+            
+            goToStep(stepIndex) {
+                if (stepIndex < 0 || stepIndex >= this.tourSteps.length) return;
+                
+                this.currentStep = stepIndex;
+                const step = this.tourSteps[stepIndex];
+                
+                // Update progress text
+                this.progressText.textContent = `Step ${stepIndex + 1} of ${this.tourSteps.length}`;
+                
+                // Update tooltip content
+                this.tooltipTitle.textContent = step.title;
+                this.tooltipContent.textContent = step.content;
+                
+                // Change Next button text on last step
+                this.nextButton.textContent = step.isLast ? 'Finish' : 'Next';
+                
+                // Run any setup function for this step
+                if (step.setupFunction) {
+                    step.setupFunction();
+                }
+                
+                // Show the overlay
+                this.overlay.classList.add('active');
+                
+                // Short delay to ensure elements are ready
+                setTimeout(() => {
+                    this.positionElements();
+                    this.tooltip.classList.add('active');
+                }, 300);
+            }
+            
+            positionElements() {
+                const step = this.tourSteps[this.currentStep];
+                if (!step) return;
+                
+                // For modal steps (center of screen)
+                if (step.isModal) {
+                    // Center the tooltip
+                    this.tooltip.style.top = '50%';
+                    this.tooltip.style.left = '50%';
+                    this.tooltip.style.transform = 'translate(-50%, -50%)';
+                    this.tooltip.className = 'tour-tooltip active';
+                    
+                    // No highlight for modals
+                    this.highlight.style.display = 'none';
+                    return;
+                }
+                
+                // For regular steps that highlight elements
+                this.highlight.style.display = 'block';
+                
+                const elementToHighlight = document.querySelector(step.element);
+                if (!elementToHighlight) {
+                    console.error(`Element not found: ${step.element}`);
+                    return;
+                }
+                
+                // Get element position and dimensions
+                const rect = elementToHighlight.getBoundingClientRect();
+                
+                // Add padding to the highlight
+                const padding = step.padding || 0;
+                
+                // Position the highlight
+                if (step.spotlight === 'circle') {
+                    const diameter = Math.max(rect.width, rect.height) + padding * 2;
+                    const radius = diameter / 2;
+                    
+                    this.highlight.style.width = `${diameter}px`;
+                    this.highlight.style.height = `${diameter}px`;
+                    this.highlight.style.borderRadius = '50%';
+                    this.highlight.style.top = `${rect.top + rect.height/2 - radius}px`;
+                    this.highlight.style.left = `${rect.left + rect.width/2 - radius}px`;
+                } else {
+                    // Default rectangle highlight
+                    this.highlight.style.width = `${rect.width + padding * 2}px`;
+                    this.highlight.style.height = `${rect.height + padding * 2}px`;
+                    this.highlight.style.borderRadius = '8px';
+                    this.highlight.style.top = `${rect.top - padding}px`;
+                    this.highlight.style.left = `${rect.left - padding}px`;
+                }
+                
+                // Position the tooltip
+                const tooltipWidth = this.tooltip.offsetWidth || 300;
+                const tooltipHeight = this.tooltip.offsetHeight || 150;
+                
+                // Remove all position classes
+                this.tooltip.className = 'tour-tooltip active';
+                
+                // Position based on the specified direction
+                switch(step.position) {
+                    case 'top':
+                        this.tooltip.classList.add('bottom');
+                        this.tooltip.style.top = `${rect.top - tooltipHeight - 15}px`;
+                        this.tooltip.style.left = `${rect.left + rect.width/2 - tooltipWidth/2}px`;
+                        break;
+                        
+                    case 'bottom':
+                        this.tooltip.classList.add('top');
+                        this.tooltip.style.top = `${rect.bottom + 15}px`;
+                        this.tooltip.style.left = `${rect.left + rect.width/2 - tooltipWidth/2}px`;
+                        break;
+                        
+                    case 'left':
+                        this.tooltip.classList.add('right');
+                        this.tooltip.style.top = `${rect.top + rect.height/2 - tooltipHeight/2}px`;
+                        this.tooltip.style.left = `${rect.left - tooltipWidth - 15}px`;
+                        break;
+                        
+                    case 'right':
+                        this.tooltip.classList.add('left');
+                        this.tooltip.style.top = `${rect.top + rect.height/2 - tooltipHeight/2}px`;
+                        this.tooltip.style.left = `${rect.right + 15}px`;
+                        break;
+                        
+                    default:
+                        // Default centered
+                        this.tooltip.style.top = '50%';
+                        this.tooltip.style.left = '50%';
+                        this.tooltip.style.transform = 'translate(-50%, -50%)';
+                }
+                
+                // Ensure tooltip stays within viewport
+                const tooltipRect = this.tooltip.getBoundingClientRect();
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+                
+                // Adjust horizontal position if needed
+                if (tooltipRect.right > viewportWidth - 10) {
+                    this.tooltip.style.left = `${viewportWidth - tooltipWidth - 10}px`;
+                } else if (tooltipRect.left < 10) {
+                    this.tooltip.style.left = '10px';
+                }
+                
+                // Adjust vertical position if needed
+                if (tooltipRect.bottom > viewportHeight - 10) {
+                    this.tooltip.style.top = `${viewportHeight - tooltipHeight - 10}px`;
+                } else if (tooltipRect.top < 10) {
+                    this.tooltip.style.top = '10px';
+                }
+            }
+        }
+        
+        // Initialize the tour when the document is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize tour after a short delay to ensure the app is fully loaded
+            setTimeout(() => {
+                window.guidedTour = new GuidedTour();
+            }, 2000);
+        });
     </script>
     <div id="modalBlocker" class="fixed inset-0 pointer-events-none" style="z-index: 2999; display: none;"></div>
+
+    <!-- Tour overlay container -->
+    <div id="tourOverlay" class="tour-overlay">
+        <!-- Highlight element that will be positioned over targeted elements -->
+        <div id="tourHighlight" class="tour-highlight"></div>
+        
+        <!-- Tooltip that will show explanatory text -->
+        <div id="tourTooltip" class="tour-tooltip">
+            <div id="tourTooltipTitle" class="tour-tooltip-title"></div>
+            <div id="tourTooltipContent" class="tour-tooltip-content"></div>
+            <div class="tour-tooltip-nav">
+                <div id="tourProgress" class="tour-tooltip-progress">Step 1 of 7</div>
+                <div>
+                    <button id="tourSkip" class="tour-button skip">Skip Tour</button>
+                    <button id="tourNext" class="tour-button">Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Welcome modal for first-time visitors -->
+    <div id="tourWelcomeModal" class="tour-welcome-modal">
+        <div class="tour-welcome-content">
+            <div class="tour-welcome-icon">
+                <i class="fas fa-gem"></i>
+            </div>
+            <div class="tour-welcome-title">Welcome to Virtual Try-On!</div>
+            <p>Experience jewelry like never before with our virtual try-on tool. Would you like a quick tour of the features?</p>
+            <div class="tour-welcome-buttons">
+                <button id="tourStart" class="tour-button">Start Tour</button>
+                <button id="tourDismiss" class="tour-button skip">Skip</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- A floating button to restart the tour (hidden by default) -->
+    <button id="restartTour" class="tour-restart-button" style="position: fixed; bottom: 100px; right: 20px; z-index: 100; background: var(--color-primary); color: white; border: none; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); cursor: pointer; display: none;">
+        <i class="fas fa-question"></i>
+    </button>
 </body>
 </html>
