@@ -2980,6 +2980,12 @@
                 shareImage.src = imageUrl;
             }
             
+            // Activate the modal blocker
+            const modalBlocker = document.getElementById('modalBlocker');
+            if (modalBlocker) {
+                modalBlocker.style.display = 'block';
+            }
+            
             // Show the review modal
             const reviewModal = document.getElementById('reviewModal');
             if (reviewModal) {
@@ -3856,10 +3862,16 @@
             if (finishReview) {
                 finishReview.addEventListener('click', () => {
                     document.getElementById('reviewModal').classList.add('hidden');
+                    
+                    // Hide the modal blocker
+                    const modalBlocker = document.getElementById('modalBlocker');
+                    if (modalBlocker) {
+                        modalBlocker.style.display = 'none';
+                    }
+                    
                     resetReviewForm();
                 });
             }
-        });
         
         // Confetti Animation Function
         function showConfetti() {
@@ -3949,5 +3961,6 @@
             animate();
         }
     </script>
+    <div id="modalBlocker" class="fixed inset-0 pointer-events-none" style="z-index: 9999; display: none;"></div>
 </body>
 </html>
