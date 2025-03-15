@@ -2973,6 +2973,11 @@
         }
 
         function showReviewModal(imageUrl) {
+            // Ensure video is paused when showing review modal
+            if (elements.video && !elements.video.paused) {
+                elements.video.pause();
+            }
+            
             // Set the screenshot in reviewData and preview
             reviewData.screenshot = imageUrl;
             const shareImage = document.getElementById('shareImage');
@@ -3857,9 +3862,12 @@
                 finishReview.addEventListener('click', () => {
                     document.getElementById('reviewModal').classList.add('hidden');
                     resetReviewForm();
+                    // Resume video playback when review modal is closed
+                    if (elements.video) {
+                        elements.video.play();
+                    }
                 });
             }
-        });
         
         // Confetti Animation Function
         function showConfetti() {
