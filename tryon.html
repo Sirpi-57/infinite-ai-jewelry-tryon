@@ -2503,30 +2503,27 @@
         }
         
         // Main rendering function
+        // Main rendering function
         function renderJewelry() {
             if (!elements.canvas || !elements.ctx) return;
-            
-            // Add this line to prevent rendering when review modal is visible
-            const reviewModal = document.getElementById('reviewModal');
-            if (reviewModal && !reviewModal.classList.contains('hidden')) return;
-            
+
             // Make sure canvas dimensions match video
             if (elements.canvas.width !== elements.video.videoWidth || 
                 elements.canvas.height !== elements.video.videoHeight) {
                 elements.canvas.width = elements.video.videoWidth;
                 elements.canvas.height = elements.video.videoHeight;
             }
-            
+
             // Clear canvas
             elements.ctx.clearRect(0, 0, elements.canvas.width, elements.canvas.height);
-            
+
             // Nothing to render if no jewelry or no landmarks
             if (appState.activeJewelry.size === 0) return;
-            
+
             // Render each active jewelry item
             appState.activeJewelry.forEach((jewelry, id) => {
                 if (!jewelry.visible) return;
-                
+
                 if (jewelry.type === 'necklace') {
                     if (appState.poseLandmarks) {
                         drawNecklace(jewelry, id);
