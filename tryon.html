@@ -2973,9 +2973,6 @@
         }
 
         function showReviewModal(imageUrl) {
-            // Pause the video stream - this prevents new frames from being processed
-            elements.video.pause();
-            
             // Set the screenshot in reviewData and preview
             reviewData.screenshot = imageUrl;
             const shareImage = document.getElementById('shareImage');
@@ -2987,6 +2984,14 @@
             const reviewModal = document.getElementById('reviewModal');
             if (reviewModal) {
                 reviewModal.classList.remove('hidden');
+            }
+            
+            // Force the jewelry canvas to be below the modal
+            const jewelryCanvas = document.getElementById('jewelryCanvas');
+            if (jewelryCanvas) {
+                // Store the original z-index to restore later
+                jewelryCanvas.dataset.originalZIndex = jewelryCanvas.style.zIndex || "5";
+                jewelryCanvas.style.zIndex = "1"; // Set to a very low z-index
             }
             
             // Reset to first step
@@ -3855,13 +3860,18 @@
             }
             
             // Initialize close button
-            // Initialize close button
+            // Then in the finishReview event listener
             const finishReview = document.getElementById('finishReview');
             if (finishReview) {
                 finishReview.addEventListener('click', () => {
                     document.getElementById('reviewModal').classList.add('hidden');
-                    // Resume the video stream
-                    elements.video.play();
+                    
+                    // Restore original z-index
+                    const jewelryCanvas = document.getElementById('jewelryCanvas');
+                    if (jewelryCanvas && jewelryCanvas.dataset.originalZIndex) {
+                        jewelryCanvas.style.zIndex = jewelryCanvas.dataset.originalZIndex;
+                    }
+                    
                     resetReviewForm();
                 });
             }
