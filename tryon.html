@@ -1539,233 +1539,48 @@
     </div>
     
     <script>
-        const JEWELRY = {
-            // Face jewelry (tikka)
-            tikka1: {
-                name: "Tikka Design 1",
-                type: 'single',
-                image: 'tikka1.png',
-                thumbnail: 'thumbnails/tikka1-thumb.png',
-                landmark: 151,
-                offset: { x: 0, y: 0 },
-                defaultScale: 1.3,
-                group: 'face',
-                category: 'Face Jewelry'
-            },
-            tikka2: {
-                name: "Tikka Design 2",
-                type: 'single',
-                image: 'tikka2.png',
-                thumbnail: 'thumbnails/tikka2-thumb.png',
-                landmark: 151,
-                offset: { x: 0, y: 0 },
-                defaultScale: 1,
-                group: 'face',
-                category: 'Face Jewelry'
-            },
-            tikka3: {
-                name: "Tikka Design 3",
-                type: 'single',
-                image: 'tikka3.png',
-                thumbnail: 'thumbnails/tikka3-thumb.png',
-                landmark: 151,
-                offset: { x: 0, y: 0 },
-                defaultScale: 1,
-                group: 'face',
-                category: 'Face Jewelry'
-            },
-            tikka4: {
-                name: "Tikka Design 4",
-                type: 'single',
-                image: 'tikka4.png',
-                thumbnail: 'thumbnails/tikka4-thumb.png',
-                landmark: 151,
-                offset: { x: 0, y: 0 },
-                defaultScale: 0.8,
-                group: 'face',
-                category: 'Face Jewelry'
-            },
-            
-            // Ear jewelry (jhumka/earrings)
-            jhumka1: {
-                name: "Earring Design 1",
-                type: 'earrings',
-                left: 'earing1left.png',
-                right: 'earing1right.png',
-                thumbnail: 'thumbnails/earring1-thumb.png',
-                landmarks: [177, 401],
-                offset: { x: -5, y: 0 },
-                defaultScale: 0.75,
-                gap: 0,
-                group: 'ear',
-                category: 'Ear Jewelry'
-            },
-            jhumka2: {
-                name: "Earring Design 2",
-                type: 'earrings',
-                left: 'earing2left.png',
-                right: 'earing2right.png',
-                thumbnail: 'thumbnails/earring2-thumb.png',
-                landmarks: [177, 401],
-                offset: { x: -5, y: 0 },
-                defaultScale: 1.5,
-                gap: 0,
-                group: 'ear',
-                category: 'Ear Jewelry'
-            },
-            jhumka3: {
-                name: "Earring Design 3",
-                type: 'earrings',
-                left: 'earing3left.png',
-                right: 'earing3right.png',
-                thumbnail: 'thumbnails/earring3-thumb.png',
-                landmarks: [177, 401],
-                offset: { x: -5, y: 0 },
-                defaultScale: 1.5,
-                gap: 0,
-                group: 'ear',
-                category: 'Ear Jewelry'
-            },
-            jhumka4: {
-                name: "Earring Design 4",
-                type: 'earrings',
-                left: 'earing4left.png',
-                right: 'earing4right.png',
-                thumbnail: 'thumbnails/earring4-thumb.png',
-                landmarks: [177, 401],
-                offset: { x: -5, y: 0 },
-                defaultScale: 1.5,
-                gap: 0,
-                group: 'ear',
-                category: 'Ear Jewelry'
-            },
-            
-            // Neck jewelry (necklaces)
-            necklace1: {
-                name: "Necklace Design 1",
-                type: 'necklace',
-                image: 'necklace1.png',
-                thumbnail: 'thumbnails/necklace1-thumb.png',
-                offset: { x: 0, y: 0 },
-                defaultScale: 0.55,
-                group: 'neck',
-                category: 'Neck Jewelry'
-            },
-            necklace2: {
-                name: "Necklace Design 2",
-                type: 'necklace',
-                image: 'necklace2.png',
-                thumbnail: 'thumbnails/necklace2-thumb.png',
-                offset: { x: 0, y: 0 },
-                defaultScale: 0.55,
-                group: 'neck',
-                category: 'Neck Jewelry'
-            },
-            necklace3: {
-                name: "Necklace Design 3",
-                type: 'necklace',
-                image: 'necklace3.png',
-                thumbnail: 'thumbnails/necklace3-thumb.png',
-                offset: { x: 0, y: 0 },
-                defaultScale: 0.55,
-                group: 'neck',
-                category: 'Neck Jewelry'
-            },
-            necklace4: {
-                name: "Necklace Design 4",
-                type: 'necklace',
-                image: 'necklace4.png',
-                thumbnail: 'thumbnails/necklace4-thumb.png',
-                offset: { x: 0, y: 0 },
-                defaultScale: 0.4,
-                group: 'neck',
-                category: 'Neck Jewelry'
-            },
-            necklace5: {
-                name: "Necklace Design 5",
-                type: 'necklace',
-                image: 'necklace5.png',
-                thumbnail: 'thumbnails/necklace5-thumb.png',
-                offset: { x: 0, y: 0 },
-                defaultScale: 0.4,
-                group: 'neck',
-                category: 'Neck Jewelry'
-            },
-            necklace6: {
-                name: "Necklace Design 6",
-                type: 'necklace',
-                image: 'necklace6.png',
-                thumbnail: 'thumbnails/necklace6-thumb.png',
-                offset: { x: 0, y: 0 },
-                defaultScale: 0.4,
-                group: 'neck',
-                category: 'Neck Jewelry'
-            },
-            necklace7: {
-                name: "Necklace Design 7",
-                type: 'necklace',
-                image: 'necklace7.png',
-                thumbnail: 'thumbnails/necklace7-thumb.png',
-                offset: { x: 0, y: 0 },
-                defaultScale: 0.4,
-                group: 'neck',
-                category: 'Neck Jewelry'
-            },
-            
-            // Hand jewelry (rings, bangles)
-            ring1: {
-                name: "Ring Design",
-                type: 'hand',
-                image: 'ring1.png',
-                thumbnail: 'thumbnails/ring1-thumb.png',
-                landmark: 'custom',
-                fingerIndex: 8,
-                handIndex: 0,
-                offset: { x: 0, y: 0 },
-                defaultScale: 0.2,
-                group: 'hand',
-                category: 'Hand Jewelry'
-            },
-            bangle1: {
-                name: "Bangle Design 1",
-                type: 'hand',
-                image: 'bangle1.png',
-                thumbnail: 'thumbnails/bangle1-thumb.png',
-                landmark: 'custom',
-                wristIndex: 0,
-                handIndex: 0,
-                offset: { x: 0, y: 0 },
-                defaultScale: 0.35,
-                group: 'hand',
-                category: 'Hand Jewelry'
-            },
-            bangle2: {
-                name: "Bangle Design 2",
-                type: 'hand',
-                image: 'bangle2.png',
-                thumbnail: 'thumbnails/bangle2-thumb.png',
-                landmark: 'custom',
-                wristIndex: 0,
-                handIndex: 0,
-                offset: { x: 0, y: 0 },
-                defaultScale: 0.35,
-                group: 'hand',
-                category: 'Hand Jewelry'
-            },
-            bangle3: {
-                name: "Bangle Design 3",
-                type: 'hand',
-                image: 'bangle3.png',
-                thumbnail: 'thumbnails/bangle3-thumb.png',
-                landmark: 'custom',
-                wristIndex: 0,
-                handIndex: 0,
-                offset: { x: 0, y: 0 },
-                defaultScale: 0.35,
-                group: 'hand',
-                category: 'Hand Jewelry'
+        // API endpoint URL - replace with your actual API Gateway URL from Step 3
+        const API_URL = 'https://kdkpbjjeze.execute-api.ap-south-1.amazonaws.com/prod1';
+        
+        // Initial empty JEWELRY object
+        let JEWELRY = {};
+        
+        // Function to fetch jewelry data from DynamoDB via API
+        async function fetchJewelryData() {
+            try {
+                // Show loading message in the console
+                console.log('Fetching jewelry data from DynamoDB...');
+                
+                // Fetch the data from our API
+                const response = await fetch(`${API_URL}/jewelry-data`);
+                
+                if (!response.ok) {
+                    throw new Error(`API request failed: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (!data.JEWELRY) {
+                    throw new Error('Invalid API response: JEWELRY object not found');
+                }
+                
+                // Replace the empty JEWELRY object with the data from API
+                JEWELRY = data.JEWELRY;
+                
+                console.log(`Successfully loaded ${Object.keys(JEWELRY).length} jewelry items from DynamoDB`);
+                return true;
+            } catch (error) {
+                console.error('Error fetching jewelry data:', error);
+                
+                // Show error message to user
+                const loadingError = document.querySelector('.loading-error');
+                if (loadingError) {
+                    loadingError.textContent = `Failed to load jewelry data: ${error.message}. Please refresh the page or try again later.`;
+                    loadingError.classList.remove('hidden');
+                }
+                return false;
             }
-        };
+        }
 
         const LANDMARKS = {
             tikka: {
@@ -1828,6 +1643,13 @@
                 
                 // Setup event listeners
                 setupEventListeners();
+                
+                // Fetch jewelry data before anything else
+                updateLoadingStatus("Loading jewelry data...");
+                const dataLoaded = await fetchJewelryData();
+                if (!dataLoaded) {
+                    throw new Error("Failed to load jewelry data from API");
+                }
                 
                 // Initialize camera
                 await initializeCamera();
