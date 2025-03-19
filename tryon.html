@@ -1889,6 +1889,10 @@
                         const leftImg = new Image();
                         const rightImg = new Image();
                         
+                        // Add crossOrigin attribute
+                        leftImg.crossOrigin = "anonymous";
+                        rightImg.crossOrigin = "anonymous";
+                        
                         leftImg.src = jewelry.left;
                         rightImg.src = jewelry.right;
                         
@@ -1909,6 +1913,10 @@
                             }));
                     } else {
                         const img = new Image();
+                        
+                        // Add crossOrigin attribute
+                        img.crossOrigin = "anonymous";
+                        
                         img.src = jewelry.image;
                         
                         const imgPromise = new Promise((resolve, reject) => {
@@ -1924,6 +1932,10 @@
                     // Preload thumbnail if available
                     if (jewelry.thumbnail) {
                         const thumbImg = new Image();
+                        
+                        // Add crossOrigin attribute
+                        thumbImg.crossOrigin = "anonymous";
+                        
                         thumbImg.src = jewelry.thumbnail;
                         
                         const thumbPromise = new Promise((resolve) => {
@@ -2946,127 +2958,143 @@
         }
         
         function captureScreenshot() {
-            // Pause the video stream
-            elements.video.pause();
-            
-            // Create a new full-size canvas matching video dimensions
-            const captureCanvas = document.createElement('canvas');
-            captureCanvas.width = elements.video.videoWidth;
-            captureCanvas.height = elements.video.videoHeight;
-            const ctx = captureCanvas.getContext('2d');
-            
-            // Draw the video frame with mirroring if enabled
-            ctx.save();
-            if (appState.mirrorCamera) {
-                ctx.scale(-1, 1);
-                ctx.drawImage(
-                    elements.video, 
-                    -captureCanvas.width, 0, 
-                    captureCanvas.width, 
-                    captureCanvas.height
-                );
-            } else {
-                ctx.drawImage(
-                    elements.video,
-                    0, 0,
-                    captureCanvas.width,
-                    captureCanvas.height
-                );
-            }
-            ctx.restore();
-            
-            // Draw jewelry canvas with the same mirroring if enabled
-            ctx.save();
-            if (appState.mirrorCamera) {
-                ctx.scale(-1, 1);
-                ctx.drawImage(
-                    elements.canvas, 
-                    -captureCanvas.width, 0, 
-                    captureCanvas.width, 
-                    captureCanvas.height
-                );
-            } else {
-                ctx.drawImage(
-                    elements.canvas,
-                    0, 0,
-                    captureCanvas.width,
-                    captureCanvas.height
-                );
-            }
-            ctx.restore();
-            
-            // Create modal for preview and save
-            const modal = document.createElement('div');
-            modal.style.position = 'fixed';
-            modal.style.top = '0';
-            modal.style.left = '0';
-            modal.style.width = '100%';
-            modal.style.height = '100%';
-            modal.style.backgroundColor = 'rgba(0,0,0,0.8)';
-            modal.style.zIndex = '3000';
-            modal.style.display = 'flex';
-            modal.style.flexDirection = 'column';
-            modal.style.alignItems = 'center';
-            modal.style.justifyContent = 'center';
-            
-            const previewImg = document.createElement('img');
-            previewImg.src = captureCanvas.toDataURL('image/png');
-            previewImg.style.maxWidth = '90%';
-            previewImg.style.maxHeight = '80%';
-            previewImg.style.objectFit = 'contain';
-            
-            const buttonContainer = document.createElement('div');
-            buttonContainer.style.marginTop = '20px';
-            
-            const saveButton = document.createElement('button');
-            saveButton.textContent = 'Save';
-            saveButton.style.margin = '0 10px';
-            saveButton.style.padding = '10px 20px';
-            saveButton.style.backgroundColor = 'white';
-            saveButton.style.color = '#7B2CBF';
-            saveButton.style.fontWeight = 'bold';
-            saveButton.style.border = 'none';
-            saveButton.style.borderRadius = '5px';
-            saveButton.style.cursor = 'pointer';
-            saveButton.onclick = () => {
-                const link = document.createElement('a');
-                link.download = 'jewelry-tryon-' + new Date().toISOString().slice(0, 10) + '.png';
-                const imageUrl = captureCanvas.toDataURL('image/png');
-                link.href = imageUrl;
-                link.click();
-                document.body.removeChild(modal);
+            try {
+                // Pause the video stream
+                elements.video.pause();
+                
+                // Create a new full-size canvas matching video dimensions
+                const captureCanvas = document.createElement('canvas');
+                captureCanvas.width = elements.video.videoWidth;
+                captureCanvas.height = elements.video.videoHeight;
+                const ctx = captureCanvas.getContext('2d');
+                
+                // Draw the video frame with mirroring if enabled
+                ctx.save();
+                if (appState.mirrorCamera) {
+                    ctx.scale(-1, 1);
+                    ctx.drawImage(
+                        elements.video, 
+                        -captureCanvas.width, 0, 
+                        captureCanvas.width, 
+                        captureCanvas.height
+                    );
+                } else {
+                    ctx.drawImage(
+                        elements.video,
+                        0, 0,
+                        captureCanvas.width,
+                        captureCanvas.height
+                    );
+                }
+                ctx.restore();
+                
+                // Draw jewelry canvas with the same mirroring if enabled
+                ctx.save();
+                if (appState.mirrorCamera) {
+                    ctx.scale(-1, 1);
+                    ctx.drawImage(
+                        elements.canvas, 
+                        -captureCanvas.width, 0, 
+                        captureCanvas.width, 
+                        captureCanvas.height
+                    );
+                } else {
+                    ctx.drawImage(
+                        elements.canvas,
+                        0, 0,
+                        captureCanvas.width,
+                        captureCanvas.height
+                    );
+                }
+                ctx.restore();
+                
+                // Try to get the data URL (this is where it might fail)
+                const dataUrl = captureCanvas.toDataURL('image/png');
+                
+                // Create modal for preview and save
+                const modal = document.createElement('div');
+                modal.style.position = 'fixed';
+                modal.style.top = '0';
+                modal.style.left = '0';
+                modal.style.width = '100%';
+                modal.style.height = '100%';
+                modal.style.backgroundColor = 'rgba(0,0,0,0.8)';
+                modal.style.zIndex = '3000';
+                modal.style.display = 'flex';
+                modal.style.flexDirection = 'column';
+                modal.style.alignItems = 'center';
+                modal.style.justifyContent = 'center';
+                
+                const previewImg = document.createElement('img');
+                previewImg.src = dataUrl;
+                previewImg.style.maxWidth = '90%';
+                previewImg.style.maxHeight = '80%';
+                previewImg.style.objectFit = 'contain';
+                
+                const buttonContainer = document.createElement('div');
+                buttonContainer.style.marginTop = '20px';
+                
+                const saveButton = document.createElement('button');
+                saveButton.textContent = 'Save';
+                saveButton.style.margin = '0 10px';
+                saveButton.style.padding = '10px 20px';
+                saveButton.style.backgroundColor = 'white';
+                saveButton.style.color = '#7B2CBF';
+                saveButton.style.fontWeight = 'bold';
+                saveButton.style.border = 'none';
+                saveButton.style.borderRadius = '5px';
+                saveButton.style.cursor = 'pointer';
+                saveButton.onclick = () => {
+                    const link = document.createElement('a');
+                    link.download = 'jewelry-tryon-' + new Date().toISOString().slice(0, 10) + '.png';
+                    link.href = dataUrl;
+                    link.click();
+                    document.body.removeChild(modal);
+                    elements.video.play();
+                    
+                    // Show review modal with the screenshot
+                    showReviewModal(dataUrl);
+                };
+                
+                const cancelButton = document.createElement('button');
+                cancelButton.textContent = 'Cancel';
+                cancelButton.style.margin = '0 10px';
+                cancelButton.style.padding = '10px 20px';
+                cancelButton.style.backgroundColor = 'white';
+                cancelButton.style.color = '#7B2CBF';
+                cancelButton.style.fontWeight = 'bold';
+                cancelButton.style.border = 'none';
+                cancelButton.style.borderRadius = '5px';
+                cancelButton.style.cursor = 'pointer';
+                cancelButton.onclick = () => {
+                    document.body.removeChild(modal);
+                    elements.video.play();
+                    
+                    // Show review modal even if they cancel
+                    showReviewModal(dataUrl);
+                };
+                
+                buttonContainer.appendChild(saveButton);
+                buttonContainer.appendChild(cancelButton);
+                
+                modal.appendChild(previewImg);
+                modal.appendChild(buttonContainer);
+                
+                document.body.appendChild(modal);
+                
+            } catch (error) {
+                console.error("Screenshot error:", error);
+                
+                // Resume video playback
                 elements.video.play();
                 
-                // Show review modal with the screenshot
-                showReviewModal(imageUrl);
-            };
-            
-            const cancelButton = document.createElement('button');
-            cancelButton.textContent = 'Cancel';
-            cancelButton.style.margin = '0 10px';
-            cancelButton.style.padding = '10px 20px';
-            cancelButton.style.backgroundColor = 'white';
-            cancelButton.style.color = '#7B2CBF';
-            cancelButton.style.fontWeight = 'bold';
-            cancelButton.style.border = 'none';
-            cancelButton.style.borderRadius = '5px';
-            cancelButton.style.cursor = 'pointer';
-            cancelButton.onclick = () => {
-                const imageUrl = captureCanvas.toDataURL('image/png');
-                document.body.removeChild(modal);
-                elements.video.play();
+                // Show error message to user
+                showToast("Cannot capture screenshot due to image security restrictions. Please try reloading the page.");
                 
-                // Show review modal even if they cancel
-                showReviewModal(imageUrl);
-            };
-            
-            buttonContainer.appendChild(saveButton);
-            buttonContainer.appendChild(cancelButton);
-            
-            modal.appendChild(previewImg);
-            modal.appendChild(buttonContainer);
-            
-            document.body.appendChild(modal);
+                // You can still show the review modal with a placeholder image
+                const placeholderImage = "https://via.placeholder.com/800x600?text=Screenshot+Unavailable";
+                showReviewModal(placeholderImage);
+            }
         }
 
         function showReviewModal(imageUrl) {
