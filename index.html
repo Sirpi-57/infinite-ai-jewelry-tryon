@@ -367,14 +367,14 @@
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <!-- Virtual Try-On Card -->
+            <!-- Modified Virtual Try-On Card -->
             <article class="service-card p-6">
                 <div class="feature-icon mb-6" aria-hidden="true">
                     <i class="fas fa-vr-cardboard"></i>
                 </div>
                 <h3 class="text-xl font-bold text-gray-800 mb-4">Virtual Try-On</h3>
                 <p class="text-gray-600 mb-4">
-                    Immersive AR technology that revolutionize online shopping, enabling real-time virtual try-ons. Lets take try before buy to next level!
+                    Immersive AR technology that revolutionizes online shopping, enabling real-time virtual try-ons. Lets take try before buy to next level!
                 </p>
                 <ul class="text-gray-600 mb-6 space-y-2" role="list">
                     <li class="flex items-center">
@@ -394,12 +394,47 @@
                         Cross-platform compatibility
                     </li>
                 </ul>
-                <a href="tryon.html" 
-                class="button-primary w-full py-2 rounded-lg text-white text-center inline-block" 
-                aria-label="Try Virtual Try-On Demo">
-                    Try Demo
-                </a>
+                <!-- Button Container -->
+                <div class="space-y-4">
+                    <a href="tryon.html" 
+                       class="button-primary w-full py-2 rounded-lg text-white text-center inline-block" 
+                       aria-label="Try Virtual Try-On Demo">
+                        Try Demo
+                    </a>
+                    
+                    <!-- Admin Dashboard Button -->
+                    <button class="w-full py-2 rounded-lg text-white text-center inline-block 
+                                  bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700
+                                  transition-all duration-300 shadow-md hover:shadow-lg"
+                            id="jewelry-management-btn"
+                            aria-label="Access Jewelry Management Dashboard">
+                        Management Dashboard
+                    </button>
+                </div>
             </article>
+            
+            <!-- Add this right before the closing </body> tag -->
+            <div id="admin-login-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6">Admin Login</h3>
+                    <input type="password" 
+                           id="admin-password" 
+                           class="w-full px-4 py-3 border border-gray-200 rounded-lg mb-4 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                           placeholder="Enter admin password"
+                           aria-label="Admin password input">
+                    <div class="flex gap-4">
+                        <button id="cancel-btn" 
+                                class="flex-1 px-6 py-2 text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                            Cancel
+                        </button>
+                        <button id="login-btn" 
+                                class="flex-1 px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg
+                                       hover:from-purple-700 hover:to-indigo-700 transition-all">
+                            Login
+                        </button>
+                    </div>
+                </div>
+            </div>
 
             <!-- AI Chatbot Card -->
             <article class="service-card p-6">
@@ -2254,6 +2289,33 @@ Trust Indicators Section
         document.querySelectorAll('section').forEach(section => {
             observer.observe(section);
         });
+    });
+
+    // Add this to your existing script section
+    document.getElementById('jewelry-management-btn').addEventListener('click', function() {
+        document.getElementById('admin-login-modal').classList.remove('hidden');
+    });
+    
+    document.getElementById('cancel-btn').addEventListener('click', function() {
+        document.getElementById('admin-login-modal').classList.add('hidden');
+        document.getElementById('admin-password').value = '';
+    });
+    
+    document.getElementById('login-btn').addEventListener('click', function() {
+        const password = document.getElementById('admin-password').value;
+        // Change 'admin123' to your desired password
+        if (password === 'admin123') {
+            window.open('https://sirpi-57.github.io/jewelry-management-dashboard/', '_blank');
+            document.getElementById('admin-login-modal').classList.add('hidden');
+            document.getElementById('admin-password').value = '';
+        } else {
+            alert('Incorrect password. Please try again.');
+        }
+    });
+    
+    // Enter key submission
+    document.getElementById('admin-password').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') document.getElementById('login-btn').click();
     });
 </script>
 </body>
