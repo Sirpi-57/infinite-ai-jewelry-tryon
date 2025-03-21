@@ -1544,14 +1544,20 @@
         
         // Initial empty JEWELRY object
         let JEWELRY = {};
+
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            const results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
         
         // Function to fetch jewelry data from DynamoDB via API
+        // Modify the fetchJewelryData function to create SKU mappings
         async function fetchJewelryData() {
             try {
-                // Show loading message in the console
                 console.log('Fetching jewelry data from DynamoDB...');
                 
-                // Fetch the data from our API
                 const response = await fetch(`${API_URL}/jewelry-data`);
                 
                 if (!response.ok) {
@@ -1567,12 +1573,25 @@
                 // Replace the empty JEWELRY object with the data from API
                 JEWELRY = data.JEWELRY;
                 
-                console.log(`Successfully loaded ${Object.keys(JEWELRY).length} jewelry items from DynamoDB`);
+                // Create mapping from SKU to ID
+                for (const [id, item] of Object.entries(JEWELRY)) {
+                    if (item.sku) {
+                        appState.skuToJewelryId[item.sku] = id;
+                    }
+                    
+                    // If no SKU exists but the ID looks like a SKU (e.g., "TIK-0001"),
+                    // use the ID itself as a mapping key
+                    if (id.match(/^[A-Z]{3}-\d{4}$/)) {
+                        appState.skuToJewelryId[id] = id;
+                    }
+                }
+                
+                console.log(`Successfully loaded ${Object.keys(JEWELRY).length} jewelry items`);
+                console.log('SKU to ID mapping created:', appState.skuToJewelryId);
                 return true;
             } catch (error) {
                 console.error('Error fetching jewelry data:', error);
                 
-                // Show error message to user
                 const loadingError = document.querySelector('.loading-error');
                 if (loadingError) {
                     loadingError.textContent = `Failed to load jewelry data: ${error.message}. Please refresh the page or try again later.`;
@@ -1609,6 +1628,9 @@
             isCameraReady: false,
             isResourcesLoaded: false,
             isInitialized: false
+            initialJewelryId: null,
+            categorySwitched: false,
+            skuToJewelryId: {} // For mapping SKUs to internal IDs
         };
         
         // DOM Elements
@@ -1633,38 +1655,71 @@
         // Initialization
         document.addEventListener('DOMContentLoaded', init);
         
+        // Modify your init function to handle the URL parameter
         async function init() {
             try {
                 console.log("Starting initialization...");
                 updateLoadingStatus("Initializing...");
                 
-                // Get DOM elements
-                initializeElements();
+                // Get the jewelry ID from URL
+                const jewelryIdFromUrl = getUrlParameter('jewelryId');
+                if (jewelryIdFromUrl) {
+                    console.log(`Found jewelry ID in URL: ${jewelryIdFromUrl}`);
+                    appState.initialJewelryId = jewelryIdFromUrl;
+                }
                 
-                // Setup event listeners
+                // Initialize elements and event listeners
+                initializeElements();
                 setupEventListeners();
                 
-                // Fetch jewelry data before anything else
+                // Fetch jewelry data
                 updateLoadingStatus("Loading jewelry data...");
                 const dataLoaded = await fetchJewelryData();
                 if (!dataLoaded) {
                     throw new Error("Failed to load jewelry data from API");
                 }
                 
-                // Initialize camera
+                // Initialize camera, AI models, and preload images
                 await initializeCamera();
-                
-                // Initialize MediaPipe models
                 await initializeAIModels();
-                
-                // Preload jewelry images
                 await preloadJewelryImages();
                 
-                // Initialize UI
+                // Initialize UI and gesture handlers
                 initializeUI();
-                
-                // Initialize gesture support
                 setupGestureHandlers();
+                
+                // Auto-select jewelry if ID was provided
+                if (appState.initialJewelryId) {
+                    // First check if we have a direct ID match
+                    let jewelryId = appState.initialJewelryId;
+                    
+                    // Check if the ID is in our mapping (for SKUs)
+                    if (!JEWELRY[jewelryId] && appState.skuToJewelryId[jewelryId]) {
+                        jewelryId = appState.skuToJewelryId[jewelryId];
+                    }
+                    
+                    // If we found a matching jewelry item, load it
+                    if (JEWELRY[jewelryId]) {
+                        console.log(`Auto-selecting jewelry with ID: ${jewelryId}`);
+                        
+                        // Get the jewelry item
+                        const jewelryItem = JEWELRY[jewelryId];
+                        
+                        // Switch to the appropriate category
+                        if (jewelryItem.group) {
+                            switchCategory(jewelryItem.group);
+                        }
+                        
+                        // Add the jewelry
+                        addJewelry(jewelryId);
+                        
+                        // Show toast notification
+                        showToast(`${jewelryItem.name} automatically applied`);
+                    } else {
+                        console.warn(`Jewelry with ID/SKU ${appState.initialJewelryId} not found!`);
+                        showToast(`Jewelry item not found`, 'warning');
+                    }
+                }
                 
                 // Start detection loop
                 appState.isInitialized = true;
@@ -1977,7 +2032,10 @@
             elements.canvas.style.transform = 'scaleX(-1)';
         }
         
+        // Update the switchCategory function
         function switchCategory(category) {
+            console.log(`Switching to category: ${category}`);
+            
             // Update active pill
             elements.categoryPills.forEach(btn => {
                 if (btn.dataset.category === category) {
@@ -2001,6 +2059,9 @@
             } else {
                 renderCategoryItems(category);
             }
+            
+            // Mark that we've performed a category switch
+            appState.categorySwitched = true;
         }
         
         function renderCategoryItems(category) {
@@ -2463,9 +2524,21 @@
             resetControlsTimer();
         }
         // 5. Add Jewelry Function
+        // Update the addJewelry function to handle auto-loaded items
         function addJewelry(id) {
             const originalJewelry = JEWELRY[id];
-            if (!originalJewelry) return;
+            if (!originalJewelry) {
+                console.error(`Jewelry not found with ID: ${id}`);
+                return;
+            }
+            
+            // Skip if already active
+            if (appState.activeJewelry.has(id)) {
+                console.log(`Jewelry ${id} is already active, skipping`);
+                return;
+            }
+            
+            console.log(`Adding jewelry: ${id}, type: ${originalJewelry.type}, group: ${originalJewelry.group}`);
             
             // Create a deep copy of the jewelry item with loaded images
             const jewelryCopy = JSON.parse(JSON.stringify(originalJewelry));
@@ -2479,7 +2552,7 @@
             }
             
             // Initialize with default values
-            jewelryCopy.scale = originalJewelry.defaultScale;
+            jewelryCopy.scale = originalJewelry.defaultScale || 1.0;
             jewelryCopy.offset = { x: 0, y: 0 };
             jewelryCopy.visible = true;
             jewelryCopy.opacity = 1.0;
@@ -2492,14 +2565,11 @@
             // Add to active jewelry
             appState.activeJewelry.set(id, jewelryCopy);
             
-            // Show toast
-            showToast(`${originalJewelry.name} added`);
-            
-            // Update carousel if that's the current view
+            // Update UI
             if (appState.currentCategory === 'active') {
                 renderActiveItems();
             } else {
-                // Update the particular carousel item to show as active
+                // Update just the particular carousel item to show as active
                 const carouselItems = elements.jewelryCarousel.querySelectorAll('.carousel-item');
                 carouselItems.forEach(card => {
                     if (card.dataset.jewelryId === id) {
@@ -2507,7 +2577,12 @@
                     }
                 });
             }
-        }
+            
+            // Show toast notification only if not auto-loaded
+            if (id !== appState.initialJewelryId) {
+                showToast(`${originalJewelry.name} added`);
+            }
+        }    
         
         // 6. Remove Jewelry Function
         function removeJewelry(id) {
