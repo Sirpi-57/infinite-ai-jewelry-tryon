@@ -1666,6 +1666,15 @@
                 if (jewelryIdFromUrl) {
                     console.log(`Found jewelry ID in URL: ${jewelryIdFromUrl}`);
                     appState.initialJewelryId = jewelryIdFromUrl;
+                    
+                    // Add alternative format (convert hyphens to underscores and vice versa)
+                    if (jewelryIdFromUrl.includes('-')) {
+                        appState.initialJewelryIdAlternative = jewelryIdFromUrl.replace(/-/g, '_');
+                        console.log(`Also trying alternative format: ${appState.initialJewelryIdAlternative}`);
+                    } else if (jewelryIdFromUrl.includes('_')) {
+                        appState.initialJewelryIdAlternative = jewelryIdFromUrl.replace(/_/g, '-');
+                        console.log(`Also trying alternative format: ${appState.initialJewelryIdAlternative}`);
+                    }
                 }
                 
                 // Initialize elements and event listeners
@@ -1698,6 +1707,15 @@
                         jewelryId = appState.skuToJewelryId[jewelryId];
                     }
                     
+                    // If no match found, try the alternative format
+                    if (!JEWELRY[jewelryId] && appState.initialJewelryIdAlternative) {
+                        if (JEWELRY[appState.initialJewelryIdAlternative]) {
+                            jewelryId = appState.initialJewelryIdAlternative;
+                        } else if (appState.skuToJewelryId[appState.initialJewelryIdAlternative]) {
+                            jewelryId = appState.skuToJewelryId[appState.initialJewelryIdAlternative];
+                        }
+                    }
+                    
                     // If we found a matching jewelry item, load it
                     if (JEWELRY[jewelryId]) {
                         console.log(`Auto-selecting jewelry with ID: ${jewelryId}`);
@@ -1716,7 +1734,7 @@
                         // Show toast notification
                         showToast(`${jewelryItem.name} automatically applied`);
                     } else {
-                        console.warn(`Jewelry with ID/SKU ${appState.initialJewelryId} not found!`);
+                        console.warn(`Jewelry with ID/SKU ${appState.initialJewelryId} not found! Also tried ${appState.initialJewelryIdAlternative || 'no alternative'}`);
                         showToast(`Jewelry item not found`, 'warning');
                     }
                 }
