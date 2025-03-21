@@ -2723,9 +2723,9 @@
                     }
                 } else if (jewelry.type === 'hand') {
                     if (appState.handLandmarks && appState.handLandmarks.length > 0) {
-                        if (id.startsWith('ring')) {
+                        if (jewelry.subcategory === 'ring') {
                             drawRing(jewelry, id);
-                        } else if (id.startsWith('bangle')) {
+                        } else if (jewelry.subcategory === 'bangle') {
                             drawBangle(jewelry, id);
                         }
                     }
